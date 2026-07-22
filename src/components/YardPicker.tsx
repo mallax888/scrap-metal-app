@@ -52,7 +52,7 @@ export function YardPicker({
         ))}
       </select>
 
-      <div className="flex max-h-96 flex-col gap-4 overflow-y-auto">
+      <div className="flex max-h-96 flex-col gap-4 overflow-y-auto pr-3">
         {grouped.map(([regionName, regionYards]) => (
           <div key={regionName} className="flex flex-col gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
