@@ -12,7 +12,15 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error("Auth callback: exchangeCodeForSession failed", error);
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent(error.message)}`
+    );
   }
 
-  return NextResponse.redirect(`${origin}/login`);
+  const errorDescription = searchParams.get("error_description");
+  console.error("Auth callback: no code param", { errorDescription, url: request.url });
+  return NextResponse.redirect(
+    `${origin}/login?error=${encodeURIComponent(errorDescription ?? "No sign-in code was returned.")}`
+  );
 }

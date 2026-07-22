@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
-export default function LoginPage() {
+function LoginForm() {
   const { signInWithEmail } = useAuth();
+  const searchParams = useSearchParams();
+  const callbackError = searchParams.get("error");
+
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +50,12 @@ export default function LoginPage() {
         <p className="text-stone-400">No password needed — we&apos;ll email you a link.</p>
       </div>
 
+      {callbackError && (
+        <p className="rounded-lg border border-red-900/60 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          That sign-in link didn&apos;t work: {callbackError}. Try sending a new one.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
           type="email"
@@ -65,5 +75,13 @@ export default function LoginPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
