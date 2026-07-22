@@ -14,18 +14,14 @@ export function PriceCard({ metal, price }: { metal: Metal; price: MetalPrice })
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/30"
+      className="relative overflow-hidden rounded-2xl border-2 p-4 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/30"
       style={{
-        borderColor: hexToRgba(metal.color, 0.4),
+        borderColor: hexToRgba(metal.color, 0.7),
         backgroundColor: "#1c1917",
         backgroundImage: `radial-gradient(circle at 10% -10%, ${hexToRgba(metal.color, 0.32)}, transparent 65%)`,
+        boxShadow: `0 0 24px -8px ${hexToRgba(metal.color, 0.5)}`,
       }}
     >
-      <span
-        className="absolute inset-x-0 top-0 h-1"
-        style={{ backgroundColor: metal.color }}
-      />
-
       <div className="flex items-center gap-2">
         <MetalSwatch metal={metal} />
         <MetalLabel metal={metal} className="text-sm" />
