@@ -10,16 +10,19 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createLocalStore } from "./local-store";
-import { initialPrices, tickPrices, YARDS } from "./mock-data";
+import { DEMO_YARDS, initialPrices, tickPrices, YARDS } from "./mock-data";
 import { MetalId, MetalPrice, RequestStatus, ScrapRequest, Yard } from "./types";
 
 const requestsStore = createLocalStore<ScrapRequest[]>("scrap-metal:requests", []);
-const yardsStore = createLocalStore<Yard[]>("scrap-metal:yards", YARDS);
+// Only the fictional sandbox yards are ever mutable/persisted — the real,
+// unaffiliated directory (YARDS) is static and never gets buyPrices attached.
+const demoYardsStore = createLocalStore<Yard[]>("scrap-metal:demo-yards", DEMO_YARDS);
 
 interface AppState {
   prices: MetalPrice[];
   requests: ScrapRequest[];
   yards: Yard[];
+  demoYards: Yard[];
   addRequest: (request: Omit<ScrapRequest, "id" | "createdAt" | "status">) => ScrapRequest;
   updateRequestStatus: (id: string, status: RequestStatus) => void;
   updateYardPrice: (yardId: string, metal: MetalId, price: number) => void;
@@ -34,11 +37,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     requestsStore.getSnapshot,
     requestsStore.getServerSnapshot
   );
-  const yards = useSyncExternalStore(
-    yardsStore.subscribe,
-    yardsStore.getSnapshot,
-    yardsStore.getServerSnapshot
+  const demoYards = useSyncExternalStore(
+    demoYardsStore.subscribe,
+    demoYardsStore.getSnapshot,
+    demoYardsStore.getServerSnapshot
   );
+  const yards = useMemo(() => [...demoYards, ...YARDS], [demoYards]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,7 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateYardPrice = useCallback<AppState["updateYardPrice"]>(
     (yardId, metal, price) => {
-      yardsStore.setState((current) =>
+      demoYardsStore.setState((current) =>
         current.map((y) =>
           y.id === yardId ? { ...y, buyPrices: { ...y.buyPrices, [metal]: price } } : y
         )
@@ -79,8 +83,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<AppState>(
-    () => ({ prices, requests, yards, addRequest, updateRequestStatus, updateYardPrice }),
-    [prices, requests, yards, addRequest, updateRequestStatus, updateYardPrice]
+    () => ({
+      prices,
+      requests,
+      yards,
+      demoYards,
+      addRequest,
+      updateRequestStatus,
+      updateYardPrice,
+    }),
+    [prices, requests, yards, demoYards, addRequest, updateRequestStatus, updateYardPrice]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

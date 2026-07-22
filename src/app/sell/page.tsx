@@ -29,7 +29,7 @@ export default function SellPage() {
 
   const selectedYard = yards.find((y) => y.id === yardId);
   const effectivePrice =
-    method === "dropoff" && selectedYard?.buyPrices[metal]
+    method === "dropoff" && selectedYard?.buyPrices?.[metal]
       ? (selectedYard.buyPrices[metal] as number)
       : marketPrice;
 
@@ -185,8 +185,12 @@ export default function SellPage() {
       {method === "dropoff" ? (
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-            Nearest yards
+            Scrap yards
           </label>
+          <p className="text-xs text-zinc-500">
+            Independent yards, not app partners — rates aren&apos;t live, so your quote
+            above uses the current market price. Call ahead to confirm.
+          </p>
           <YardPicker yards={yards} metal={metal} selectedYardId={yardId} onSelect={setYardId} />
         </div>
       ) : (

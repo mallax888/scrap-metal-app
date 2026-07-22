@@ -21,11 +21,11 @@ const NEXT_LABEL: Partial<Record<RequestStatus, string>> = {
 };
 
 export default function DealerPage() {
-  const { yards, requests, prices, updateYardPrice, updateRequestStatus } = useApp();
-  const [yardId, setYardId] = useState(yards[0]?.id ?? "");
+  const { demoYards, requests, prices, updateYardPrice, updateRequestStatus } = useApp();
+  const [yardId, setYardId] = useState(demoYards[0]?.id ?? "");
   const [tab, setTab] = useState<"prices" | "requests">("requests");
 
-  const yard = yards.find((y) => y.id === yardId) ?? yards[0];
+  const yard = demoYards.find((y) => y.id === yardId) ?? demoYards[0];
   const relevantRequests = requests.filter(
     (r) => r.method === "pickup" || r.yardId === yard?.id
   );
@@ -40,7 +40,8 @@ export default function DealerPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Dealer Dashboard</h1>
           <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-            Manage your buy prices and incoming requests.
+            Manage your buy prices and incoming requests. Sandbox yards for now —
+            real yards join once dealer onboarding exists.
           </p>
         </div>
         <select
@@ -48,7 +49,7 @@ export default function DealerPage() {
           onChange={(e) => setYardId(e.target.value)}
           className="rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
         >
-          {yards.map((y) => (
+          {demoYards.map((y) => (
             <option key={y.id} value={y.id}>
               {y.name}
             </option>
@@ -83,7 +84,7 @@ export default function DealerPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {METALS.map((m) => {
             const marketPrice = prices.find((p) => p.metal === m.id)?.pricePerKg ?? 0;
-            const yardPrice = yard.buyPrices[m.id] ?? marketPrice;
+            const yardPrice = yard.buyPrices?.[m.id] ?? marketPrice;
             return (
               <div
                 key={m.id}

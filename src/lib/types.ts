@@ -29,8 +29,13 @@ export interface Yard {
   id: string;
   name: string;
   suburb: string;
-  distanceKm: number;
-  buyPrices: Partial<Record<MetalId, number>>;
+  region: string;
+  phone?: string;
+  // True only for the fictional sandbox yards used by the Dealer Dashboard demo.
+  // Real, unaffiliated businesses must never have editable/fabricated prices
+  // attached to their name, so only isDemo yards carry buyPrices.
+  isDemo?: boolean;
+  buyPrices?: Partial<Record<MetalId, number>>;
 }
 
 export interface ScrapRequest {
