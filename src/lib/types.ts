@@ -45,7 +45,11 @@ export interface ScrapRequest {
   quotedPricePerKg: number;
   quotedTotal: number;
   method: RequestMethod;
+  // Yards aren't real DB-backed accounts yet, so this is a plain id plus a
+  // name/suburb snapshot taken at request time, not a live reference.
   yardId?: string;
+  yardName?: string;
+  yardSuburb?: string;
   address?: string;
   status: RequestStatus;
   createdAt: string;

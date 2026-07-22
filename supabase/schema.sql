@@ -7,6 +7,16 @@ create table if not exists metals (
   unit text not null default 'kg'
 );
 
+insert into metals (id, label, unit) values
+  ('copper', 'Copper', 'kg'),
+  ('aluminium', 'Aluminium', 'kg'),
+  ('steel', 'Steel', 'kg'),
+  ('brass', 'Brass', 'kg'),
+  ('stainless', 'Stainless Steel', 'kg'),
+  ('lead', 'Lead', 'kg'),
+  ('insulated-copper-wire', 'Insulated Copper Wire', 'kg')
+on conflict (id) do nothing;
+
 create table if not exists metal_prices (
   metal_id text primary key references metals(id),
   price_per_kg numeric(10, 3) not null,
@@ -40,13 +50,18 @@ create table if not exists yard_buy_prices (
 
 create table if not exists scrap_requests (
   id uuid primary key default gen_random_uuid(),
-  seller_id uuid references auth.users(id),
+  seller_id uuid not null default auth.uid() references auth.users(id),
   metal_id text not null references metals(id),
   weight_kg numeric(10, 2) not null,
   quoted_price_per_kg numeric(10, 3) not null,
   quoted_total numeric(12, 2) not null,
   method text not null check (method in ('pickup', 'dropoff')),
-  yard_id uuid references yards(id),
+  -- Yards aren't real DB-backed accounts yet (no owners/onboarding), so we
+  -- store a plain id plus a name/suburb snapshot instead of an FK to the
+  -- yards table.
+  yard_id text,
+  yard_name text,
+  yard_suburb text,
   address text,
   status text not null default 'quoted'
     check (status in ('quoted', 'scheduled', 'collected', 'paid')),

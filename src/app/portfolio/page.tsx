@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { PackageOpen } from "lucide-react";
+import { LogIn, PackageOpen } from "lucide-react";
 import { useApp } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { getMetal } from "@/lib/metals";
 import { formatMoney } from "@/lib/format";
 import { StatusTimeline } from "@/components/StatusTimeline";
 
 export default function PortfolioPage() {
-  const { requests } = useApp();
+  const { requests, requestsLoading } = useApp();
+  const { user, loading: authLoading } = useAuth();
 
   const stats = useMemo(() => {
     const thisYear = new Date().getFullYear();
@@ -21,6 +23,28 @@ export default function PortfolioPage() {
     const totalKg = yearRequests.reduce((sum, r) => sum + r.weightKg, 0);
     return { totalSold, dropoffs, totalKg, year: thisYear };
   }, [requests]);
+
+  if (authLoading || (user && requestsLoading)) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
+        <LogIn className="h-10 w-10 text-zinc-400" />
+        <h1 className="text-xl font-semibold">Sign in to see your portfolio</h1>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Your sales history is tied to your account so it follows you across devices.
+        </p>
+        <Link
+          href="/login"
+          className="mt-2 rounded-full bg-emerald-500 px-5 py-2.5 font-medium text-white hover:bg-emerald-600"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
 
   if (requests.length === 0) {
     return (

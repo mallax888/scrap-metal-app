@@ -141,7 +141,11 @@ export default function DealerPage() {
                 </div>
                 {next && (
                   <button
-                    onClick={() => updateRequestStatus(r.id, next)}
+                    onClick={() => {
+                      updateRequestStatus(r.id, next).catch((err) =>
+                        console.error("Failed to update request status", err)
+                      );
+                    }}
                     className="rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-600"
                   >
                     {NEXT_LABEL[r.status]}

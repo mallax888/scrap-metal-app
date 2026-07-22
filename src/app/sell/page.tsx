@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { CheckCircle2, Truck, Warehouse } from "lucide-react";
 import { useApp } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { METALS } from "@/lib/metals";
 import { MetalId, RequestMethod } from "@/lib/types";
 import { formatMoney, formatPricePerKg } from "@/lib/format";
@@ -12,6 +13,7 @@ import { YardPicker } from "@/components/YardPicker";
 
 export default function SellPage() {
   const { prices, yards, addRequest } = useApp();
+  const { user } = useAuth();
   const router = useRouter();
 
   const [metal, setMetal] = useState<MetalId>("copper");
@@ -21,6 +23,8 @@ export default function SellPage() {
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const marketPrice = useMemo(
     () => prices.find((p) => p.metal === metal)?.pricePerKg ?? 0,
@@ -38,19 +42,33 @@ export default function SellPage() {
   const canSubmit =
     weight > 0 && (method === "pickup" ? address.trim().length > 0 : Boolean(yardId));
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!canSubmit) return;
-    const request = addRequest({
-      metal,
-      weightKg: weight,
-      quotedPricePerKg: effectivePrice,
-      quotedTotal: total,
-      method,
-      yardId: method === "dropoff" ? yardId ?? undefined : undefined,
-      address: method === "pickup" ? address.trim() : undefined,
-      note: note.trim() || undefined,
-    });
-    setConfirmedId(request.id);
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const request = await addRequest({
+        metal,
+        weightKg: weight,
+        quotedPricePerKg: effectivePrice,
+        quotedTotal: total,
+        method,
+        yardId: method === "dropoff" ? yardId ?? undefined : undefined,
+        yardName: method === "dropoff" ? selectedYard?.name : undefined,
+        yardSuburb: method === "dropoff" ? selectedYard?.suburb : undefined,
+        address: method === "pickup" ? address.trim() : undefined,
+        note: note.trim() || undefined,
+      });
+      setConfirmedId(request.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (confirmedId) {
@@ -223,13 +241,19 @@ export default function SellPage() {
         />
       </div>
 
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
       <button
         type="button"
-        disabled={!canSubmit}
+        disabled={!canSubmit || submitting}
         onClick={handleSubmit}
         className="rounded-full bg-emerald-500 px-5 py-3 font-medium text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Confirm quote &amp; submit
+        {submitting
+          ? "Submitting…"
+          : user
+            ? "Confirm quote & submit"
+            : "Sign in to confirm & submit"}
       </button>
     </div>
   );
