@@ -20,9 +20,7 @@ export function StatusTimeline({ status }: { status: RequestStatus }) {
             <span
               className={clsx(
                 "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold",
-                i <= activeIndex
-                  ? "bg-emerald-500 text-white"
-                  : "bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
+                i <= activeIndex ? "bg-amber-600 text-stone-950" : "bg-stone-800 text-stone-500"
               )}
             >
               {i + 1}
@@ -30,7 +28,7 @@ export function StatusTimeline({ status }: { status: RequestStatus }) {
             <span
               className={clsx(
                 "text-[11px] font-medium",
-                i <= activeIndex ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400"
+                i <= activeIndex ? "text-stone-100" : "text-stone-500"
               )}
             >
               {LABELS[step]}
@@ -40,7 +38,7 @@ export function StatusTimeline({ status }: { status: RequestStatus }) {
             <span
               className={clsx(
                 "mx-1 h-0.5 flex-1",
-                i < activeIndex ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-800"
+                i < activeIndex ? "bg-amber-600" : "bg-stone-800"
               )}
             />
           )}

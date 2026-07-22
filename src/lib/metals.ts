@@ -1,17 +1,19 @@
 import { Metal, MetalId } from "./types";
 
+// Real-world, earthy metal tones — used for swatches, chart lines, and bold
+// metal-name labels throughout the app.
 export const METALS: Metal[] = [
-  { id: "copper", label: "Copper", unit: "kg", swatch: "bg-orange-500" },
-  { id: "aluminium", label: "Aluminium", unit: "kg", swatch: "bg-slate-400" },
-  { id: "steel", label: "Steel", unit: "kg", swatch: "bg-zinc-500" },
-  { id: "brass", label: "Brass", unit: "kg", swatch: "bg-yellow-500" },
-  { id: "stainless", label: "Stainless Steel", unit: "kg", swatch: "bg-slate-300" },
-  { id: "lead", label: "Lead", unit: "kg", swatch: "bg-slate-600" },
+  { id: "copper", label: "Copper", unit: "kg", color: "#d4763f" },
+  { id: "aluminium", label: "Aluminium", unit: "kg", color: "#c9c3b4" },
+  { id: "steel", label: "Steel", unit: "kg", color: "#a89e8c" },
+  { id: "brass", label: "Brass", unit: "kg", color: "#d9ac4a" },
+  { id: "stainless", label: "Stainless Steel", unit: "kg", color: "#e2ddd0" },
+  { id: "lead", label: "Lead", unit: "kg", color: "#8f8879" },
   {
     id: "insulated-copper-wire",
     label: "Insulated Copper Wire",
     unit: "kg",
-    swatch: "bg-amber-600",
+    color: "#b3722f",
   },
 ];
 

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #130f0c;
+  --foreground: #f2e9dc;
 }
 
 @theme inline {
@@ -12,15 +12,31 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Soft glowing accent behind hero sections — earthy amber/copper, not the
+   cosmic app's purple, but the same moody-glow feel. */
+.glow-accent {
+  position: relative;
+  isolation: isolate;
+}
+
+.glow-accent::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto -10%;
+  height: 420px;
+  background: radial-gradient(
+    ellipse at top,
+    rgba(217, 119, 6, 0.22),
+    rgba(180, 83, 9, 0.08) 45%,
+    transparent 70%
+  );
+  filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
 }

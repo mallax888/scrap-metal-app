@@ -11,7 +11,7 @@ export interface Metal {
   id: MetalId;
   label: string;
   unit: "kg";
-  swatch: string; // tailwind bg class for the metal's accent chip
+  color: string; // hex — the metal's real-world tone, used for swatches and labels
 }
 
 export interface MetalPrice {

@@ -19,10 +19,10 @@ export function Nav() {
   const { user, loading, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-black/90">
+    <header className="sticky top-0 z-10 border-b border-stone-800 bg-stone-950/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-stone-50">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-stone-950">
             <Recycle className="h-4 w-4" />
           </span>
           <span className="text-lg tracking-tight">ScrapExchange</span>
@@ -37,8 +37,8 @@ export function Nav() {
                 className={clsx(
                   "whitespace-nowrap rounded-full px-3 py-1.5 transition-colors",
                   active
-                    ? "bg-emerald-500 text-white"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    ? "bg-amber-600 text-stone-950"
+                    : "text-stone-400 hover:bg-stone-900 hover:text-stone-100"
                 )}
               >
                 {link.label}
@@ -49,10 +49,10 @@ export function Nav() {
         <div className="flex shrink-0 items-center gap-2 text-sm">
           {loading ? null : user ? (
             <>
-              <span className="hidden text-zinc-500 sm:inline">{user.email}</span>
+              <span className="hidden text-stone-400 sm:inline">{user.email}</span>
               <button
                 onClick={() => signOut()}
-                className="rounded-full border border-zinc-200 px-3 py-1.5 font-medium hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                className="rounded-full border border-stone-700 px-3 py-1.5 font-medium text-stone-200 hover:bg-stone-900"
               >
                 Sign out
               </button>
@@ -60,7 +60,7 @@ export function Nav() {
           ) : (
             <button
               onClick={() => router.push("/login")}
-              className="rounded-full border border-zinc-200 px-3 py-1.5 font-medium hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+              className="rounded-full border border-stone-700 px-3 py-1.5 font-medium text-stone-200 hover:bg-stone-900"
             >
               Sign in
             </button>

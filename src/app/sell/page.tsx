@@ -6,10 +6,11 @@ import { clsx } from "clsx";
 import { CheckCircle2, Truck, Warehouse } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { METALS } from "@/lib/metals";
+import { METALS, getMetal } from "@/lib/metals";
 import { MetalId, RequestMethod } from "@/lib/types";
 import { formatMoney, formatPricePerKg } from "@/lib/format";
 import { YardPicker } from "@/components/YardPicker";
+import { MetalLabel, MetalSwatch } from "@/components/MetalLabel";
 
 export default function SellPage() {
   const { prices, yards, addRequest } = useApp();
@@ -25,6 +26,8 @@ export default function SellPage() {
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedMetal = getMetal(metal);
 
   const marketPrice = useMemo(
     () => prices.find((p) => p.metal === metal)?.pricePerKg ?? 0,
@@ -73,23 +76,23 @@ export default function SellPage() {
 
   if (confirmedId) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-stone-800 bg-stone-900 p-8 text-center">
         <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-        <h1 className="text-xl font-semibold">Quote locked in</h1>
-        <p className="text-zinc-600 dark:text-zinc-400">
-          Your request for {formatMoney(total)} is now in the queue. Track its progress from
-          your portfolio.
+        <h1 className="text-xl font-semibold text-stone-50">Quote locked in</h1>
+        <p className="text-stone-400">
+          Your <MetalLabel metal={selectedMetal} /> request for {formatMoney(total)} is now in
+          the queue. Track its progress from your portfolio.
         </p>
         <div className="mt-2 flex gap-3">
           <button
             onClick={() => router.push("/portfolio")}
-            className="rounded-full bg-emerald-500 px-5 py-2.5 font-medium text-white hover:bg-emerald-600"
+            className="rounded-full bg-amber-600 px-5 py-2.5 font-medium text-stone-950 hover:bg-amber-500"
           >
             View portfolio
           </button>
           <button
             onClick={() => setConfirmedId(null)}
-            className="rounded-full border border-zinc-200 px-5 py-2.5 font-medium hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+            className="rounded-full border border-stone-700 px-5 py-2.5 font-medium text-stone-200 hover:bg-stone-800"
           >
             Sell more
           </button>
@@ -101,38 +104,40 @@ export default function SellPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Sell my scrap</h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-3xl font-semibold tracking-tight text-stone-50">Sell my scrap</h1>
+        <p className="mt-1 text-stone-400">
           Pick your metal and weight for an instant indicative quote.
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-          Metal type
-        </label>
+        <label className="text-sm font-medium text-stone-300">Metal type</label>
         <div className="flex flex-wrap gap-2">
-          {METALS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMetal(m.id)}
-              className={clsx(
-                "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-                metal === m.id
-                  ? "border-emerald-500 bg-emerald-500 text-white"
-                  : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
-              )}
-            >
-              <span className={clsx("h-2 w-2 rounded-full", metal === m.id ? "bg-white" : m.swatch)} />
-              {m.label}
-            </button>
-          ))}
+          {METALS.map((m) => {
+            const selected = metal === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setMetal(m.id)}
+                style={selected ? { backgroundColor: m.color, borderColor: m.color } : undefined}
+                className={clsx(
+                  "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold uppercase tracking-wide transition-colors",
+                  selected
+                    ? "text-stone-950"
+                    : "border-stone-700 text-stone-300 hover:border-stone-500"
+                )}
+              >
+                {!selected && <MetalSwatch metal={m} />}
+                {m.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="weight" className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+        <label htmlFor="weight" className="text-sm font-medium text-stone-300">
           Estimated weight (kg)
         </label>
         <input
@@ -142,7 +147,7 @@ export default function SellPage() {
           max={500}
           value={weight}
           onChange={(e) => setWeight(Number(e.target.value))}
-          className="accent-emerald-500"
+          className="accent-amber-600"
         />
         <input
           id="weight"
@@ -150,26 +155,23 @@ export default function SellPage() {
           min={0}
           value={weight}
           onChange={(e) => setWeight(Math.max(0, Number(e.target.value)))}
-          className="w-32 rounded-lg border border-zinc-200 px-3 py-1.5 tabular-nums dark:border-zinc-800 dark:bg-zinc-950"
+          className="w-32 rounded-lg border border-stone-700 bg-stone-900 px-3 py-1.5 tabular-nums text-stone-50"
         />
       </div>
 
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900 dark:bg-emerald-500/10">
-        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-          Instant indicative quote
-        </p>
-        <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">
+      <div className="rounded-2xl border border-amber-900/60 bg-amber-500/10 p-5">
+        <p className="text-sm font-medium text-amber-500">Instant indicative quote</p>
+        <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums text-stone-50">
           {formatMoney(total)}
         </p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {weight}kg × {formatPricePerKg(effectivePrice)}
+        <p className="mt-1 text-sm text-stone-400">
+          {weight}kg <MetalLabel metal={selectedMetal} className="text-sm" /> ×{" "}
+          {formatPricePerKg(effectivePrice)}
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-          How do you want to sell it?
-        </label>
+        <label className="text-sm font-medium text-stone-300">How do you want to sell it?</label>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -177,8 +179,8 @@ export default function SellPage() {
             className={clsx(
               "flex flex-col items-center gap-1 rounded-xl border p-4 transition-colors",
               method === "dropoff"
-                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                : "border-zinc-200 dark:border-zinc-800"
+                ? "border-amber-600 bg-amber-500/10 text-stone-50"
+                : "border-stone-800 text-stone-300"
             )}
           >
             <Warehouse className="h-5 w-5" />
@@ -190,8 +192,8 @@ export default function SellPage() {
             className={clsx(
               "flex flex-col items-center gap-1 rounded-xl border p-4 transition-colors",
               method === "pickup"
-                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                : "border-zinc-200 dark:border-zinc-800"
+                ? "border-amber-600 bg-amber-500/10 text-stone-50"
+                : "border-stone-800 text-stone-300"
             )}
           >
             <Truck className="h-5 w-5" />
@@ -202,10 +204,8 @@ export default function SellPage() {
 
       {method === "dropoff" ? (
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-            Scrap yards
-          </label>
-          <p className="text-xs text-zinc-500">
+          <label className="text-sm font-medium text-stone-300">Scrap yards</label>
+          <p className="text-xs text-stone-500">
             Independent yards, not app partners — rates aren&apos;t live, so your quote
             above uses the current market price. Call ahead to confirm.
           </p>
@@ -213,7 +213,7 @@ export default function SellPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <label htmlFor="address" className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+          <label htmlFor="address" className="text-sm font-medium text-stone-300">
             Pickup address
           </label>
           <input
@@ -222,13 +222,13 @@ export default function SellPage() {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="123 Example Street, Suburb"
-            className="rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+            className="rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 text-stone-50"
           />
         </div>
       )}
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="note" className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+        <label htmlFor="note" className="text-sm font-medium text-stone-300">
           Notes (optional)
         </label>
         <textarea
@@ -237,17 +237,17 @@ export default function SellPage() {
           onChange={(e) => setNote(e.target.value)}
           placeholder="e.g. mixed copper wire, roughly sorted"
           rows={2}
-          className="rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+          className="rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 text-stone-50"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <button
         type="button"
         disabled={!canSubmit || submitting}
         onClick={handleSubmit}
-        className="rounded-full bg-emerald-500 px-5 py-3 font-medium text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-full bg-amber-600 px-5 py-3 font-medium text-stone-950 transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting
           ? "Submitting…"

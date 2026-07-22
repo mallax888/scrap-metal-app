@@ -42,7 +42,7 @@ export function YardPicker({
       <select
         value={region}
         onChange={(e) => setRegion(e.target.value)}
-        className="w-fit rounded-lg border border-zinc-200 px-3 py-1.5 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+        className="w-fit rounded-lg border border-stone-700 bg-stone-900 px-3 py-1.5 text-sm text-stone-50"
       >
         <option value="all">All regions</option>
         {regions.map((r) => (
@@ -55,7 +55,7 @@ export function YardPicker({
       <div className="flex max-h-96 flex-col gap-4 overflow-y-auto">
         {grouped.map(([regionName, regionYards]) => (
           <div key={regionName} className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
               {regionName}
             </p>
             {regionYards.map((yard) => {
@@ -69,24 +69,24 @@ export function YardPicker({
                   className={clsx(
                     "flex items-center justify-between rounded-xl border p-3 text-left transition-colors",
                     selected
-                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                      : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
+                      ? "border-amber-600 bg-amber-500/10"
+                      : "border-stone-800 hover:border-stone-600"
                   )}
                 >
                   <div className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-stone-500" />
                     <div>
-                      <p className="font-medium">{yard.name}</p>
-                      <p className="text-sm text-zinc-500">{yard.suburb}</p>
+                      <p className="font-medium text-stone-100">{yard.name}</p>
+                      <p className="text-sm text-stone-500">{yard.suburb}</p>
                       {yard.phone && (
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-zinc-400">
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-stone-500">
                           <Phone className="h-3 w-3" />
                           {yard.phone}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="text-right text-sm font-medium tabular-nums">
+                  <div className="text-right text-sm font-medium tabular-nums text-stone-300">
                     {yardPrice ? formatPricePerKg(yardPrice) : "Contact for rate"}
                   </div>
                 </button>
