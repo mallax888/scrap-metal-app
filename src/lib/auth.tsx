@@ -8,6 +8,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string) => Promise<{ error: string | null }>;
+  verifyEmailCode: (email: string, token: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -43,6 +44,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
+        });
+        return { error: error?.message ?? null };
+      },
+      // Sidesteps the PKCE cross-browser-context problem entirely — no
+      // cookie continuity needed, since the code is typed into the same
+      // tab that's already open rather than opened via a separate link click.
+      verifyEmailCode: async (email: string, token: string) => {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: "email",
         });
         return { error: error?.message ?? null };
       },
