@@ -1,8 +1,18 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
+import type { AuthError, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { createClient } from "./supabase/client";
+
+// AuthError.message is sometimes empty (e.g. upstream SMTP failures can come
+// back with a bare {} body) — fall back to status/code, and always log the
+// full error so it's inspectable even when the UI can't show much.
+function describeAuthError(error: AuthError): string {
+  console.error("Supabase auth error", error);
+  if (error.message) return error.message;
+  if (error.status) return `Request failed (status ${error.status}). Check Supabase Auth logs.`;
+  return "Something went wrong. Check Supabase Auth logs for details.";
+}
 
 interface AuthState {
   user: User | null;
@@ -45,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
-        return { error: error?.message ?? null };
+        return { error: error ? describeAuthError(error) : null };
       },
       // Sidesteps the PKCE cross-browser-context problem entirely — no
       // cookie continuity needed, since the code is typed into the same
@@ -56,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           token,
           type: "email",
         });
-        return { error: error?.message ?? null };
+        return { error: error ? describeAuthError(error) : null };
       },
       signOut: async () => {
         await supabase.auth.signOut();
