@@ -144,8 +144,8 @@ export default function SellPage() {
           type="range"
           aria-label="Estimated weight slider"
           min={1}
-          max={500}
-          value={weight}
+          max={2000}
+          value={Math.min(weight, 2000)}
           onChange={(e) => setWeight(Number(e.target.value))}
           className="accent-amber-600"
         />
