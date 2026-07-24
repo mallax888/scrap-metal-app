@@ -77,7 +77,10 @@ function LoginForm() {
       <div className="flex w-fit gap-1 self-center rounded-full border border-stone-800 p-1">
         <button
           type="button"
-          onClick={() => setMode("signin")}
+          onClick={() => {
+            setMode("signin");
+            setError(null);
+          }}
           className={
             mode === "signin"
               ? "rounded-full bg-amber-600 px-4 py-1.5 text-sm font-medium text-stone-950"
@@ -88,7 +91,10 @@ function LoginForm() {
         </button>
         <button
           type="button"
-          onClick={() => setMode("register")}
+          onClick={() => {
+            setMode("register");
+            setError(null);
+          }}
           className={
             mode === "register"
               ? "rounded-full bg-amber-600 px-4 py-1.5 text-sm font-medium text-stone-950"
