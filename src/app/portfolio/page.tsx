@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { LogIn, PackageOpen } from "lucide-react";
+import { LogIn, Loader2, PackageOpen } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { getMetal } from "@/lib/metals";
@@ -27,7 +27,11 @@ export default function PortfolioPage() {
   }, [requests]);
 
   if (authLoading || (user && requestsLoading)) {
-    return null;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-stone-500" />
+      </div>
+    );
   }
 
   if (!user) {
