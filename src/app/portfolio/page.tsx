@@ -107,6 +107,8 @@ export default function PortfolioPage() {
                   <MetalLabel metal={metal} className="text-sm" />
                   <span className="text-sm text-stone-500">
                     · {r.weightKg}kg · {r.method === "pickup" ? "Pickup" : "Drop-off"}
+                    {r.method === "dropoff" && r.yardName && ` at ${r.yardName}`}
+                    {r.method === "pickup" && r.address && ` — ${r.address}`}
                   </span>
                 </div>
                 <div className="text-lg font-semibold tabular-nums text-stone-50">
@@ -114,6 +116,7 @@ export default function PortfolioPage() {
                 </div>
               </div>
               <p className="mt-1 text-xs text-stone-500">
+                {r.method === "dropoff" && r.yardSuburb ? `${r.yardSuburb} · ` : ""}
                 {new Date(r.createdAt).toLocaleString("en-NZ")}
               </p>
               <div className="mt-4">
