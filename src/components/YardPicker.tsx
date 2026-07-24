@@ -40,6 +40,7 @@ export function YardPicker({
   return (
     <div className="flex flex-col gap-3">
       <select
+        aria-label="Filter yards by region"
         value={region}
         onChange={(e) => setRegion(e.target.value)}
         className="w-fit rounded-lg border border-stone-700 bg-stone-900 px-3 py-1.5 text-sm text-stone-50"

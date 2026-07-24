@@ -112,18 +112,28 @@ function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <label htmlFor="login-email" className="sr-only">
+          Email
+        </label>
         <input
+          id="login-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           className="rounded-lg border border-stone-700 bg-stone-950 px-3 py-2 text-stone-50"
         />
+        <label htmlFor="login-password" className="sr-only">
+          Password
+        </label>
         <input
+          id="login-password"
           type="password"
           required
           minLength={6}
+          autoComplete={mode === "register" ? "new-password" : "current-password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"

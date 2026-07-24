@@ -49,6 +49,7 @@ export default function DealerPage() {
           </p>
         </div>
         <select
+          aria-label="Select yard to manage"
           value={yardId}
           onChange={(e) => setYardId(e.target.value)}
           className="rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 text-stone-50"
