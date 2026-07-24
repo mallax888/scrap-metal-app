@@ -5,13 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Recycle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-
-const LINKS = [
-  { href: "/", label: "Market" },
-  { href: "/sell", label: "Sell Scrap" },
-  { href: "/portfolio", label: "My Portfolio" },
-  { href: "/dealer", label: "Dealer Dashboard" },
-];
+import { NAV_LINKS } from "@/lib/nav-links";
 
 export function Nav() {
   const pathname = usePathname();
@@ -27,8 +21,8 @@ export function Nav() {
           </span>
           <span className="text-lg tracking-tight">ScrapExchange</span>
         </Link>
-        <nav className="flex items-center gap-1 overflow-x-auto text-sm font-medium">
-          {LINKS.map((link) => {
+        <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
+          {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
               <Link

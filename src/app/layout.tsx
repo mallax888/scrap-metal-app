@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProvider } from "@/lib/store";
 import { AuthProvider } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
+import { MobileTabBar } from "@/components/MobileTabBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,9 +36,10 @@ export default function RootLayout({
         <AuthProvider>
           <AppProvider>
             <Nav />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-24 sm:px-6 sm:pb-8">
               {children}
             </main>
+            <MobileTabBar />
           </AppProvider>
         </AuthProvider>
       </body>
