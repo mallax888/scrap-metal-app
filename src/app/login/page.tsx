@@ -61,8 +61,8 @@ function LoginForm() {
         <div className="flex flex-col gap-3 border-t border-stone-800 pt-4">
           <p className="text-sm text-stone-300">
             The link can fail if you open it inside an app&apos;s built-in browser (e.g.
-            tapping it in the Mail app) — typing the 6-digit code from the email here
-            always works instead:
+            tapping it in the Mail app) — typing the code from the email here always
+            works instead:
           </p>
           <form onSubmit={handleVerifyCode} className="flex flex-col gap-3">
             <input
@@ -71,7 +71,7 @@ function LoginForm() {
               autoComplete="one-time-code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
+              placeholder="Enter the code from your email"
               className="rounded-lg border border-stone-700 bg-stone-950 px-3 py-2 text-center text-lg tracking-widest text-stone-50"
             />
             {verifyError && <p className="text-sm text-red-400">{verifyError}</p>}
@@ -101,7 +101,7 @@ function LoginForm() {
       {callbackError && (
         <p className="rounded-lg border border-red-900/60 bg-red-500/10 px-3 py-2 text-sm text-red-400">
           That sign-in link didn&apos;t work: {callbackError}. Try again below — if the
-          link fails again, use the 6-digit code from the email instead.
+          link fails again, use the code from the email instead.
         </p>
       )}
 
