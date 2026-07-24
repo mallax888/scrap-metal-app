@@ -17,8 +17,13 @@ function describeAuthError(error: AuthError): string {
 interface AuthState {
   user: User | null;
   loading: boolean;
-  signInWithEmail: (email: string) => Promise<{ error: string | null }>;
-  verifyEmailCode: (email: string, token: string) => Promise<{ error: string | null }>;
+  // Returns needsEmailConfirmation: true when the project requires confirming
+  // the email before a session is issued (no error, but not signed in yet).
+  signUp: (
+    email: string,
+    password: string
+  ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -48,24 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       loading,
-      signInWithEmail: async (email: string) => {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        return { error: error ? describeAuthError(error) : null };
+      signUp: async (email: string, password: string) => {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) return { error: describeAuthError(error), needsEmailConfirmation: false };
+        return { error: null, needsEmailConfirmation: !data.session };
       },
-      // Sidesteps the PKCE cross-browser-context problem entirely — no
-      // cookie continuity needed, since the code is typed into the same
-      // tab that's already open rather than opened via a separate link click.
-      verifyEmailCode: async (email: string, token: string) => {
-        const { error } = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: "email",
-        });
+      signInWithPassword: async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         return { error: error ? describeAuthError(error) : null };
       },
       signOut: async () => {
