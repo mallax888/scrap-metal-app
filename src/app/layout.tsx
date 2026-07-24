@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/lib/store";
@@ -17,9 +17,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Update if a custom domain replaces the default Vercel one — needed to
+  // resolve absolute URLs for the generated OG/social share image.
+  metadataBase: new URL("https://scrap-metal-app.vercel.app"),
   title: "ScrapExchange — live scrap metal prices",
   description:
     "Live scrap metal prices, instant quotes, and a portfolio-style dashboard for tracking your sales — Sharesies for scrap metal.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0c0a09",
 };
 
 export default function RootLayout({
