@@ -5,7 +5,7 @@ import { clsx } from "clsx";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Metal, MetalPrice } from "@/lib/types";
 import { formatPricePerKg } from "@/lib/format";
-import { hexToRgba } from "@/lib/color";
+import { MetalCard } from "./MetalCard";
 import { MetalLabel, MetalSwatch } from "./MetalLabel";
 
 export function PriceCard({ metal, price }: { metal: Metal; price: MetalPrice }) {
@@ -13,15 +13,7 @@ export function PriceCard({ metal, price }: { metal: Metal; price: MetalPrice })
   const chartData = price.history.map((value, i) => ({ i, value }));
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl border-2 p-4 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/30"
-      style={{
-        borderColor: hexToRgba(metal.color, 0.7),
-        backgroundColor: "#1c1917",
-        backgroundImage: `radial-gradient(circle at 10% -10%, ${hexToRgba(metal.color, 0.32)}, transparent 65%)`,
-        boxShadow: `0 0 24px -8px ${hexToRgba(metal.color, 0.5)}`,
-      }}
-    >
+    <MetalCard metal={metal} intensity="hero" className="p-4">
       <div className="flex items-center gap-2">
         <MetalSwatch metal={metal} />
         <MetalLabel metal={metal} className="text-sm" />
@@ -57,6 +49,6 @@ export function PriceCard({ metal, price }: { metal: Metal; price: MetalPrice })
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </MetalCard>
   );
 }

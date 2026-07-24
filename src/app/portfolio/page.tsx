@@ -9,6 +9,7 @@ import { getMetal } from "@/lib/metals";
 import { formatMoney } from "@/lib/format";
 import { StatusTimeline } from "@/components/StatusTimeline";
 import { MetalLabel, MetalSwatch } from "@/components/MetalLabel";
+import { MetalCard } from "@/components/MetalCard";
 
 export default function PortfolioPage() {
   const { requests, requestsLoading } = useApp();
@@ -97,10 +98,7 @@ export default function PortfolioPage() {
         {requests.map((r) => {
           const metal = getMetal(r.metal);
           return (
-            <div
-              key={r.id}
-              className="rounded-2xl border border-stone-800 bg-stone-900 p-5"
-            >
+            <MetalCard key={r.id} metal={metal} className="p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <MetalSwatch metal={metal} />
@@ -122,7 +120,7 @@ export default function PortfolioPage() {
               <div className="mt-4">
                 <StatusTimeline status={r.status} />
               </div>
-            </div>
+            </MetalCard>
           );
         })}
       </div>

@@ -8,6 +8,7 @@ import { METALS, getMetal } from "@/lib/metals";
 import { RequestStatus } from "@/lib/types";
 import { formatMoney, formatPricePerKg } from "@/lib/format";
 import { MetalLabel, MetalSwatch } from "@/components/MetalLabel";
+import { MetalCard } from "@/components/MetalCard";
 
 const NEXT_STATUS: Partial<Record<RequestStatus, RequestStatus>> = {
   quoted: "scheduled",
@@ -89,9 +90,10 @@ export default function DealerPage() {
             const marketPrice = prices.find((p) => p.metal === m.id)?.pricePerKg ?? 0;
             const yardPrice = yard.buyPrices?.[m.id] ?? marketPrice;
             return (
-              <div
+              <MetalCard
                 key={m.id}
-                className="flex items-center justify-between rounded-xl border border-stone-800 p-4"
+                metal={m}
+                className="flex items-center justify-between p-4"
               >
                 <div className="flex items-center gap-2">
                   <MetalSwatch metal={m} />
@@ -113,7 +115,7 @@ export default function DealerPage() {
                   />
                   <span className="text-stone-500">/kg</span>
                 </div>
-              </div>
+              </MetalCard>
             );
           })}
         </div>
@@ -128,9 +130,10 @@ export default function DealerPage() {
             const metal = getMetal(r.metal);
             const next = NEXT_STATUS[r.status];
             return (
-              <div
+              <MetalCard
                 key={r.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-800 p-4"
+                metal={metal}
+                className="flex flex-wrap items-center justify-between gap-3 p-4"
               >
                 <div className="flex items-center gap-2">
                   <MetalSwatch metal={metal} />
@@ -156,7 +159,7 @@ export default function DealerPage() {
                     {NEXT_LABEL[r.status]}
                   </button>
                 )}
-              </div>
+              </MetalCard>
             );
           })}
           {completedRequests.length > 0 && (
