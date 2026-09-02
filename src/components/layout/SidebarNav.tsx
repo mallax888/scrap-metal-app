@@ -22,14 +22,14 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             className={clsx(
               "group flex items-center gap-3 rounded-full px-3.5 py-2.5 text-sm transition-colors duration-200",
               active
-                ? "bg-cream font-semibold text-bark"
+                ? "bg-rose font-semibold text-litchi"
                 : "font-medium text-mist hover:bg-cream/60 hover:text-ink"
             )}
           >
             <Icon
               className={clsx(
                 "h-[18px] w-[18px] shrink-0 transition-colors",
-                active ? "text-bark" : "text-clay group-hover:text-bark"
+                active ? "text-litchi" : "text-clay group-hover:text-litchi"
               )}
               aria-hidden
             />

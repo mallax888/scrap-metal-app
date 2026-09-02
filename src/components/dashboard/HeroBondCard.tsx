@@ -86,15 +86,14 @@ export function HeroBondCard() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
               size="lg"
-              className="bg-cream text-ink hover:bg-paper"
+              variant="onHero"
               onClick={() => setPlanOpen(true)}
             >
               View repayment plan
             </Button>
             <Button
               size="lg"
-              variant="ghost"
-              className="border border-onbrand/25 text-onbrand hover:bg-onbrand/10"
+              variant="onHeroGhost"
               onClick={() => setExtraOpen(true)}
             >
               Make extra payment

@@ -25,7 +25,7 @@ export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolea
       label: "Litchi bond repayment",
       to: "Litchi Bond Assist",
       amount: plan.weeklyPayment,
-      dot: "bg-bark",
+      dot: "bg-litchi",
     },
   ];
 
@@ -52,7 +52,7 @@ export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolea
       {/* Proportional bar: rent vs Litchi repayment. */}
       <div className="mt-6 flex h-2.5 w-full overflow-hidden rounded-full bg-sand" aria-hidden>
         <div className="h-full bg-clay" style={{ width: `${rentShare * 100}%` }} />
-        <div className="h-full flex-1 bg-bark" />
+        <div className="h-full flex-1 bg-litchi" />
       </div>
 
       <dl className="mt-6 divide-y divide-sand/70">

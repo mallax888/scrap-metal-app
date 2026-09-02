@@ -72,7 +72,7 @@ export function RepaymentChart() {
         </div>
         <div className="flex items-center gap-4 text-xs text-mist">
           <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-5 rounded-full bg-bark" aria-hidden />
+            <span className="h-0.5 w-5 rounded-full bg-litchi" aria-hidden />
             Actual
           </span>
           <span className="flex items-center gap-1.5">
@@ -108,8 +108,8 @@ export function RepaymentChart() {
             <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
               <defs>
                 <linearGradient id="litchi-actual" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-bark)" stopOpacity={0.22} />
-                  <stop offset="100%" stopColor="var(--color-bark)" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--color-litchi)" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="var(--color-litchi)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="litchi-projected" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-clay)" stopOpacity={0.14} />
@@ -154,12 +154,12 @@ export function RepaymentChart() {
               <Area
                 type="monotone"
                 dataKey="actual"
-                stroke="var(--color-bark)"
+                stroke="var(--color-litchi)"
                 strokeWidth={2.5}
                 fill="url(#litchi-actual)"
                 connectNulls={false}
                 dot={false}
-                activeDot={{ r: 4, fill: "var(--color-bark)", stroke: "var(--color-paper)", strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: "var(--color-litchi)", stroke: "var(--color-paper)", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
             </AreaChart>

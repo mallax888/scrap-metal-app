@@ -2,7 +2,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { Loader2 } from "lucide-react";
 
-type Variant = "primary" | "secondary" | "soft" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "soft" | "ghost" | "danger" | "onHero" | "onHeroGhost";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
@@ -11,6 +11,11 @@ const VARIANTS: Record<Variant, string> = {
   soft: "bg-cream text-bark hover:bg-sand",
   ghost: "text-bark hover:bg-cream",
   danger: "bg-paper text-bark border border-sand hover:bg-cream",
+  /* For the dark hero slab. These exist as variants rather than className
+     overrides because a caller-supplied text colour loses to the variant's own
+     in the cascade — order in the class string doesn't decide it. */
+  onHero: "bg-onbrand text-hero hover:bg-paper shadow-card",
+  onHeroGhost: "border border-onbrand/25 text-onbrand hover:bg-onbrand/10",
 };
 
 const SIZES: Record<Size, string> = {
