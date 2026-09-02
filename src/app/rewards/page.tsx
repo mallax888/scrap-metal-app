@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useCelebrate } from "@/components/ui/Celebration";
 import { useToast } from "@/components/ui/Toast";
 import { ActivityRow } from "@/components/dashboard/ActivityFeed";
 import { rewardCatalogue, rewardCategories, rewards, type Reward } from "@/lib/data";
@@ -19,6 +20,7 @@ import { useLitchi } from "@/lib/store";
 export default function RewardsPage() {
   const { derived, state, redeemReward } = useLitchi();
   const toast = useToast();
+  const celebrate = useCelebrate();
   const [pending, setPending] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
 
@@ -32,8 +34,18 @@ export default function RewardsPage() {
     const ok = redeemReward(pending.id);
     setRedeeming(false);
     const name = pending.name;
+    const cost = pending.cost;
     setPending(null);
-    toast(ok ? `${name} redeemed` : "Not enough points yet", ok ? "success" : "info");
+
+    if (ok) {
+      celebrate({
+        title: "Reward unlocked.",
+        message: `${name} is yours. We'll be in touch with the details.`,
+        stat: `${points(cost)} points redeemed`,
+      });
+    } else {
+      toast("Not enough points yet", "info");
+    }
   }
 
   return (

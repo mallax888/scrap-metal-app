@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
+import { useCelebrate } from "@/components/ui/Celebration";
 import { useToast } from "@/components/ui/Toast";
 import { movingFund } from "@/lib/data";
 import { money, percent } from "@/lib/format";
@@ -14,6 +15,7 @@ const QUICK_AMOUNTS = [20, 50, 100];
 export function MovingFundModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { derived, addToMovingFund } = useLitchi();
   const toast = useToast();
+  const celebrate = useCelebrate();
   const [amount, setAmount] = useState("50");
   const [saving, setSaving] = useState(false);
 
@@ -30,7 +32,17 @@ export function MovingFundModal({ open, onClose }: { open: boolean; onClose: () 
     setSaving(false);
     setAmount("50");
     onClose();
-    toast(`${money(parsed)} added to your Moving Fund`);
+
+    const reachedGoal = derived.fundSaved < movingFund.goal && projected >= movingFund.goal;
+    if (reachedGoal) {
+      celebrate({
+        title: "Moving Fund complete.",
+        message: "You've hit your goal. It's yours whenever your next move comes around.",
+        stat: `${money(projected)} saved`,
+      });
+    } else {
+      toast(`${money(parsed)} added to your Moving Fund`);
+    }
   }
 
   return (
