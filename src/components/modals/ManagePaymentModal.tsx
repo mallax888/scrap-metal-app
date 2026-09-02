@@ -66,7 +66,7 @@ export function ManagePaymentModal({ open, onClose }: { open: boolean; onClose: 
                 <span
                   className={clsx(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    active ? "bg-bark text-cream" : "bg-cream text-bark"
+                    active ? "bg-brand text-onbrand" : "bg-cream text-bark"
                   )}
                 >
                   <Icon className="h-[18px] w-[18px]" aria-hidden />
@@ -80,7 +80,7 @@ export function ManagePaymentModal({ open, onClose }: { open: boolean; onClose: 
                   </span>
                 </span>
                 {active ? (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-bark text-cream">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-onbrand">
                     <Check className="h-3 w-3" aria-hidden />
                   </span>
                 ) : null}

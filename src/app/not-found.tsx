@@ -18,7 +18,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-8 inline-flex h-11 items-center rounded-full bg-bark px-5 text-sm font-medium text-cream shadow-card transition-colors hover:bg-ink"
+        className="mt-8 inline-flex h-11 items-center rounded-full bg-brand px-5 text-sm font-medium text-onbrand shadow-card transition-colors hover:bg-brand-strong"
       >
         Back to your overview
       </Link>

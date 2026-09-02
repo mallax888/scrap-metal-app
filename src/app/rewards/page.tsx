@@ -63,8 +63,8 @@ export default function RewardsPage() {
                 <p className="numeric mt-4 text-[52px] font-semibold leading-none">
                   {points(derived.pointsBalance)}
                 </p>
-                <p className="mt-2.5 text-sm text-cream/65">
-                  <span className="numeric font-semibold text-cream">
+                <p className="mt-2.5 text-sm text-onbrand/65">
+                  <span className="numeric font-semibold text-onbrand">
                     +{points(rewards.earnedThisMonth)}
                   </span>{" "}
                   earned this month
@@ -73,7 +73,7 @@ export default function RewardsPage() {
                 <div className="mt-9 max-w-md">
                   <div className="flex items-baseline justify-between text-sm">
                     <span className="font-medium">{rewards.tier} tier</span>
-                    <span className="numeric text-cream/60">
+                    <span className="numeric text-onbrand/60">
                       {points(derived.pointsToNextTier)} to {rewards.nextTier}
                     </span>
                   </div>

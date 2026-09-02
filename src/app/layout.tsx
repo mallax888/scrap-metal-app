@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { ToastProvider } from "@/components/ui/Toast";
 import { LitchiProvider } from "@/lib/store";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-litchi-sans",
@@ -25,14 +26,26 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#faf8f4",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#17110e" },
+  ],
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-NZ" className={`${jakarta.variable} h-full antialiased`}>
+    <html
+      lang="en-NZ"
+      className={`${jakarta.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Applies the saved theme before first paint, so the page never
+            flashes light before switching to dark. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full bg-canvas text-ink">
         <LitchiProvider>
           <ToastProvider>

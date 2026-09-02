@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { SidebarNav } from "./SidebarNav";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserChip } from "./UserChip";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -47,7 +48,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SidebarNav />
         </div>
 
-        <div className="mt-6 shrink-0">
+        <div className="mt-6 flex shrink-0 flex-col gap-3">
+          <ThemeToggle />
           <UserChip />
         </div>
       </aside>
@@ -73,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {drawerOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
-            className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
             onClick={() => setDrawerOpen(false)}
             aria-hidden
           />
@@ -99,7 +101,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mt-8 flex-1 overflow-y-auto">
               <SidebarNav onNavigate={() => setDrawerOpen(false)} />
             </div>
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col gap-3">
+              <ThemeToggle />
               <UserChip />
             </div>
           </div>
