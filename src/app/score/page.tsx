@@ -15,7 +15,7 @@ import { Progress, ProgressRing } from "@/components/ui/Progress";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { renterScore, scoreFactors } from "@/lib/data";
-import { percent } from "@/lib/format";
+import { formatMonth, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
 const TIPS = [
@@ -33,16 +33,6 @@ const TIPS = [
   },
 ];
 
-const MONTH_LABELS: Record<string, string> = {
-  "2026-03": "Mar",
-  "2026-04": "Apr",
-  "2026-05": "May",
-  "2026-06": "Jun",
-  "2026-07": "Jul",
-  "2026-08": "Aug",
-  "2026-09": "Sep",
-};
-
 function ScoreTooltip({
   active,
   payload,
@@ -55,7 +45,7 @@ function ScoreTooltip({
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-sand bg-paper px-3.5 py-2.5 shadow-lift">
-      <p className="text-xs text-mist">{label ? MONTH_LABELS[label] ?? label : ""}</p>
+      <p className="text-xs text-mist">{label ? formatMonth(label, "long") : ""}</p>
       <p className="numeric mt-1 text-base font-semibold text-ink">{payload[0].value} / 100</p>
     </div>
   );
@@ -109,7 +99,8 @@ export default function ScorePage() {
                 </div>
                 <Badge tone="moss">
                   <TrendingUp className="h-3 w-3" aria-hidden />
-                  Up {renterScore.value - history[0].value} since March
+                  Up {renterScore.value - history[0].value} since{" "}
+                  {formatMonth(history[0].month, "long")}
                 </Badge>
               </div>
 
@@ -119,7 +110,7 @@ export default function ScorePage() {
                     <LineChart data={history} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
                       <XAxis
                         dataKey="month"
-                        tickFormatter={(value: string) => MONTH_LABELS[value] ?? value}
+                        tickFormatter={(value: string) => formatMonth(value)}
                         tickLine={false}
                         axisLine={false}
                         tickMargin={12}

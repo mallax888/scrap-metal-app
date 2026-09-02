@@ -13,7 +13,9 @@ import { createLocalStore } from "./local-store";
 import {
   TODAY,
   baseActivity,
+  baseRepaid,
   movingFund,
+  originalEndDate,
   paymentMethods,
   plan,
   repaymentHistory,
@@ -22,7 +24,7 @@ import {
   tenancy,
   type ActivityItem,
 } from "./data";
-import { addWeeks } from "./format";
+import { addWeeks, daysBetween } from "./format";
 
 /* ------------------------------------------------------------------ */
 /* Persisted state                                                     */
@@ -66,11 +68,6 @@ const store = createLocalStore<LitchiState>("litchi.state.v1", INITIAL_STATE);
 /* Derived plan maths                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Weeks left on the untouched sample plan — the baseline the payoff date hangs off. */
-const BASE_WEEKS_REMAINING = Math.round(
-  (plan.principal - plan.baseRepaid) / plan.weeklyPayment
-);
-
 export interface ScheduledPayment {
   date: string;
   amount: number;
@@ -99,20 +96,25 @@ export interface PlanProjection {
 /**
  * The one place repayment maths lives, so the dashboard and the "what would an
  * extra payment do?" preview can never drift apart.
+ *
+ * The payoff date is the date of the last remaining payment — counted forward
+ * in weeks from the next one — not a date written down anywhere. Paying extra
+ * removes payments off the end, which pulls the date back on its own.
  */
 export function projectPlan(totalRepaidInput: number): PlanProjection {
   const totalRepaid = Math.min(plan.principal, Math.max(0, round2(totalRepaidInput)));
   const balance = round2(plan.principal - totalRepaid);
   const weeksRemaining =
     balance <= 0 ? 0 : Math.max(1, Math.round(balance / plan.weeklyPayment));
-  const weeksSaved = Math.max(0, BASE_WEEKS_REMAINING - weeksRemaining);
+  const payoffDate =
+    weeksRemaining === 0 ? TODAY : addWeeks(plan.nextPaymentDate, weeksRemaining - 1);
   return {
     totalRepaid,
     balance,
     progress: totalRepaid / plan.principal,
     weeksRemaining,
-    payoffDate: addWeeks(plan.agreedEndDate, -weeksSaved),
-    weeksSaved,
+    payoffDate,
+    weeksSaved: Math.max(0, Math.round(daysBetween(payoffDate, originalEndDate) / 7)),
   };
 }
 
@@ -204,7 +206,7 @@ export interface LitchiDerived {
 function derive(state: LitchiState): LitchiDerived {
   const extraPaid = round2(state.extraPayments.reduce((sum, e) => sum + e.amount, 0));
   const { totalRepaid, balance, progress, weeksRemaining, payoffDate, weeksSaved } =
-    projectPlan(plan.baseRepaid + extraPaid);
+    projectPlan(baseRepaid + extraPaid);
   const schedule = buildSchedule(balance, weeksRemaining, plan.nextPaymentDate, payoffDate);
 
   const fundAdded = round2(state.fundContributions.reduce((sum, e) => sum + e.amount, 0));

@@ -5,10 +5,20 @@
  * tenant's bond up front, the statutory bond is lodged with Tenancy Services,
  * and the tenant repays Litchi a fixed amount each week. Rent is a separate
  * payment to the landlord and is never described as a Litchi repayment.
+ *
+ * Every date and amount here sits on one real schedule: 52 weekly payments,
+ * taken every Friday from 17 July 2026. "Today" is a payment Friday, the next
+ * payment is the Friday after it, and the payoff date is derived from the
+ * remaining payments rather than written down.
  */
 
-/** The prototype runs against a fixed "today" so sample data stays coherent. */
-export const TODAY = "2026-09-02";
+import { addWeeks } from "./format";
+
+/**
+ * The prototype runs against a fixed "today" so the sample data stays coherent:
+ * Friday 18 September 2026, the day payment 10 of 52 was taken.
+ */
+export const TODAY = "2026-09-18";
 
 export const renter = {
   firstName: "Malcolm",
@@ -16,7 +26,7 @@ export const renter = {
   displayName: "Malcolm M.",
   role: "Renter",
   initials: "MM",
-  memberSince: "2026-07-14",
+  memberSince: "2026-03-02",
 } as const;
 
 export const tenancy = {
@@ -38,24 +48,27 @@ export const bond = {
 } as const;
 
 /**
- * The financed side of the bond. `baseRepaid` is what has been paid so far in
- * the sample history; anything the user adds in-session is layered on top by
- * the store.
+ * The financed side of the bond: 52 weekly payments of $53.85, with the last
+ * one trimmed to settle the balance at exactly $2,800.
  */
 export const plan = {
   principal: 2800,
   weeklyPayment: 53.85,
-  baseRepaid: 532.7,
   termWeeks: 52,
-  /** Contractual end of the finance term — repayment is projected to land on or before this. */
-  agreedEndDate: "2027-07-14",
-  nextPaymentDate: "2026-09-04",
+  nextPaymentDate: "2026-09-25",
+  /** First repayment — the Friday after the tenancy started. */
   startDate: "2026-07-17",
   establishmentFee: 0,
   interestRate: 0,
   partner: "Kōwhai Finance Ltd",
   agreementRef: "LB-2026-284731",
 } as const;
+
+/**
+ * Where the original 52-payment schedule would have finished, with no extra
+ * payments. Derived, so it can never drift from the term or the start date.
+ */
+export const originalEndDate = addWeeks(plan.startDate, plan.termWeeks - 1);
 
 export const rent = {
   weekly: tenancy.rentWeekly,
@@ -92,6 +105,32 @@ export const paymentMethods: PaymentMethod[] = [
   },
 ];
 
+/**
+ * Repayments to date: payments 1-10 of 52, every Friday from 17 July 2026.
+ * Ten payments x $53.85 is the $538.50 (19%) shown on the dashboard.
+ */
+export const repaymentHistory: { date: string; amount: number; kind: "repayment" | "extra" }[] = [
+  "2026-07-17",
+  "2026-07-24",
+  "2026-07-31",
+  "2026-08-07",
+  "2026-08-14",
+  "2026-08-21",
+  "2026-08-28",
+  "2026-09-04",
+  "2026-09-11",
+  "2026-09-18",
+].map((date) => ({ date, amount: plan.weeklyPayment, kind: "repayment" as const }));
+
+/** On-time weekly payments made so far — drives the score and rewards copy. */
+const weeklyPaymentsMade = repaymentHistory.filter((entry) => entry.kind === "repayment").length;
+
+/** Repaid to date, summed from the history rather than stated separately. */
+export const baseRepaid = repaymentHistory.reduce(
+  (sum, entry) => Math.round((sum + entry.amount) * 100) / 100,
+  0
+);
+
 export interface ScoreFactor {
   key: string;
   label: string;
@@ -110,7 +149,7 @@ export const scoreFactors: ScoreFactor[] = [
     label: "Payment history",
     value: 98,
     weight: 0.35,
-    detail: "9 of 9 Litchi payments made on time.",
+    detail: `${weeklyPaymentsMade} of ${weeklyPaymentsMade} weekly payments made on time.`,
   },
   {
     key: "consistency",
@@ -158,34 +197,39 @@ export interface RewardCategory {
   description: string;
 }
 
+/** 40 points per on-time payment, so September's three so far are the +120 shown. */
+const POINTS_PER_PAYMENT = 40;
+
 export const rewardCategories: RewardCategory[] = [
   {
     key: "on-time",
     label: "On-time payments",
-    earned: 720,
-    description: "80 points for every repayment made on time.",
+    earned: weeklyPaymentsMade * POINTS_PER_PAYMENT,
+    description: `${POINTS_PER_PAYMENT} points for every repayment made on time.`,
   },
   {
     key: "history",
     label: "Consistent renter history",
-    earned: 370,
+    earned: 440,
     description: "Earned as your verified tenancy record grows.",
   },
   {
     key: "profile",
     label: "Completed profile",
-    earned: 150,
-    description: "One-off bonus for verifying your details.",
+    earned: 400,
+    description: "One-off bonus for verifying your identity, income and tenancy details.",
   },
 ];
 
 export const rewards = {
-  basePoints: 1240,
-  earnedThisMonth: 120,
+  /** Always the sum of the categories above — never a number of its own. */
+  basePoints: rewardCategories.reduce((sum, category) => sum + category.earned, 0),
+  /** Three on-time payments so far in September. */
+  earnedThisMonth: 3 * POINTS_PER_PAYMENT,
   tier: "Grove",
   nextTier: "Orchard",
   nextTierAt: 1500,
-} as const;
+};
 
 export interface Reward {
   id: string;
@@ -221,12 +265,28 @@ export const rewardCatalogue: Reward[] = [
   },
 ];
 
+/** $500 opening deposit plus nine weekly $20 top-ups = the $680 balance. */
+const FUND_OPENING_DEPOSIT = 500;
+const FUND_TOP_UP_DATES = [
+  "2026-07-24",
+  "2026-07-31",
+  "2026-08-07",
+  "2026-08-14",
+  "2026-08-21",
+  "2026-08-28",
+  "2026-09-04",
+  "2026-09-11",
+  "2026-09-18",
+];
+
 export const movingFund = {
-  baseSaved: 680,
-  goal: 2500,
   autoTopUp: 20,
+  goal: 2500,
   openedDate: "2026-07-21",
-} as const;
+  get baseSaved() {
+    return FUND_OPENING_DEPOSIT + FUND_TOP_UP_DATES.length * this.autoTopUp;
+  },
+};
 
 export type ActivityKind = "repayment" | "extra" | "reward" | "bond" | "fund";
 
@@ -240,22 +300,6 @@ export interface ActivityItem {
   points?: number;
 }
 
-/**
- * Repayments to date. Eight weekly payments plus one extra payment the renter
- * made in August — together exactly the $532.70 shown on the dashboard.
- */
-export const repaymentHistory: { date: string; amount: number; kind: "repayment" | "extra" }[] = [
-  { date: "2026-07-17", amount: 53.85, kind: "repayment" },
-  { date: "2026-07-24", amount: 53.85, kind: "repayment" },
-  { date: "2026-07-31", amount: 53.85, kind: "repayment" },
-  { date: "2026-08-04", amount: 101.9, kind: "extra" },
-  { date: "2026-08-07", amount: 53.85, kind: "repayment" },
-  { date: "2026-08-14", amount: 53.85, kind: "repayment" },
-  { date: "2026-08-21", amount: 53.85, kind: "repayment" },
-  { date: "2026-08-28", amount: 53.85, kind: "repayment" },
-  { date: "2026-09-02", amount: 53.85, kind: "repayment" },
-];
-
 const historyActivity: ActivityItem[] = repaymentHistory.map((entry, index) => ({
   id: `act_pay_${index}`,
   date: entry.date,
@@ -268,32 +312,32 @@ const historyActivity: ActivityItem[] = repaymentHistory.map((entry, index) => (
 /** Non-payment events, woven into the full activity feed. */
 const milestoneActivity: ActivityItem[] = [
   {
-    id: "act_reward_aug",
-    date: "2026-08-31",
+    id: "act_reward_sep",
+    date: TODAY,
     kind: "reward",
     title: "Litchi Rewards earned",
-    detail: "On-time payments — August",
-    points: 120,
+    detail: "On-time payments — September",
+    points: rewards.earnedThisMonth,
   },
-  {
-    id: "act_fund_aug",
-    date: "2026-08-21",
-    kind: "fund",
+  ...FUND_TOP_UP_DATES.map((date, index) => ({
+    id: `act_fund_${index}`,
+    date,
+    kind: "fund" as const,
     title: "Moving Fund top-up",
     detail: "Automatic weekly top-up",
-    amount: 20,
-  },
+    amount: movingFund.autoTopUp,
+  })),
   {
-    id: "act_fund_aug_2",
-    date: "2026-08-07",
+    id: "act_fund_opening",
+    date: movingFund.openedDate,
     kind: "fund",
-    title: "Moving Fund top-up",
-    detail: "Automatic weekly top-up",
-    amount: 20,
+    title: "Moving Fund opened",
+    detail: "Opening deposit",
+    amount: FUND_OPENING_DEPOSIT,
   },
   {
     id: "act_bond_lodged",
-    date: "2026-07-14",
+    date: bond.lodgedDate,
     kind: "bond",
     title: "Bond lodged with Tenancy Services",
     detail: `Bond ID ${bond.bondId}`,

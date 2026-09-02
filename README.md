@@ -19,6 +19,12 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 The app runs entirely on realistic local sample data — no backend, no keys, no setup.
+Every figure sits on one schedule: 52 weekly payments of $53.85 taken every Friday from
+17 July 2026, with the last trimmed to $53.65 so the plan settles at exactly $2,800.
+"Today" is Friday 18 September 2026, the day payment 10 of 52 was taken — which is where
+$538.50 repaid (19%) and 42 payments left both come from. Nothing is a written-down date:
+the payoff date is counted forward from the next payment, so paying extra moves it.
+
 Anything you change (extra payments, Moving Fund top-ups, reward redemptions, payment
 method, waitlists) persists to `localStorage`, so the numbers stay consistent as you move
 between screens.
