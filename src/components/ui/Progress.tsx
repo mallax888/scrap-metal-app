@@ -21,12 +21,12 @@ export function Progress({
   const pct = Math.max(0, Math.min(1, value)) * 100;
   const heights = { sm: "h-1.5", md: "h-2.5", lg: "h-3.5" };
   const track = {
-    bark: "bg-sand",
+    bark: "bg-blush",
     cream: "bg-onbrand/25",
     moss: "bg-moss-soft",
   };
   const fill = {
-    bark: "bg-bark",
+    bark: "bg-litchi",
     cream: "bg-onbrand",
     moss: "bg-moss",
   };
@@ -73,7 +73,7 @@ export function ProgressRing({
           r={radius}
           fill="none"
           strokeWidth={stroke}
-          className="stroke-sand"
+          className="stroke-blush"
         />
         <circle
           cx={size / 2}
@@ -82,7 +82,7 @@ export function ProgressRing({
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          className="stroke-bark transition-[stroke-dashoffset] duration-700 ease-out"
+          className="stroke-litchi transition-[stroke-dashoffset] duration-700 ease-out"
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - pct)}
         />

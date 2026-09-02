@@ -40,6 +40,14 @@
   --brand-strong: #2b211d;
   --onbrand: #f1e8de;
 
+  /* Litchi red — the brand accent. Owns the mark, progress, and Litchi's own
+     money. Never used for status: green alone does that job, so the two
+     never encode the same variable and can't be confused for one another. */
+  --litchi: #c4384f;
+  --litchi-fill: #b8324a;
+  --blush: #f7e3e1;
+  --rose: #fcf2f1;
+
   /* Status — reserved, never reused for decoration */
   --moss: #3f6b4e;
   --moss-soft: #e9f1ea;
@@ -71,6 +79,11 @@
     --brand-strong: #a26c50;
     --onbrand: #f6efe6;
 
+    --litchi: #e8879a;
+    --litchi-fill: #b8324a;
+    --blush: #4a2a2f;
+    --rose: #2e1e21;
+
     --moss: #8cc3a0;
     --moss-soft: #21332a;
     --amber-warm: #ddab60;
@@ -101,6 +114,11 @@
   --brand-strong: #a26c50;
   --onbrand: #f6efe6;
 
+  --litchi: #e8879a;
+  --litchi-fill: #b8324a;
+  --blush: #4a2a2f;
+  --rose: #2e1e21;
+
   --moss: #8cc3a0;
   --moss-soft: #21332a;
   --amber-warm: #ddab60;
@@ -126,6 +144,11 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-onbrand: var(--onbrand);
+
+  --color-litchi: var(--litchi);
+  --color-litchi-fill: var(--litchi-fill);
+  --color-blush: var(--blush);
+  --color-rose: var(--rose);
 
   --color-moss: var(--moss);
   --color-moss-soft: var(--moss-soft);

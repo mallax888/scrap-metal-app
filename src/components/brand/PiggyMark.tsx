@@ -46,9 +46,9 @@ export function PiggyMark({
 export function PiggyBadge({ className = "h-9 w-9" }: { className?: string }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-[11px] bg-brand text-onbrand ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-[11px] bg-litchi-fill text-onbrand ${className}`}
     >
-      <PiggyMark className="h-[74%] w-[74%]" accent="var(--brand)" />
+      <PiggyMark className="h-[74%] w-[74%]" accent="var(--litchi-fill)" />
     </span>
   );
 }
