@@ -62,7 +62,7 @@ function fmt(iso: string, options: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat(NZD, { ...options, timeZone: "UTC" }).format(toDate(iso));
 }
 
-/** `14 July 2027` */
+/** `9 July 2027` */
 export function formatDate(iso: string): string {
   return fmt(iso, { day: "numeric", month: "long", year: "numeric" });
 }
@@ -85,6 +85,11 @@ export function formatDayShort(iso: string): string {
 /** `4 Sep` */
 export function formatDayMonth(iso: string): string {
   return fmt(iso, { day: "numeric", month: "short" });
+}
+
+/** `Mar` / `March` from a `YYYY-MM` string. */
+export function formatMonth(monthISO: string, style: "short" | "long" = "short"): string {
+  return fmt(`${monthISO}-01`, { month: style });
 }
 
 /** `Jul 26` — compact axis label. */

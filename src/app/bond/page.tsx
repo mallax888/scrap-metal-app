@@ -89,7 +89,11 @@ export default function BondPage() {
               {derived.balance <= 0 ? "Paid in full" : formatDate(derived.payoffDate)}
             </p>
             <p className="mt-2 text-sm text-mist">
-              Agreed term ends {formatDate(plan.agreedEndDate)}
+              {derived.weeksSaved > 0
+                ? `${derived.weeksSaved} ${
+                    derived.weeksSaved === 1 ? "week" : "weeks"
+                  } ahead of your original term`
+                : `${plan.termWeeks} weekly payments from ${formatDate(plan.startDate)}`}
             </p>
           </div>
 
