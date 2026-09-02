@@ -1,42 +1,112 @@
 @import "tailwindcss";
 
-:root {
-  --background: #130f0c;
-  --foreground: #f2e9dc;
+/* ------------------------------------------------------------------
+   Litchi design tokens
+
+   Brown is the brand colour — no blue, no gradients-for-the-sake-of-it.
+   Everything sits on a warm off-white canvas with generous whitespace.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Surfaces */
+  --color-canvas: #faf8f4;
+  --color-paper: #ffffff;
+  --color-cream: #f1e8de;
+  --color-sand: #e8ddd1;
+
+  /* Browns */
+  --color-ink: #2b211d;
+  --color-bark: #6b4635;
+  --color-clay: #a9826a;
+  --color-mist: #857468;
+
+  /* Positive / caution accents, deliberately desaturated */
+  --color-moss: #3f6b4e;
+  --color-moss-soft: #e9f1ea;
+  --color-amber-warm: #9a6b1f;
+  --color-amber-soft: #f7efdf;
+
+  --radius-card: 20px;
+  --radius-tile: 14px;
+
+  --shadow-card: 0 1px 2px rgb(43 33 29 / 0.04), 0 8px 24px -12px rgb(43 33 29 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(43 33 29 / 0.05), 0 18px 40px -18px rgb(43 33 29 / 0.22);
+  --shadow-inset-cream: inset 0 0 0 1px rgb(43 33 29 / 0.05);
+
+  --font-sans: var(--font-litchi-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-pop: pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
-/* Soft glowing accent behind hero sections — earthy amber/copper, not the
-   cosmic app's purple, but the same moody-glow feel. */
-.glow-accent {
-  position: relative;
-  isolation: isolate;
+/* Tabular figures everywhere a number is meant to be read as money. */
+.numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.glow-accent::before {
-  content: "";
-  position: absolute;
-  inset: -40% -10% auto -10%;
-  height: 420px;
-  background: radial-gradient(
-    ellipse at top,
-    rgba(217, 119, 6, 0.22),
-    rgba(180, 83, 9, 0.08) 45%,
-    transparent 70%
-  );
-  filter: blur(20px);
-  z-index: -1;
-  pointer-events: none;
+/* Keyboard focus that matches the palette rather than the browser default. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-bark);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Recharts injects its own focus outline on the surface; suppress it. */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

@@ -1,51 +1,92 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { PriceTicker } from "@/components/PriceTicker";
+"use client";
 
-export default function Home() {
+import { MessageCircle } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardTitle } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import { HeroBondCard } from "@/components/dashboard/HeroBondCard";
+import { RepaymentChart } from "@/components/dashboard/RepaymentChart";
+import { NextPaymentCard } from "@/components/dashboard/NextPaymentCard";
+import { BondLodgementCard } from "@/components/dashboard/BondLodgementCard";
+import { RewardsCard } from "@/components/dashboard/RewardsCard";
+import { WeeklyBreakdown } from "@/components/dashboard/WeeklyBreakdown";
+import { ScoreCard } from "@/components/dashboard/ScoreCard";
+import { MovingFundCard } from "@/components/dashboard/MovingFundCard";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { EcosystemGrid } from "@/components/dashboard/EcosystemGrid";
+import { bond, renter } from "@/lib/data";
+import { useGreeting } from "@/lib/use-greeting";
+
+export default function OverviewPage() {
+  const greeting = useGreeting();
+
   return (
-    <div className="flex flex-col gap-10">
-      <section className="glow-accent flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-stone-50 sm:text-4xl">
-            Live scrap metal prices
-          </h1>
-          <p className="mt-2 max-w-xl text-stone-400">
-            No login needed to browse. See what your metal is worth right now, then get an
-            instant quote in seconds.
-          </p>
-        </div>
-        <Link
-          href="/sell"
-          className="inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-5 py-2.5 font-medium text-stone-950 transition-colors hover:bg-amber-500 whitespace-nowrap"
-        >
-          Sell my scrap
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </section>
+    <>
+      <PageHeader
+        title={
+          <>
+            {greeting}, {renter.firstName} <span aria-hidden>👋</span>
+          </>
+        }
+        subtitle="Here's your Litchi overview."
+        actions={
+          <Badge tone="outline" className="numeric h-9 px-3.5">
+            Bond ID {bond.bondId}
+          </Badge>
+        }
+      />
 
-      <PriceTicker />
+      <div className="space-y-6">
+        <SummaryCards />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-          <p className="text-sm font-medium text-amber-500">1. Get a quote</p>
-          <p className="mt-1 text-stone-300">
-            Pick your metal and estimated weight for an instant indicative price.
-          </p>
+        <HeroBondCard />
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="xl:col-span-2">
+            <RepaymentChart />
+          </div>
+          <NextPaymentCard />
         </div>
-        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-          <p className="text-sm font-medium text-amber-500">2. Pickup or drop-off</p>
-          <p className="mt-1 text-stone-300">
-            Book a pickup or find the nearest yard that pays your price.
-          </p>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <BondLodgementCard />
+          <WeeklyBreakdown />
+          <RewardsCard />
         </div>
-        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
-          <p className="text-sm font-medium text-amber-500">3. Track and get paid</p>
-          <p className="mt-1 text-stone-300">
-            Follow your request from quoted to paid, and watch your sales add up.
-          </p>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="xl:col-span-2">
+            <ScoreCard compact />
+          </div>
+          <MovingFundCard />
         </div>
-      </section>
-    </div>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="xl:col-span-2">
+            <ActivityFeed kinds={["repayment", "extra"]} limit={4} />
+          </div>
+
+          <Card tone="cream" className="flex h-full flex-col">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-paper text-bark">
+              <MessageCircle className="h-[18px] w-[18px]" aria-hidden />
+            </span>
+            <CardTitle className="mt-5">Questions about your bond?</CardTitle>
+            <p className="mt-2 text-sm leading-relaxed text-mist">
+              Real people, based in New Zealand. If a payment is going to be tight, tell us early —
+              we can move it.
+            </p>
+            <div className="mt-auto pt-7">
+              <ButtonLink href="/support" variant="secondary" className="w-full">
+                Get support
+              </ButtonLink>
+            </div>
+          </Card>
+        </div>
+
+        <EcosystemGrid />
+      </div>
+    </>
   );
 }

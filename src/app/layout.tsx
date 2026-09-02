@@ -1,54 +1,44 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/lib/store";
-import { AuthProvider } from "@/lib/auth";
-import { Nav } from "@/components/Nav";
-import { MobileTabBar } from "@/components/MobileTabBar";
+import { AppShell } from "@/components/layout/AppShell";
+import { ToastProvider } from "@/components/ui/Toast";
+import { LitchiProvider } from "@/lib/store";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-litchi-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  // Update if a custom domain replaces the default Vercel one — needed to
-  // resolve absolute URLs for the generated OG/social share image.
-  metadataBase: new URL("https://scrap-metal-app.vercel.app"),
-  title: "ScrapExchange — live scrap metal prices",
+  // Update if a custom domain replaces the default deployment URL — needed to
+  // resolve absolute URLs for the generated social share image.
+  metadataBase: new URL("https://litchi-app.vercel.app"),
+  title: {
+    default: "Litchi — Move in. Pay smarter.",
+    template: "%s · Litchi",
+  },
   description:
-    "Live scrap metal prices, instant quotes, and a portfolio-style dashboard for tracking your sales — Sharesies for scrap metal.",
+    "Litchi pays your rental bond up front and you repay it in fixed weekly payments. Track your bond, payments, rewards and renter score in one place.",
+  applicationName: "Litchi",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0a09",
+  themeColor: "#faf8f4",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-stone-950 text-stone-50">
-        <AuthProvider>
-          <AppProvider>
-            <Nav />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-24 sm:px-6 sm:pb-8">
-              {children}
-            </main>
-            <MobileTabBar />
-          </AppProvider>
-        </AuthProvider>
+    <html lang="en-NZ" className={`${jakarta.variable} h-full antialiased`}>
+      <body className="min-h-full bg-canvas text-ink">
+        <LitchiProvider>
+          <ToastProvider>
+            <AppShell>{children}</AppShell>
+          </ToastProvider>
+        </LitchiProvider>
       </body>
     </html>
   );
