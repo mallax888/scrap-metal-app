@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useCelebrate } from "@/components/ui/Celebration";
 import { useToast } from "@/components/ui/Toast";
 import { plan } from "@/lib/data";
 import { formatDate, money, moneyExact } from "@/lib/format";
@@ -14,6 +15,7 @@ const QUICK_AMOUNTS = [53.85, 100, 250];
 export function ExtraPaymentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { derived, makeExtraPayment } = useLitchi();
   const toast = useToast();
+  const celebrate = useCelebrate();
   const [amount, setAmount] = useState("100");
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,7 +38,18 @@ export function ExtraPaymentModal({ open, onClose }: { open: boolean; onClose: (
     setSubmitting(false);
     setAmount("100");
     onClose();
-    toast(`${money(parsed)} paid towards your bond`);
+
+    if (preview.balance <= 0) {
+      celebrate({
+        title: "Your bond is repaid.",
+        message: `You cleared it ${derived.weeksRemaining} ${
+          derived.weeksRemaining === 1 ? "week" : "weeks"
+        } early. Nothing more to pay.`,
+        stat: `${money(plan.principal)} repaid in full`,
+      });
+    } else {
+      toast(`${money(parsed)} paid towards your bond`);
+    }
   }
 
   return (

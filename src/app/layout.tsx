@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
+import { CelebrationProvider } from "@/components/ui/Celebration";
 import { ToastProvider } from "@/components/ui/Toast";
 import { LitchiProvider } from "@/lib/store";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
@@ -49,7 +50,9 @@ export default function RootLayout({
       <body className="min-h-full bg-canvas text-ink">
         <LitchiProvider>
           <ToastProvider>
-            <AppShell>{children}</AppShell>
+            <CelebrationProvider>
+              <AppShell>{children}</AppShell>
+            </CelebrationProvider>
           </ToastProvider>
         </LitchiProvider>
       </body>
