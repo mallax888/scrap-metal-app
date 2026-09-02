@@ -1,14 +1,15 @@
 /**
- * The Litchi mark: an abstract piggy bank built from a solid silhouette, with
- * an "L" cut through the body that doubles as the coin slot. Deliberately
- * geometric — no cartoon face, no outlines, no gradients.
+ * The Litchi mark: a front-facing piggy bank — round body, ears angled out, a
+ * big central snout with two upright nostrils, and wide-set eyes. Drawn flat as
+ * a solid silhouette with the face knocked out of it, so it holds together at
+ * favicon size where a shaded or outlined mark would fall apart.
  *
- * `accent` is the colour of the cut-out, so it must match whatever the mark
- * sits on (the canvas by default).
+ * `accent` is the colour of the knocked-out face, so it has to match whatever
+ * the mark sits on (the canvas by default).
  */
 export function PiggyMark({
   className,
-  accent = "var(--color-canvas)",
+  accent = "var(--canvas)",
   title,
 }: {
   className?: string;
@@ -25,32 +26,29 @@ export function PiggyMark({
       aria-label={title}
     >
       {title ? <title>{title}</title> : null}
-      {/* ear */}
-      <path d="M11.8 13.4 13.7 6.3a1.4 1.4 0 0 1 2.2-.7l4.7 4.6z" />
-      {/* body */}
-      <rect x="5" y="11" width="26" height="19" rx="9.5" />
+      {/* ears */}
+      <path d="M9.7 14.9C7.5 10.5 6.9 6.5 8.3 5.3c1.4-1.1 5.2 1.2 8.6 4.6z" />
+      <path d="M30.3 14.9c2.2-4.4 2.8-8.4 1.4-9.6-1.4-1.1-5.2 1.2-8.6 4.6z" />
+      {/* head */}
+      <circle cx="20" cy="20.4" r="12.4" />
+      {/* eyes */}
+      <circle cx="13.7" cy="14.6" r="2.15" fill={accent} />
+      <circle cx="26.3" cy="14.6" r="2.15" fill={accent} />
       {/* snout */}
-      <rect x="25" y="15.5" width="10" height="9" rx="4.5" />
-      {/* trotters */}
-      <rect x="10" y="27" width="4.6" height="6.4" rx="2.3" />
-      <rect x="21.4" y="27" width="4.6" height="6.4" rx="2.3" />
-      {/* the L / coin slot */}
-      <rect x="11.6" y="14.4" width="3.6" height="10.6" rx="1.8" fill={accent} />
-      <rect x="11.6" y="21.4" width="9.2" height="3.6" rx="1.8" fill={accent} />
-      {/* eye + nostril */}
-      <circle cx="23.6" cy="16.8" r="1.25" fill={accent} />
-      <circle cx="32.4" cy="20" r="1.15" fill={accent} />
+      <ellipse cx="20" cy="21" rx="6.4" ry="5.4" fill={accent} />
+      <ellipse cx="17.8" cy="21" rx="1.15" ry="1.95" fill="currentColor" />
+      <ellipse cx="22.2" cy="21" rx="1.15" ry="1.95" fill="currentColor" />
     </svg>
   );
 }
 
-/** Mark in a brown chip — the app-icon lockup, reused in the sidebar. */
+/** Mark in a brand-brown chip — the app-icon lockup, reused in the sidebar. */
 export function PiggyBadge({ className = "h-9 w-9" }: { className?: string }) {
   return (
     <span
       className={`flex shrink-0 items-center justify-center rounded-[11px] bg-brand text-onbrand ${className}`}
     >
-      <PiggyMark className="h-[70%] w-[70%]" accent="var(--color-bark)" />
+      <PiggyMark className="h-[74%] w-[74%]" accent="var(--brand)" />
     </span>
   );
 }

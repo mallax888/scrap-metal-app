@@ -36,7 +36,7 @@ export function HeroBondCard() {
         />
         <PiggyMark
           className="pointer-events-none absolute -right-8 -bottom-12 h-56 w-56 text-onbrand/[0.05]"
-          accent="transparent"
+          accent="var(--hero)"
         />
 
         <div className="relative">

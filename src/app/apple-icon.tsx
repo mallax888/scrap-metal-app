@@ -16,16 +16,15 @@ export default function AppleIcon() {
           background: "#6b4635",
         }}
       >
-        <svg width="118" height="118" viewBox="0 0 40 40" fill="#f1e8de">
-          <path d="M11.8 13.4 13.7 6.3a1.4 1.4 0 0 1 2.2-.7l4.7 4.6z" />
-          <rect x="5" y="11" width="26" height="19" rx="9.5" />
-          <rect x="25" y="15.5" width="10" height="9" rx="4.5" />
-          <rect x="10" y="27" width="4.6" height="6.4" rx="2.3" />
-          <rect x="21.4" y="27" width="4.6" height="6.4" rx="2.3" />
-          <rect x="11.6" y="14.4" width="3.6" height="10.6" rx="1.8" fill="#6b4635" />
-          <rect x="11.6" y="21.4" width="9.2" height="3.6" rx="1.8" fill="#6b4635" />
-          <circle cx="23.6" cy="16.8" r="1.25" fill="#6b4635" />
-          <circle cx="32.4" cy="20" r="1.15" fill="#6b4635" />
+        <svg width="126" height="126" viewBox="0 0 40 40" fill="#f1e8de">
+          <path d="M9.7 14.9C7.5 10.5 6.9 6.5 8.3 5.3c1.4-1.1 5.2 1.2 8.6 4.6z" />
+          <path d="M30.3 14.9c2.2-4.4 2.8-8.4 1.4-9.6-1.4-1.1-5.2 1.2-8.6 4.6z" />
+          <circle cx="20" cy="20.4" r="12.4" />
+          <circle cx="13.7" cy="14.6" r="2.15" fill="#6b4635" />
+          <circle cx="26.3" cy="14.6" r="2.15" fill="#6b4635" />
+          <ellipse cx="20" cy="21" rx="6.4" ry="5.4" fill="#6b4635" />
+          <ellipse cx="17.8" cy="21" rx="1.15" ry="1.95" fill="#f1e8de" />
+          <ellipse cx="22.2" cy="21" rx="1.15" ry="1.95" fill="#f1e8de" />
         </svg>
       </div>
     ),
