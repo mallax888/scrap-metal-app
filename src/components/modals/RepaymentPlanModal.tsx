@@ -78,7 +78,7 @@ export function RepaymentPlanModal({ open, onClose }: { open: boolean; onClose: 
         {final ? (
           <li className="flex items-center justify-between gap-4 bg-cream/60 px-4 py-3">
             <span className="flex items-center gap-3">
-              <span className="numeric flex h-7 w-7 items-center justify-center rounded-full bg-bark text-[11px] font-semibold text-cream">
+              <span className="numeric flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-semibold text-onbrand">
                 {schedule.length}
               </span>
               <span className="text-sm font-medium text-ink">

@@ -5,7 +5,7 @@ type Tone = "moss" | "cream" | "bark" | "amber" | "outline";
 const TONES: Record<Tone, string> = {
   moss: "bg-moss-soft text-moss",
   cream: "bg-cream text-bark",
-  bark: "bg-bark text-cream",
+  bark: "bg-brand text-onbrand",
   amber: "bg-amber-soft text-amber-warm",
   outline: "border border-sand text-mist",
 };

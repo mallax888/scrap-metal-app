@@ -109,7 +109,7 @@ export default function MovingFundPage() {
               <span
                 className={clsx(
                   "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
-                  state.autoTopUp ? "bg-bark" : "bg-sand"
+                  state.autoTopUp ? "bg-brand" : "bg-sand"
                 )}
               >
                 <span

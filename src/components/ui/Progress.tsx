@@ -22,12 +22,12 @@ export function Progress({
   const heights = { sm: "h-1.5", md: "h-2.5", lg: "h-3.5" };
   const track = {
     bark: "bg-sand",
-    cream: "bg-cream/25",
+    cream: "bg-onbrand/25",
     moss: "bg-moss-soft",
   };
   const fill = {
     bark: "bg-bark",
-    cream: "bg-cream",
+    cream: "bg-onbrand",
     moss: "bg-moss",
   };
 

@@ -5,7 +5,7 @@ type Tone = "paper" | "cream" | "ink";
 const TONES: Record<Tone, string> = {
   paper: "bg-paper border-sand/70",
   cream: "bg-cream border-sand",
-  ink: "bg-ink border-ink text-cream",
+  ink: "bg-hero border-hero text-onbrand",
 };
 
 export function Card({

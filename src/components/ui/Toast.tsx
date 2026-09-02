@@ -37,9 +37,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {items.map((item) => (
           <div
             key={item.id}
-            className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-full bg-ink py-2.5 pl-3 pr-5 text-sm text-cream shadow-lift animate-pop"
+            className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-full bg-hero py-2.5 pl-3 pr-5 text-sm text-onbrand shadow-lift animate-pop"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cream/15">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-onbrand/15">
               {item.tone === "success" ? (
                 <Check className="h-3.5 w-3.5" aria-hidden />
               ) : (

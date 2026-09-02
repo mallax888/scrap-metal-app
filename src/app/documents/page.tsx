@@ -64,7 +64,7 @@ export default function DocumentsPage() {
                 className={clsx(
                   "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                   filter === category
-                    ? "bg-bark text-cream"
+                    ? "bg-brand text-onbrand"
                     : "border border-sand bg-paper text-mist hover:bg-cream hover:text-bark"
                 )}
               >
@@ -72,7 +72,7 @@ export default function DocumentsPage() {
                 <span
                   className={clsx(
                     "numeric rounded-full px-1.5 text-[11px]",
-                    filter === category ? "bg-cream/20 text-cream" : "bg-cream text-clay"
+                    filter === category ? "bg-onbrand/20 text-onbrand" : "bg-cream text-clay"
                   )}
                 >
                   {count}

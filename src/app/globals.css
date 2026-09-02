@@ -4,33 +4,139 @@
    Litchi design tokens
 
    Brown is the brand colour — no blue, no gradients-for-the-sake-of-it.
-   Everything sits on a warm off-white canvas with generous whitespace.
+   Everything sits on a warm ground with generous whitespace.
+
+   Two layers on purpose: the raw values live on :root (and are swapped
+   wholesale for dark mode), and @theme inline points Tailwind's utilities
+   at those variables, so `bg-canvas` / `text-ink` re-resolve per theme
+   instead of being baked in at build time.
+
+   Three tokens each do two jobs and so had to be split, because the two
+   jobs move in opposite directions in the dark:
+     ink   -> text            + hero (the dark slab it sits on)
+     cream -> a soft fill     + onbrand (text on brown/dark fills)
+     bark  -> text and icons  + brand (a fill that always carries onbrand)
    ------------------------------------------------------------------ */
-@theme {
+:root {
+  color-scheme: light;
+
   /* Surfaces */
-  --color-canvas: #faf8f4;
-  --color-paper: #ffffff;
-  --color-cream: #f1e8de;
-  --color-sand: #e8ddd1;
+  --canvas: #faf8f4;
+  --paper: #ffffff;
+  --cream: #f1e8de;
+  --sand: #e8ddd1;
+  /* The dark slab: hero card, toasts. Stays dark in both themes. */
+  --hero: #2b211d;
+  --scrim: rgb(43 33 29 / 0.35);
 
-  /* Browns */
-  --color-ink: #2b211d;
-  --color-bark: #6b4635;
-  --color-clay: #a9826a;
-  --color-mist: #857468;
+  /* Text */
+  --ink: #2b211d;
+  --mist: #857468;
+  --clay: #a9826a;
+  --bark: #6b4635;
 
-  /* Positive / caution accents, deliberately desaturated */
-  --color-moss: #3f6b4e;
-  --color-moss-soft: #e9f1ea;
-  --color-amber-warm: #9a6b1f;
-  --color-amber-soft: #f7efdf;
+  /* Brand fills, and the one colour that reads on top of them */
+  --brand: #6b4635;
+  --brand-strong: #2b211d;
+  --onbrand: #f1e8de;
+
+  /* Status — reserved, never reused for decoration */
+  --moss: #3f6b4e;
+  --moss-soft: #e9f1ea;
+  --amber-warm: #9a6b1f;
+  --amber-soft: #f7efdf;
+
+  --shadow-card-value: 0 1px 2px rgb(43 33 29 / 0.04), 0 8px 24px -12px rgb(43 33 29 / 0.12);
+  --shadow-lift-value: 0 2px 4px rgb(43 33 29 / 0.05), 0 18px 40px -18px rgb(43 33 29 / 0.22);
+}
+
+/* System preference, unless an explicit light choice overrides it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --canvas: #17110e;
+    --paper: #211a15;
+    --cream: #2d231c;
+    --sand: #3b2e25;
+    --hero: #2a1e17;
+    --scrim: rgb(0 0 0 / 0.6);
+
+    --ink: #f4ebe2;
+    --mist: #a5907e;
+    --clay: #b5906f;
+    --bark: #dcae8d;
+
+    --brand: #8a5b44;
+    --brand-strong: #a26c50;
+    --onbrand: #f6efe6;
+
+    --moss: #8cc3a0;
+    --moss-soft: #21332a;
+    --amber-warm: #ddab60;
+    --amber-soft: #33281a;
+
+    --shadow-card-value: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.7);
+    --shadow-lift-value: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 40px -18px rgb(0 0 0 / 0.8);
+  }
+}
+
+/* An explicit dark choice wins over a light OS setting. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas: #17110e;
+  --paper: #211a15;
+  --cream: #2d231c;
+  --sand: #3b2e25;
+  --hero: #2a1e17;
+  --scrim: rgb(0 0 0 / 0.6);
+
+  --ink: #f4ebe2;
+  --mist: #a5907e;
+  --clay: #b5906f;
+  --bark: #dcae8d;
+
+  --brand: #8a5b44;
+  --brand-strong: #a26c50;
+  --onbrand: #f6efe6;
+
+  --moss: #8cc3a0;
+  --moss-soft: #21332a;
+  --amber-warm: #ddab60;
+  --amber-soft: #33281a;
+
+  --shadow-card-value: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.7);
+  --shadow-lift-value: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 40px -18px rgb(0 0 0 / 0.8);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-paper: var(--paper);
+  --color-cream: var(--cream);
+  --color-sand: var(--sand);
+  --color-hero: var(--hero);
+  --color-scrim: var(--scrim);
+
+  --color-ink: var(--ink);
+  --color-mist: var(--mist);
+  --color-clay: var(--clay);
+  --color-bark: var(--bark);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-onbrand: var(--onbrand);
+
+  --color-moss: var(--moss);
+  --color-moss-soft: var(--moss-soft);
+  --color-amber-warm: var(--amber-warm);
+  --color-amber-soft: var(--amber-soft);
 
   --radius-card: 20px;
   --radius-tile: 14px;
 
-  --shadow-card: 0 1px 2px rgb(43 33 29 / 0.04), 0 8px 24px -12px rgb(43 33 29 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(43 33 29 / 0.05), 0 18px 40px -18px rgb(43 33 29 / 0.22);
-  --shadow-inset-cream: inset 0 0 0 1px rgb(43 33 29 / 0.05);
+  --shadow-card: var(--shadow-card-value);
+  --shadow-lift: var(--shadow-lift-value);
 
   --font-sans: var(--font-litchi-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
@@ -41,35 +147,18 @@
 }
 
 @keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes shimmer {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.9;
-  }
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
 }
 
 @keyframes pop {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 html {
@@ -77,8 +166,8 @@ html {
 }
 
 body {
-  background: var(--color-canvas);
-  color: var(--color-ink);
+  background: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-sans);
 }
 
@@ -90,7 +179,7 @@ body {
 
 /* Keyboard focus that matches the palette rather than the browser default. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-bark);
+  outline: 2px solid var(--bark);
   outline-offset: 2px;
   border-radius: 6px;
 }

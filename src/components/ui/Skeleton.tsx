@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={clsx("animate-shimmer rounded-lg bg-sand/70", className)} />;
+  return <div className={clsx("animate-shimmer rounded-lg bg-sand", className)} />;
 }
 
 export function SkeletonCard({ className }: { className?: string }) {
