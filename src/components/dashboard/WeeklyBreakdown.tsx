@@ -19,7 +19,7 @@ export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolea
       label: "Rent",
       to: tenancy.landlordAgency,
       amount: tenancy.rentWeekly,
-      dot: "bg-clay",
+      dot: "bg-moss",
     },
     {
       label: "Litchi bond repayment",
@@ -51,7 +51,7 @@ export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolea
 
       {/* Proportional bar: rent vs Litchi repayment. */}
       <div className="mt-6 flex h-2.5 w-full overflow-hidden rounded-full bg-sand" aria-hidden>
-        <div className="h-full bg-clay" style={{ width: `${rentShare * 100}%` }} />
+        <div className="h-full bg-moss" style={{ width: `${rentShare * 100}%` }} />
         <div className="h-full flex-1 bg-litchi" />
       </div>
 

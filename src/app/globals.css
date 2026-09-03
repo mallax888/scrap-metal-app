@@ -21,36 +21,38 @@
   color-scheme: light;
 
   /* Surfaces */
-  --canvas: #faf8f4;
+  --canvas: #faf7f2;
   --paper: #ffffff;
-  --cream: #f1e8de;
-  --sand: #e8ddd1;
+  --cream: #f2ece2;
+  --sand: #e9e2d7;
   /* The dark slab: hero card, toasts. Stays dark in both themes. */
-  --hero: #2b211d;
-  --scrim: rgb(43 33 29 / 0.35);
+  --hero: #221a15;
+  --scrim: rgb(34 26 21 / 0.4);
 
   /* Text */
-  --ink: #2b211d;
-  --mist: #857468;
-  --clay: #a9826a;
+  --ink: #1f1815;
+  --mist: #79706a;
+  --clay: #8a7f76;
   --bark: #6b4635;
 
   /* Brand fills, and the one colour that reads on top of them */
   --brand: #6b4635;
-  --brand-strong: #2b211d;
-  --onbrand: #f1e8de;
+  --brand-strong: #513528;
+  --onbrand: #ffffff;
 
-  /* Litchi red — the brand accent. Owns the mark, progress, and Litchi's own
-     money. Never used for status: green alone does that job, so the two
-     never encode the same variable and can't be confused for one another. */
-  --litchi: #c4384f;
-  --litchi-fill: #b8324a;
-  --blush: #f7e3e1;
-  --rose: #fcf2f1;
+  /* Coral — the accent. Owns the mark, progress, and Litchi's own money.
+     Brown stays the structural colour (hero, buttons, headings); coral is
+     what draws the eye. Never used for status, which is teal's job alone. */
+  --litchi: #c4402f;
+  --litchi-fill: #c4402f;
+  --blush: #f7ded9;
+  --rose: #fcf1ee;
 
-  /* Status — reserved, never reused for decoration */
-  --moss: #3f6b4e;
-  --moss-soft: #e9f1ea;
+  /* Teal earns its keep twice in a four-colour system: the positive status
+     colour, and the second data series (rent, against Litchi's coral). Status
+     always ships with an icon and a label, so the readings never collide. */
+  --moss: #2f7d6b;
+  --moss-soft: #e4f0ec;
   --amber-warm: #9a6b1f;
   --amber-soft: #f7efdf;
 
@@ -63,29 +65,29 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --canvas: #17110e;
-    --paper: #211a15;
-    --cream: #2d231c;
-    --sand: #3b2e25;
-    --hero: #2a1e17;
+    --canvas: #14120f;
+    --paper: #1e1b17;
+    --cream: #2a2621;
+    --sand: #332e28;
+    --hero: #241f19;
     --scrim: rgb(0 0 0 / 0.6);
 
-    --ink: #f4ebe2;
-    --mist: #a5907e;
-    --clay: #b5906f;
-    --bark: #dcae8d;
+    --ink: #f5f1ea;
+    --mist: #9a9088;
+    --clay: #a0958b;
+    --bark: #d9a68a;
 
     --brand: #8a5b44;
-    --brand-strong: #a26c50;
-    --onbrand: #f6efe6;
+    --brand-strong: #a06d52;
+    --onbrand: #ffffff;
 
-    --litchi: #e8879a;
-    --litchi-fill: #b8324a;
-    --blush: #4a2a2f;
-    --rose: #2e1e21;
+    --litchi: #e4614e;
+    --litchi-fill: #c4402f;
+    --blush: #33201b;
+    --rose: #241713;
 
-    --moss: #8cc3a0;
-    --moss-soft: #21332a;
+    --moss: #4ca894;
+    --moss-soft: #16302a;
     --amber-warm: #ddab60;
     --amber-soft: #33281a;
 
@@ -98,29 +100,29 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --canvas: #17110e;
-  --paper: #211a15;
-  --cream: #2d231c;
-  --sand: #3b2e25;
-  --hero: #2a1e17;
+  --canvas: #14120f;
+  --paper: #1e1b17;
+  --cream: #2a2621;
+  --sand: #332e28;
+  --hero: #241f19;
   --scrim: rgb(0 0 0 / 0.6);
 
-  --ink: #f4ebe2;
-  --mist: #a5907e;
-  --clay: #b5906f;
-  --bark: #dcae8d;
+  --ink: #f5f1ea;
+  --mist: #9a9088;
+  --clay: #a0958b;
+  --bark: #d9a68a;
 
   --brand: #8a5b44;
-  --brand-strong: #a26c50;
-  --onbrand: #f6efe6;
+  --brand-strong: #a06d52;
+  --onbrand: #ffffff;
 
-  --litchi: #e8879a;
-  --litchi-fill: #b8324a;
-  --blush: #4a2a2f;
-  --rose: #2e1e21;
+  --litchi: #e4614e;
+  --litchi-fill: #c4402f;
+  --blush: #33201b;
+  --rose: #241713;
 
-  --moss: #8cc3a0;
-  --moss-soft: #21332a;
+  --moss: #4ca894;
+  --moss-soft: #16302a;
   --amber-warm: #ddab60;
   --amber-soft: #33281a;
 
