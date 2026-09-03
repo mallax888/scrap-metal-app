@@ -16,7 +16,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   // Update if a custom domain replaces the default deployment URL — needed to
   // resolve absolute URLs for the generated social share image.
-  metadataBase: new URL("https://litchi-app.vercel.app"),
+  metadataBase: new URL("https://litchi-psi.vercel.app"),
   title: {
     default: "Litchi — Move in. Pay smarter.",
     template: "%s · Litchi",
