@@ -49,19 +49,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh lg:flex">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-[268px] shrink-0 flex-col border-r border-sand/80 bg-paper px-5 py-6 lg:flex">
-        {/*
-          Stacked rather than in a row. Laid out horizontally the mark, the
-          wordmark and the demo tag filled the sidebar's full 227px, so there
-          was no slack left to centre into and no room to grow the mark. In a
-          column the mark can be half again as big and sit on the sidebar's
-          centre line, which the empty space further down easily affords.
-        */}
-        <Link
-          href={APP_HOME}
-          className="flex flex-col items-center gap-2.5 px-1.5 pt-1 text-center"
-        >
-          <PiggyBadge className="h-14 w-14 rounded-[17px]" />
-          <Wordmark className="text-[19px]" />
+        <Link href={APP_HOME} className="flex items-center gap-3 px-1.5">
+          <PiggyBadge />
+          <Wordmark className="text-[17px]" />
           {/* Visible on every screen behind the sidebar. The figures in here
               are invented, and nobody should have to be told that separately. */}
           <DemoTag />

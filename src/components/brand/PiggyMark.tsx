@@ -18,7 +18,12 @@ export function PiggyMark({
 }) {
   return (
     <svg
-      viewBox="0 0 40 40"
+      // The artwork's own bounding box, not a padded square. Drawn inside
+      // "0 0 40 40" the mark measured 5.02 above and 7.20 below, so it sat
+      // high in any chip that centred the SVG element — a visible gap under
+      // the chin. Framing it tightly means centring the box centres the pig,
+      // and its size is set by the box rather than by leftover padding.
+      viewBox="7.55 5.02 24.91 27.78"
       className={className}
       fill="currentColor"
       role={title ? "img" : "presentation"}
@@ -48,7 +53,7 @@ export function PiggyBadge({ className = "h-9 w-9" }: { className?: string }) {
     <span
       className={`flex shrink-0 items-center justify-center rounded-[11px] bg-litchi-fill text-onbrand ${className}`}
     >
-      <PiggyMark className="h-[74%] w-[74%]" accent="var(--litchi-fill)" />
+      <PiggyMark className="h-[62%] w-[62%]" accent="var(--litchi-fill)" />
     </span>
   );
 }
