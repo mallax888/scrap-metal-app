@@ -257,12 +257,34 @@ body {
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans);
+  /*
+   * Plus Jakarta Sans ships a notably narrow word space — measured at 0.17em
+   * against 0.278em for Arial/Helvetica and 0.318em for system-ui, so roughly
+   * 60% of a normal sans space. Left alone, short label-plus-value strings
+   * ("$2,261.50 to go", "19% of your bond repaid") read as one run-on word.
+   * This nudges the effective space to about 0.24em: the low end of normal,
+   * enough to separate words without making body copy look airy.
+   */
+  word-spacing: 0.07em;
 }
 
-/* Tabular figures everywhere a number is meant to be read as money. */
-.numeric {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+/*
+ * Tabular figures everywhere a number is meant to be read as money.
+ *
+ * Digit alignment only. This used to also set letter-spacing: -0.02em, which
+ * was wrong twice over: the class is wrapped around plenty of spans that hold
+ * words as well as digits ("$2,261.50 to go", "19% of your bond repaid"), and
+ * negative tracking squeezes the space between words, not just between digits.
+ * It also sat outside the utilities layer, so it beat any explicit tracking-*
+ * on the same element — the display figures were silently ignoring theirs.
+ *
+ * Optical tightening now lives at the call site, where it can be seen and
+ * overridden.
+ */
+@layer utilities {
+  .numeric {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* Keyboard focus that matches the palette rather than the browser default. */

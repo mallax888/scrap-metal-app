@@ -72,7 +72,7 @@ export default function RewardsPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-clay">
                   Points balance
                 </p>
-                <p className="numeric mt-4 text-[52px] font-semibold leading-none">
+                <p className="numeric mt-4 text-[52px] font-semibold tracking-[-0.02em] leading-none">
                   {points(derived.pointsBalance)}
                 </p>
                 <p className="mt-2.5 text-sm text-onbrand/65">

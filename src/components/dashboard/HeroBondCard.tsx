@@ -50,13 +50,20 @@ export function HeroBondCard() {
             You moved in without paying the full bond upfront.
           </p>
 
-          <dl className="mt-8 grid max-w-lg grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-3">
+          {/*
+            Columns size to their content rather than splitting a fixed width
+            three ways. Equal thirds of max-w-lg gave every stat 149px, which
+            starved the only one that needed more — "$53.85 / week" needs 151px
+            and wrapped "week" onto its own line, while the neighbours sat on 75px
+            and 99px with room to spare. A wider cap would just move the cliff.
+          */}
+          <dl className="mt-8 grid w-fit grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-[repeat(3,auto)] sm:gap-x-12">
             {stats.map((stat) => (
               <div key={stat.label}>
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-onbrand/45">
                   {stat.label}
                 </dt>
-                <dd className="numeric mt-1.5 text-xl font-semibold sm:text-[22px]">
+                <dd className="numeric mt-1.5 whitespace-nowrap text-xl font-semibold sm:text-[22px]">
                   {ready ? stat.value : <Skeleton className="h-6 w-24 bg-onbrand/15" />}
                 </dd>
               </div>

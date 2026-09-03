@@ -22,7 +22,7 @@ export function NextPaymentCard() {
         <CardTitle>Next payment</CardTitle>
 
         {ready ? (
-          <p className="numeric mt-4 text-[38px] font-semibold leading-none text-ink">
+          <p className="numeric mt-4 text-[38px] font-semibold tracking-[-0.02em] leading-none text-ink">
             {next ? moneyExact(next.amount) : "—"}
           </p>
         ) : (

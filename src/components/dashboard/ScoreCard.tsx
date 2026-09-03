@@ -13,7 +13,7 @@ export function ScoreCard({ compact = false }: { compact?: boolean }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <CardTitle>Your Litchi Score</CardTitle>
-          <p className="numeric mt-3 text-[40px] font-semibold leading-none text-ink">
+          <p className="numeric mt-3 text-[40px] font-semibold tracking-[-0.02em] leading-none text-ink">
             {renterScore.value}
             <span className="text-lg font-medium text-mist"> / 100</span>
           </p>

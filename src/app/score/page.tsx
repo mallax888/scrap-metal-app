@@ -69,7 +69,7 @@ export default function ScorePage() {
             <CardLabel>Your Litchi Score</CardLabel>
             <div className="mt-6 flex items-center gap-6">
               <ProgressRing value={renterScore.value / 100} size={112} stroke={9} tone="moss">
-                <span className="numeric text-[30px] font-semibold text-ink">
+                <span className="numeric text-[30px] font-semibold tracking-[-0.02em] text-ink">
                   {renterScore.value}
                 </span>
               </ProgressRing>

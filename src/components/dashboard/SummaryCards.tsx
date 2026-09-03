@@ -48,7 +48,7 @@ function Stat({
       </span>
       <span className="numeric mt-2 text-[38px] font-semibold leading-none tracking-[-0.035em] text-ink">
         {value}
-        {unit ? <span className="text-lg font-medium text-mist">{unit}</span> : null}
+        {unit ? <span className="text-lg font-medium tracking-normal text-mist">{unit}</span> : null}
       </span>
       <span className="mt-2 text-[13px] text-mist">{caption}</span>
       {chip ? <span className="mt-3">{chip}</span> : null}

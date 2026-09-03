@@ -27,7 +27,7 @@ export function MovingFundCard() {
         <div className="mt-6 flex items-baseline gap-2">
           {ready ? (
             <>
-              <span className="numeric text-[34px] font-semibold leading-none text-ink">
+              <span className="numeric text-[34px] font-semibold tracking-[-0.02em] leading-none text-ink">
                 {money(derived.fundSaved)}
               </span>
               <span className="text-sm text-mist">saved</span>

@@ -16,9 +16,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Close the drawer whenever the route changes — adjusted during render
   // rather than in an effect, so there is no extra paint with it still open.
-  if (drawerOpen && pathname !== drawerPath) {
-    setDrawerOpen(false);
+  //
+  // The tracked path has to move on *every* navigation, not only the ones that
+  // happen with the drawer open. The drawer's own links call setDrawerOpen(false)
+  // on click, so by the time the pathname lands the drawer has already closed —
+  // gate this on drawerOpen and the path never catches up. It then went stale at
+  // the previous route and swallowed the next tap on the menu button, which
+  // opened the drawer and was immediately undone by this very branch. Two taps
+  // to reopen, every time, after following a link from the drawer.
+  if (pathname !== drawerPath) {
     setDrawerPath(pathname);
+    if (drawerOpen) setDrawerOpen(false);
   }
 
   useEffect(() => {

@@ -60,14 +60,14 @@ export default function BondPage() {
         <Card className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <div>
             <CardLabel>Bond financed</CardLabel>
-            <p className="numeric mt-2.5 text-[28px] font-semibold leading-none text-ink">
+            <p className="numeric mt-2.5 text-[28px] font-semibold tracking-[-0.02em] leading-none text-ink">
               {money(plan.principal)}
             </p>
             <p className="mt-2 text-sm text-mist">{bond.weeksOfRent} weeks&rsquo; rent</p>
           </div>
           <div>
             <CardLabel>Repaid</CardLabel>
-            <p className="numeric mt-2.5 text-[28px] font-semibold leading-none text-ink">
+            <p className="numeric mt-2.5 text-[28px] font-semibold tracking-[-0.02em] leading-none text-ink">
               {moneyExact(derived.totalRepaid)}
             </p>
             <p className="numeric mt-2 text-sm text-moss">
@@ -76,7 +76,7 @@ export default function BondPage() {
           </div>
           <div>
             <CardLabel>Balance</CardLabel>
-            <p className="numeric mt-2.5 text-[28px] font-semibold leading-none text-ink">
+            <p className="numeric mt-2.5 text-[28px] font-semibold tracking-[-0.02em] leading-none text-ink">
               {moneyExact(derived.balance)}
             </p>
             <p className="numeric mt-2 text-sm text-mist">

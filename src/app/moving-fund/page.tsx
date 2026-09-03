@@ -47,7 +47,7 @@ export default function MovingFundPage() {
             <Card tone="cream" className="flex h-full flex-col">
               <CardLabel>Balance</CardLabel>
               <div className="mt-4 flex flex-wrap items-baseline gap-3">
-                <span className="numeric text-[46px] font-semibold leading-none text-ink">
+                <span className="numeric text-[46px] font-semibold tracking-[-0.02em] leading-none text-ink">
                   {money(derived.fundSaved)}
                 </span>
                 <span className="numeric text-sm text-mist">of {money(movingFund.goal)} goal</span>

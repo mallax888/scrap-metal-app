@@ -21,9 +21,9 @@ export function RewardsCard() {
       </div>
 
       {ready ? (
-        <p className="numeric mt-4 text-[34px] font-semibold leading-none text-ink">
+        <p className="numeric mt-4 text-[34px] font-semibold tracking-[-0.02em] leading-none text-ink">
           {points(derived.pointsBalance)}
-          <span className="text-base font-medium text-mist"> points</span>
+          <span className="text-base font-medium tracking-normal text-mist"> points</span>
         </p>
       ) : (
         <Skeleton className="mt-4 h-9 w-36" />

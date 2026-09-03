@@ -43,9 +43,9 @@ export default function RentPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardLabel>Rent</CardLabel>
-                <p className="numeric mt-3 text-[38px] font-semibold leading-none text-ink">
+                <p className="numeric mt-3 text-[38px] font-semibold tracking-[-0.02em] leading-none text-ink">
                   {money(rent.weekly)}
-                  <span className="text-base font-medium text-mist"> / week</span>
+                  <span className="text-base font-medium tracking-normal text-mist"> / week</span>
                 </p>
               </div>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream text-bark">
