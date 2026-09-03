@@ -41,7 +41,7 @@ export function Button({
 }) {
   return (
     <button
-      className={clsx(BASE, VARIANTS[variant], SIZES[size], className)}
+      className={clsx(BASE, "tap", VARIANTS[variant], SIZES[size], className)}
       disabled={rest.disabled || loading}
       {...rest}
     >
@@ -65,7 +65,7 @@ export function ButtonLink({
   children: React.ReactNode;
 }) {
   return (
-    <Link href={href} className={clsx(BASE, VARIANTS[variant], SIZES[size], className)}>
+    <Link href={href} className={clsx(BASE, "tap", VARIANTS[variant], SIZES[size], className)}>
       {children}
     </Link>
   );

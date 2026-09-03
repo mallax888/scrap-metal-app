@@ -62,7 +62,7 @@ export default function DocumentsPage() {
                 type="button"
                 onClick={() => setFilter(category)}
                 className={clsx(
-                  "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                  "tap flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                   filter === category
                     ? "bg-brand text-onbrand"
                     : "border border-sand bg-paper text-mist hover:bg-cream hover:text-bark"
@@ -122,7 +122,7 @@ export default function DocumentsPage() {
                   onClick={() => download(doc.id, doc.name)}
                   disabled={downloading === doc.id}
                   aria-label={`Download ${doc.name}`}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sand text-bark transition-colors hover:bg-cream disabled:opacity-50"
+                  className="tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sand text-bark transition-colors hover:bg-cream disabled:opacity-50"
                 >
                   {downloading === doc.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

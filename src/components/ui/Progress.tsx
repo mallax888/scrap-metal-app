@@ -36,6 +36,7 @@ export function Progress({
   tone = "litchi",
   size = "md",
   label,
+  decorative = false,
 }: {
   /** 0–1 */
   value: number;
@@ -43,18 +44,30 @@ export function Progress({
   tone?: Tone;
   size?: "sm" | "md" | "lg";
   label?: string;
+  /**
+   * Set where the same figure is already on the page as text. The bar is then
+   * a picture of a number a screen reader has just read out, so announcing it
+   * again as a progressbar only makes the page longer to listen to.
+   */
+  decorative?: boolean;
 }) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
   const heights = { sm: "h-1.5", md: "h-2.5", lg: "h-3.5" };
 
+  const semantics = decorative
+    ? ({ "aria-hidden": true } as const)
+    : ({
+        role: "progressbar",
+        "aria-valuenow": Math.round(pct),
+        "aria-valuemin": 0,
+        "aria-valuemax": 100,
+        "aria-label": label,
+      } as const);
+
   return (
     <div
       className={clsx("w-full overflow-hidden rounded-full", heights[size], TRACK[tone], className)}
-      role="progressbar"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label}
+      {...semantics}
     >
       <div
         className={clsx("h-full rounded-full transition-[width] duration-700 ease-out", FILL[tone])}

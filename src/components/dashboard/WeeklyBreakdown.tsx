@@ -41,7 +41,7 @@ export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolea
         {showRentLink ? (
           <Link
             href="/rent"
-            className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-bark transition-colors hover:text-ink"
+            className="tap -m-2 flex shrink-0 items-center gap-1 p-2 text-[13px] font-medium text-bark transition-colors hover:text-ink"
           >
             Rent
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />

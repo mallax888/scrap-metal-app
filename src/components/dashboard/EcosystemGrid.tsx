@@ -68,7 +68,7 @@ export function EcosystemGrid() {
                     );
                   }}
                   className={clsx(
-                    "mt-auto self-start rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                    "tap mt-auto flex items-center self-start rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                     joined
                       ? "bg-cream text-bark hover:bg-sand"
                       : "border border-sand bg-paper text-bark hover:bg-cream"

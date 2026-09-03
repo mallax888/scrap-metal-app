@@ -31,8 +31,8 @@
 
   /* Text */
   --ink: #1f1815;
-  --mist: #79706a;
-  --clay: #8a7f76;
+  --mist: #635c57;
+  --clay: #716861;
   --bark: #6b4635;
 
   /* Brand fills, and the one colour that reads on top of them */
@@ -51,7 +51,7 @@
   /* Teal earns its keep twice in a four-colour system: the positive status
      colour, and the second data series (rent, against Litchi's coral). Status
      always ships with an icon and a label, so the readings never collide. */
-  --moss: #2f7d6b;
+  --moss: #2c7665;
   --moss-soft: #e4f0ec;
   --amber-warm: #9a6b1f;
   --amber-soft: #f7efdf;
@@ -284,6 +284,23 @@ body {
 @layer utilities {
   .numeric {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/*
+ * Comfortable touch targets, without inflating the desktop layout.
+ *
+ * A fingertip is a far blunter instrument than a cursor, so controls sized for
+ * a mouse are fiddly on a phone. WCAG 2.2 sets a 24px floor and the app clears
+ * it, but 24px is the point at which a target stops being a failure, not the
+ * point at which it becomes easy to hit — the platform guidance is 44px. This
+ * lifts controls to that only where the pointer is actually coarse, so the
+ * denser desktop sizing is left alone.
+ */
+@media (pointer: coarse) {
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 

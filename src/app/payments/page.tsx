@@ -124,7 +124,7 @@ export default function PaymentsPage() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search activity"
-                className="h-10 w-full rounded-full border border-sand bg-canvas pl-10 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-mist focus:border-clay"
+                className="tap h-10 w-full rounded-full border border-sand bg-canvas pl-10 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-mist focus:border-clay"
               />
             </label>
           </div>
@@ -136,7 +136,7 @@ export default function PaymentsPage() {
                 type="button"
                 onClick={() => setFilter(item.key)}
                 className={clsx(
-                  "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                  "tap flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                   filter === item.key
                     ? "bg-brand text-onbrand"
                     : "border border-sand bg-paper text-mist hover:bg-cream hover:text-bark"

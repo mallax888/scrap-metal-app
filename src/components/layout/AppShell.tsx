@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-sand/80 bg-canvas/90 px-4 py-3 backdrop-blur-md lg:hidden">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="tap flex items-center gap-2.5">
           <PiggyBadge className="h-8 w-8" />
           <Wordmark className="text-[15px]" />
         </Link>
@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation"
           aria-expanded={drawerOpen}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-sand bg-paper text-ink transition-colors hover:bg-cream"
+          className="tap flex h-10 w-10 items-center justify-center rounded-full border border-sand bg-paper text-ink transition-colors hover:bg-cream"
         >
           <Menu className="h-5 w-5" aria-hidden />
         </button>

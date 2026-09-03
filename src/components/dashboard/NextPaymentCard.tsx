@@ -30,27 +30,35 @@ export function NextPaymentCard() {
         )}
 
         <dl className="mt-6 space-y-4 text-sm">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-bark">
-              <CalendarDays className="h-4 w-4" aria-hidden />
-            </span>
-            <div>
-              <dt className="text-mist">Due</dt>
-              <dd className="font-medium text-ink">
-                {next ? formatDayDate(next.date) : "No payment scheduled"}
-              </dd>
-            </div>
+          {/*
+            The icon sits inside the <dt> rather than beside it. A <div> inside a
+            <dl> may hold only <dt>/<dd>, and the pair has to stay a direct child
+            of one — bracketing them in a second div so they could sit next to the
+            icon broke that, and the label stopped being related to its value for
+            anyone using a screen reader. The dd's left padding (32px icon + 12px
+            gap) keeps the value aligned under the label, so it draws the same.
+          */}
+          <div>
+            <dt className="flex items-center gap-3 text-mist">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-bark">
+                <CalendarDays className="h-4 w-4" aria-hidden />
+              </span>
+              Due
+            </dt>
+            <dd className="mt-1 pl-11 font-medium text-ink">
+              {next ? formatDayDate(next.date) : "No payment scheduled"}
+            </dd>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-bark">
-              <CreditCard className="h-4 w-4" aria-hidden />
-            </span>
-            <div>
-              <dt className="text-mist">Payment method</dt>
-              <dd className="font-medium text-ink">
-                {method.label} •••• {method.last4}
-              </dd>
-            </div>
+          <div>
+            <dt className="flex items-center gap-3 text-mist">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-bark">
+                <CreditCard className="h-4 w-4" aria-hidden />
+              </span>
+              Payment method
+            </dt>
+            <dd className="mt-1 pl-11 font-medium text-ink">
+              {method.label} •••• {method.last4}
+            </dd>
           </div>
         </dl>
 

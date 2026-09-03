@@ -159,24 +159,25 @@ export default function ScorePage() {
 
           <dl className="mt-7 grid gap-7 md:grid-cols-2">
             {scoreFactors.map((factor) => (
-              <div key={factor.key}>
-                <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-[15px] font-medium text-ink">{factor.label}</dt>
-                  <dd className="numeric text-[15px] font-semibold text-ink">
-                    {factor.value}
-                    <span className="text-sm font-normal text-mist"> / 100</span>
-                  </dd>
-                </div>
-                <Progress
-                  value={factor.value / 100}
-                  tone="moss"
-                  className="mt-2.5"
-                  label={`${factor.label} score`}
-                />
-                <p className="mt-2.5 flex items-baseline justify-between gap-4 text-xs text-mist">
+              <div
+                key={factor.key}
+                className="grid grid-cols-[1fr_auto] items-baseline gap-x-4"
+              >
+                <dt className="text-[15px] font-medium text-ink">{factor.label}</dt>
+                <dd className="numeric text-[15px] font-semibold text-ink">
+                  {factor.value}
+                  <span className="text-sm font-normal tracking-normal text-mist"> / 100</span>
+                </dd>
+                {/* The score, the bar and the explanation all describe the same
+                    factor, so they are three <dd>s under one <dt> rather than a
+                    second wrapper that would break the pairing. */}
+                <dd className="col-span-2 mt-2.5">
+                  <Progress value={factor.value / 100} tone="moss" decorative />
+                </dd>
+                <dd className="col-span-2 mt-2.5 flex items-baseline justify-between gap-4 text-xs text-mist">
                   <span>{factor.detail}</span>
                   <span className="numeric shrink-0">{percent(factor.weight)} weighting</span>
-                </p>
+                </dd>
               </div>
             ))}
           </dl>

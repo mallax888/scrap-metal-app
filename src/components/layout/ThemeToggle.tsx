@@ -43,7 +43,7 @@ export function ThemeToggle() {
             title={option.label}
             onClick={() => setTheme(option.value)}
             className={clsx(
-              "flex h-8 flex-1 items-center justify-center rounded-full transition-colors duration-200",
+              "tap flex h-8 flex-1 items-center justify-center rounded-full transition-colors duration-200",
               active
                 ? "bg-brand text-onbrand"
                 : "text-mist hover:bg-cream hover:text-ink"

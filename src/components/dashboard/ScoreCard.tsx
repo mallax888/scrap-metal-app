@@ -27,18 +27,17 @@ export function ScoreCard({ compact = false }: { compact?: boolean }) {
 
       <dl className={clsx("mt-7 space-y-4", compact && "sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0")}>
         {scoreFactors.map((factor) => (
-          <div key={factor.key}>
-            <div className="flex items-baseline justify-between gap-4 text-sm">
-              <dt className="text-ink">{factor.label}</dt>
-              <dd className="numeric font-semibold text-ink">{factor.value}</dd>
-            </div>
-            <Progress
-              value={factor.value / 100}
-              tone="moss"
-              size="sm"
-              className="mt-2"
-              label={`${factor.label} score`}
-            />
+          <div
+            key={factor.key}
+            className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 text-sm"
+          >
+            <dt className="text-ink">{factor.label}</dt>
+            <dd className="numeric font-semibold text-ink">{factor.value}</dd>
+            {/* A second <dd> describing the same term — the bar is a picture of
+                the number above it, so it is decorative rather than announced. */}
+            <dd className="col-span-2 mt-2">
+              <Progress value={factor.value / 100} tone="moss" size="sm" decorative />
+            </dd>
           </div>
         ))}
       </dl>

@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
+import { useFocusTrap } from "@/lib/focus-trap";
 
 /**
  * A lightweight dialog: escape to close, click-outside to close, scroll lock,
- * and focus moved into (and back out of) the panel.
+ * focus moved into (and back out of) the panel, and Tab held inside it.
  */
 export function Modal({
   open,
@@ -27,6 +28,8 @@ export function Modal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(panelRef, open);
 
   useEffect(() => {
     if (!open) return;

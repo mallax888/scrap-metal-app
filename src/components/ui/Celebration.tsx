@@ -1,7 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { LitchiCharacter } from "@/components/brand/LitchiCharacter";
+import { useFocusTrap } from "@/lib/focus-trap";
 import { Button } from "./Button";
 
 export interface CelebrationContent {
@@ -28,21 +37,41 @@ const CONFETTI = Array.from({ length: 14 }, (_, i) => {
 
 export function CelebrationProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState<CelebrationContent | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const celebrate = useCallback((next: CelebrationContent) => setContent(next), []);
   const dismiss = useCallback(() => setContent(null), []);
 
+  // This overlay claims aria-modal, so it owes the same keyboard contract as a
+  // dialog: Tab stays inside it, not in the page it says is unreachable.
+  useFocusTrap(panelRef, !!content);
+
   useEffect(() => {
     if (!content) return;
+
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    const focusTimer = window.setTimeout(() => panelRef.current?.focus(), 0);
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") dismiss();
     };
     document.addEventListener("keydown", onKeyDown);
-    // Long enough to read, short enough not to trap anyone.
-    const timer = window.setTimeout(dismiss, 6000);
+
+    // Long enough to read, short enough not to trap anyone — but a timer that
+    // pulls the overlay out from under someone who has tabbed into it takes
+    // their focus with it. If it holds focus, it waits for them to dismiss it.
+    const timer = window.setTimeout(() => {
+      const panel = panelRef.current;
+      if (panel && panel.contains(document.activeElement)) return;
+      dismiss();
+    }, 6000);
+
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(timer);
+      window.clearTimeout(focusTimer);
+      returnFocusRef.current?.focus?.();
     };
   }, [content, dismiss]);
 
@@ -53,7 +82,9 @@ export function CelebrationProvider({ children }: { children: React.ReactNode })
       {children}
       {content ? (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-6"
+          ref={panelRef}
+          tabIndex={-1}
+          className="fixed inset-0 z-[70] flex items-center justify-center p-6 outline-none"
           role="alertdialog"
           aria-modal="true"
           aria-label={content.title}
