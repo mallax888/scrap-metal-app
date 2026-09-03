@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createLocalStore } from "./local-store";
 import {
+  POINTS,
   TODAY,
   baseActivity,
   baseRepaid,
@@ -20,9 +21,11 @@ import {
   plan,
   repaymentHistory,
   rewardCatalogue,
+  rewardTiers,
   rewards,
   tenancy,
   type ActivityItem,
+  type RewardTier,
 } from "./data";
 import { addWeeks, daysBetween } from "./format";
 
@@ -196,7 +199,14 @@ export interface LitchiDerived {
   fundRemaining: number;
   /** Rewards */
   pointsBalance: number;
+  /** Points ever earned. Drives tier status; never goes down. */
+  lifetimeEarned: number;
+  tier: RewardTier;
+  nextTier: RewardTier | null;
   pointsToNextTier: number;
+  /** When the next tier arrives if on-time payments simply continue. */
+  nextTierDate: string | null;
+  redemptions: Redemption[];
   /** Housing */
   totalWeeklyHousing: number;
   /** Feed */
@@ -212,8 +222,40 @@ function derive(state: LitchiState): LitchiDerived {
   const fundAdded = round2(state.fundContributions.reduce((sum, e) => sum + e.amount, 0));
   const fundSaved = round2(movingFund.baseSaved + fundAdded);
 
+  /*
+   * Two separate numbers, deliberately.
+   *
+   * Lifetime earned only ever grows, and it is what tier status runs on.
+   * Spending is tracked apart from it, so redeeming a reward reduces what you
+   * can spend without pushing you back down the ladder — deriving status from
+   * the balance would have meant using the programme demoted you, which
+   * punishes the one behaviour it exists to encourage.
+   */
+  const earnedFromExtras = state.extraPayments.reduce(
+    (sum, e) => sum + Math.floor(e.amount / 50) * POINTS.perFiftyPaidEarly,
+    0
+  );
+  const earnedFromFund = state.fundContributions.length * POINTS.perFundTopUp;
+  const lifetimeEarned = rewards.basePoints + earnedFromExtras + earnedFromFund;
+
   const spent = state.redemptions.reduce((sum, r) => sum + r.cost, 0);
-  const pointsBalance = rewards.basePoints - spent;
+  const pointsBalance = lifetimeEarned - spent;
+
+  const tier =
+    [...rewardTiers].reverse().find((t) => lifetimeEarned >= t.at) ?? rewardTiers[0];
+  const nextTier = rewardTiers.find((t) => t.at > lifetimeEarned) ?? null;
+  const pointsToNextTier = nextTier ? nextTier.at - lifetimeEarned : 0;
+  /*
+   * Counted forward from the next payment at the on-time rate alone, so it is
+   * the date you reach the tier by doing nothing but keeping up — never a
+   * promise that depends on extra payments the renter has not made.
+   */
+  const nextTierDate = nextTier
+    ? addWeeks(
+        plan.nextPaymentDate,
+        Math.max(0, Math.ceil(pointsToNextTier / POINTS.perOnTimePayment) - 1)
+      )
+    : null;
 
   const userActivity: ActivityItem[] = [
     ...state.extraPayments.map((entry) => ({
@@ -257,7 +299,12 @@ function derive(state: LitchiState): LitchiDerived {
     fundProgress: Math.min(1, fundSaved / movingFund.goal),
     fundRemaining: Math.max(0, round2(movingFund.goal - fundSaved)),
     pointsBalance,
-    pointsToNextTier: Math.max(0, rewards.nextTierAt - pointsBalance),
+    lifetimeEarned,
+    tier,
+    nextTier,
+    pointsToNextTier,
+    nextTierDate,
+    redemptions: [...state.redemptions].sort((a, b) => (a.date < b.date ? 1 : -1)),
     totalWeeklyHousing: round2(tenancy.rentWeekly + plan.weeklyPayment),
     activity: [...userActivity, ...baseActivity].sort((a, b) =>
       a.date < b.date ? 1 : a.date > b.date ? -1 : 0

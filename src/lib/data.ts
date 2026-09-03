@@ -198,73 +198,6 @@ export interface RewardCategory {
 }
 
 /** 40 points per on-time payment, so September's three so far are the +120 shown. */
-const POINTS_PER_PAYMENT = 40;
-
-export const rewardCategories: RewardCategory[] = [
-  {
-    key: "on-time",
-    label: "On-time payments",
-    earned: weeklyPaymentsMade * POINTS_PER_PAYMENT,
-    description: `${POINTS_PER_PAYMENT} points for every repayment made on time.`,
-  },
-  {
-    key: "history",
-    label: "Consistent renter history",
-    earned: 440,
-    description: "Earned as your verified tenancy record grows.",
-  },
-  {
-    key: "profile",
-    label: "Completed profile",
-    earned: 400,
-    description: "One-off bonus for verifying your identity, income and tenancy details.",
-  },
-];
-
-export const rewards = {
-  /** Always the sum of the categories above — never a number of its own. */
-  basePoints: rewardCategories.reduce((sum, category) => sum + category.earned, 0),
-  /** Three on-time payments so far in September. */
-  earnedThisMonth: 3 * POINTS_PER_PAYMENT,
-  tier: "Grove",
-  nextTier: "Orchard",
-  nextTierAt: 1500,
-};
-
-export interface Reward {
-  id: string;
-  name: string;
-  description: string;
-  cost: number;
-}
-
-export const rewardCatalogue: Reward[] = [
-  {
-    id: "rw_repayment_credit",
-    name: "$10 repayment credit",
-    description: "Comes off your next weekly Litchi payment.",
-    cost: 500,
-  },
-  {
-    id: "rw_moving_fund",
-    name: "$25 Moving Fund top-up",
-    description: "Straight into your Moving Fund balance.",
-    cost: 1000,
-  },
-  {
-    id: "rw_end_clean",
-    name: "End-of-tenancy clean",
-    description: "A professional clean booked for your final week.",
-    cost: 3500,
-  },
-  {
-    id: "rw_payment_pause",
-    name: "One-week payment pause",
-    description: "Skip a week without affecting your renter score.",
-    cost: 5000,
-  },
-];
-
 /** $500 opening deposit plus nine weekly $20 top-ups = the $680 balance. */
 const FUND_OPENING_DEPOSIT = 500;
 const FUND_TOP_UP_DATES = [
@@ -279,9 +212,200 @@ const FUND_TOP_UP_DATES = [
   "2026-09-18",
 ];
 
+/*
+ * The points economy.
+ *
+ * Litchi lends the bond at 0% with no establishment fee, so the money for a
+ * rewards programme has to come out of a thin margin. A giveback of 1-2% of
+ * principal is the realistic ceiling — on a $2,800 bond that is $28-56 across
+ * the whole term. Everything below is sized to land inside that.
+ *
+ * One point is worth about two cents, improving as redemptions get larger,
+ * which is the usual shape: the programme can afford to be more generous per
+ * point when it is buying a bigger commitment.
+ *
+ * The rates deliberately pay for behaviour that lowers Litchi's risk, not for
+ * behaviour a borrower would do anyway. Paying on time is the floor; paying
+ * ahead, keeping a moving buffer and bringing in another renter are the things
+ * actually worth money.
+ */
+export const POINTS = {
+  /** Per repayment made on time. 40 x 52 = 2,080 a year, about $42 of value. */
+  perOnTimePayment: 40,
+  /** Per $50 paid ahead of schedule. Early repayment is less exposure. */
+  perFiftyPaidEarly: 25,
+  /** Per weekly Moving Fund top-up. A buffer is what stops the next default. */
+  perFundTopUp: 10,
+  /** One-off, for verifying identity, income and tenancy. */
+  profileComplete: 400,
+  /** Per referred renter who takes a bond. */
+  perReferral: 500,
+} as const;
+
+const fundTopUpsMade = FUND_TOP_UP_DATES.length;
+
+export const rewardCategories: RewardCategory[] = [
+  {
+    key: "on-time",
+    label: "On-time payments",
+    earned: weeklyPaymentsMade * POINTS.perOnTimePayment,
+    description: `${POINTS.perOnTimePayment} points for every repayment made on time.`,
+  },
+  {
+    key: "fund",
+    label: "Moving Fund streak",
+    earned: fundTopUpsMade * POINTS.perFundTopUp,
+    description: `${POINTS.perFundTopUp} points each week you top up your Moving Fund.`,
+  },
+  {
+    key: "history",
+    label: "Consistent renter history",
+    earned: 440,
+    description: "Earned as your verified tenancy record grows.",
+  },
+  {
+    key: "profile",
+    label: "Completed profile",
+    earned: POINTS.profileComplete,
+    description: "One-off bonus for verifying your identity, income and tenancy details.",
+  },
+];
+
+/**
+ * Tiers run on points *earned over the lifetime of the account*, never on the
+ * spendable balance. Deriving status from the balance means redeeming a reward
+ * demotes you, which punishes the exact behaviour the programme exists to
+ * encourage.
+ *
+ * The thresholds are set against what a single 52-week tenancy can actually
+ * produce — roughly 2,900 points before any extra payments — so Orchard is
+ * reached late in a first tenancy rather than never.
+ */
+export interface RewardTier {
+  key: string;
+  name: string;
+  /** Lifetime points needed to reach it. */
+  at: number;
+  benefits: string[];
+}
+
+export const rewardTiers: RewardTier[] = [
+  {
+    key: "sprout",
+    name: "Sprout",
+    at: 0,
+    benefits: ["Earn points on every on-time repayment", "Repayment credits available"],
+  },
+  {
+    key: "grove",
+    name: "Grove",
+    at: 1000,
+    benefits: [
+      "Everything in Sprout",
+      "Moving Fund top-ups unlocked",
+      "Rental record certificate unlocked",
+    ],
+  },
+  {
+    key: "orchard",
+    name: "Orchard",
+    at: 2500,
+    benefits: [
+      "Everything in Grove",
+      "Partner offers unlocked",
+      "Priority support — a person, not a queue",
+    ],
+  },
+];
+
+export const rewards = {
+  /** Always the sum of the categories above — never a number of its own. */
+  basePoints: rewardCategories.reduce((sum, category) => sum + category.earned, 0),
+  /** Three on-time payments so far in September, plus that month's top-ups. */
+  earnedThisMonth: 3 * POINTS.perOnTimePayment + 3 * POINTS.perFundTopUp,
+};
+
+export interface Reward {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  /** Lowest tier that can redeem it. */
+  tier: string;
+  /** What it is worth in dollars, where that is a meaningful question. */
+  worth?: number;
+}
+
+/*
+ * Priced at roughly 2c a point, improving to 2.5c at the top so the ladder is
+ * worth climbing. Every item is reachable inside one 52-week tenancy, which
+ * the previous catalogue was not: the end-of-tenancy clean cost 3,500 points
+ * and the payment pause 5,000, against a lifetime ceiling of about 2,900.
+ *
+ * The clean is a partner discount rather than the whole job. Giving away a
+ * $250 service on a $2,800 interest-free loan is roughly nine percent of
+ * principal, which no lender on this margin can fund.
+ *
+ * The old "one-week payment pause" is gone on purpose. Letting someone defer a
+ * week when money is tight is a hardship provision, and hardship provisions
+ * should not be sold for points to the people least able to have saved them.
+ * It is offered to anyone who asks instead.
+ */
+export const rewardCatalogue: Reward[] = [
+  {
+    id: "rw_repayment_credit",
+    name: "$10 repayment credit",
+    description: "Comes off your next weekly Litchi payment.",
+    cost: 500,
+    tier: "sprout",
+    worth: 10,
+  },
+  {
+    id: "rw_moving_fund",
+    name: "$25 Moving Fund top-up",
+    description: "Straight into your Moving Fund balance.",
+    cost: 1100,
+    tier: "grove",
+    worth: 25,
+  },
+  {
+    id: "rw_rental_record",
+    name: "Rental record certificate",
+    description:
+      "A signed summary of your payment history to hand to your next landlord. Yours to keep.",
+    cost: 1500,
+    tier: "grove",
+  },
+  {
+    id: "rw_end_clean",
+    name: "$40 off an end-of-tenancy clean",
+    description: "With our cleaning partner, booked for your final week.",
+    cost: 1600,
+    tier: "orchard",
+    worth: 40,
+  },
+  {
+    id: "rw_final_payments",
+    name: "$50 off your final payments",
+    description: "Knocked off the last weeks of your plan.",
+    cost: 2000,
+    tier: "orchard",
+    worth: 50,
+  },
+];
+
 export const movingFund = {
   autoTopUp: 20,
-  goal: 2500,
+  /*
+   * Reachable inside the tenancy it exists to fund. At $20 a week from $680, a
+   * $2,500 goal is 91 weeks away — the plan runs 52, so the old target could
+   * never be met before the move it was saving for.
+   *
+   * $1,500 is the right number rather than just a smaller one: Litchi finances
+   * the next bond, so this fund is not for the bond. It is for everything else
+   * a move costs — movers, letting costs, rent in advance, a final clean.
+   */
+  goal: 1500,
   openedDate: "2026-07-21",
   get baseSaved() {
     return FUND_OPENING_DEPOSIT + FUND_TOP_UP_DATES.length * this.autoTopUp;
