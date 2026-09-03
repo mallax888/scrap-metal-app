@@ -17,8 +17,14 @@ export interface NavItem {
   icon: LucideIcon;
 }
 
+/** Where the product's own front door lives, as opposed to the dashboard. */
+export const HOME_HREF = "/";
+
+/** The first screen behind the sidebar. */
+export const APP_HOME = "/dashboard";
+
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Overview", icon: LayoutGrid },
+  { href: "/dashboard", label: "Overview", icon: LayoutGrid },
   { href: "/bond", label: "My Bond", icon: ShieldCheck },
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/rent", label: "Rent", icon: Receipt },

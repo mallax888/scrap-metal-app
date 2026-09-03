@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/AppShell";
 import { CelebrationProvider } from "@/components/ui/Celebration";
 import { ToastProvider } from "@/components/ui/Toast";
 import { LitchiProvider } from "@/lib/store";
@@ -24,6 +23,7 @@ export const metadata: Metadata = {
   description:
     "Litchi pays your rental bond up front and you repay it in fixed weekly payments. Track your bond, payments, rewards and renter score in one place.",
   applicationName: "Litchi",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
@@ -50,9 +50,7 @@ export default function RootLayout({
       <body className="min-h-full bg-canvas text-ink">
         <LitchiProvider>
           <ToastProvider>
-            <CelebrationProvider>
-              <AppShell>{children}</AppShell>
-            </CelebrationProvider>
+            <CelebrationProvider>{children}</CelebrationProvider>
           </ToastProvider>
         </LitchiProvider>
       </body>
