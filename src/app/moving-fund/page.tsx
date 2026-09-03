@@ -55,6 +55,7 @@ export default function MovingFundPage() {
 
               <Progress
                 value={derived.fundProgress}
+                tone="moss"
                 size="lg"
                 className="mt-7"
                 label="Moving Fund progress"

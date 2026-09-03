@@ -101,7 +101,7 @@ export function MovingFundModal({ open, onClose }: { open: boolean; onClose: () 
             {money(projected)} <span className="font-normal text-mist">of {money(movingFund.goal)}</span>
           </p>
         </div>
-        <Progress value={projectedProgress} className="mt-3" label="Moving Fund progress" />
+        <Progress value={projectedProgress} tone="moss" className="mt-3" label="Moving Fund progress" />
         <p className="mt-2.5 text-xs text-mist">
           {percent(projectedProgress)} of the way toward your next move.
         </p>

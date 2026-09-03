@@ -40,6 +40,7 @@ export function MovingFundCard() {
 
         <Progress
           value={derived.fundProgress}
+          tone="moss"
           className="mt-5"
           label="Moving Fund progress"
         />

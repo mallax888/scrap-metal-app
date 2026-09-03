@@ -1,39 +1,55 @@
 import { clsx } from "clsx";
 
 /**
+ * Tones carry meaning, so pick by what the bar measures — not by what looks
+ * good next to it:
+ *
+ *   litchi — money owed to Litchi. The bond payoff, and nothing else.
+ *   moss   — how the renter is doing. Score factors, savings, anything where
+ *            a full bar is good news.
+ *   cream  — sits on a dark slab, where neither of the above survives.
+ *
+ * Red on a "you're doing well" measure reads as a warning, which is why the
+ * score is not litchi even though litchi is the brand colour.
+ */
+type Tone = "litchi" | "cream" | "moss";
+
+const TRACK: Record<Tone, string> = {
+  litchi: "bg-blush",
+  cream: "bg-onbrand/25",
+  moss: "bg-moss-soft",
+};
+
+const FILL: Record<Tone, string> = {
+  litchi: "bg-litchi",
+  cream: "bg-onbrand",
+  moss: "bg-moss",
+};
+
+/**
  * The repayment bar. Width animates on change so an extra payment visibly
  * moves the needle rather than snapping.
  */
 export function Progress({
   value,
   className,
-  tone = "bark",
+  tone = "litchi",
   size = "md",
   label,
 }: {
   /** 0–1 */
   value: number;
   className?: string;
-  tone?: "bark" | "cream" | "moss";
+  tone?: Tone;
   size?: "sm" | "md" | "lg";
   label?: string;
 }) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
   const heights = { sm: "h-1.5", md: "h-2.5", lg: "h-3.5" };
-  const track = {
-    bark: "bg-blush",
-    cream: "bg-onbrand/25",
-    moss: "bg-moss-soft",
-  };
-  const fill = {
-    bark: "bg-litchi",
-    cream: "bg-onbrand",
-    moss: "bg-moss",
-  };
 
   return (
     <div
-      className={clsx("w-full overflow-hidden rounded-full", heights[size], track[tone], className)}
+      className={clsx("w-full overflow-hidden rounded-full", heights[size], TRACK[tone], className)}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
@@ -41,23 +57,37 @@ export function Progress({
       aria-label={label}
     >
       <div
-        className={clsx("h-full rounded-full transition-[width] duration-700 ease-out", fill[tone])}
+        className={clsx("h-full rounded-full transition-[width] duration-700 ease-out", FILL[tone])}
         style={{ width: `${pct}%` }}
       />
     </div>
   );
 }
 
-/** Circular percentage used for the "bond paid off" summary card. */
+const RING_TRACK: Record<Tone, string> = {
+  litchi: "stroke-blush",
+  cream: "stroke-onbrand/25",
+  moss: "stroke-moss-soft",
+};
+
+const RING_FILL: Record<Tone, string> = {
+  litchi: "stroke-litchi",
+  cream: "stroke-onbrand",
+  moss: "stroke-moss",
+};
+
+/** Circular percentage used for bond payoff and the Litchi Score. */
 export function ProgressRing({
   value,
   size = 76,
   stroke = 7,
+  tone = "litchi",
   children,
 }: {
   value: number;
   size?: number;
   stroke?: number;
+  tone?: Tone;
   children?: React.ReactNode;
 }) {
   const pct = Math.max(0, Math.min(1, value));
@@ -73,7 +103,7 @@ export function ProgressRing({
           r={radius}
           fill="none"
           strokeWidth={stroke}
-          className="stroke-blush"
+          className={RING_TRACK[tone]}
         />
         <circle
           cx={size / 2}
@@ -82,7 +112,10 @@ export function ProgressRing({
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          className="stroke-litchi transition-[stroke-dashoffset] duration-700 ease-out"
+          className={clsx(
+            "transition-[stroke-dashoffset] duration-700 ease-out",
+            RING_FILL[tone]
+          )}
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - pct)}
         />

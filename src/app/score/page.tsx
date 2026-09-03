@@ -68,7 +68,7 @@ export default function ScorePage() {
           <Card className="flex flex-col items-start">
             <CardLabel>Your Litchi Score</CardLabel>
             <div className="mt-6 flex items-center gap-6">
-              <ProgressRing value={renterScore.value / 100} size={112} stroke={9}>
+              <ProgressRing value={renterScore.value / 100} size={112} stroke={9} tone="moss">
                 <span className="numeric text-[30px] font-semibold text-ink">
                   {renterScore.value}
                 </span>
@@ -130,12 +130,12 @@ export default function ScorePage() {
                       <Line
                         type="monotone"
                         dataKey="value"
-                        stroke="var(--color-bark)"
+                        stroke="var(--color-moss)"
                         strokeWidth={2.5}
-                        dot={{ r: 3, fill: "var(--color-bark)", strokeWidth: 0 }}
+                        dot={{ r: 3, fill: "var(--color-moss)", strokeWidth: 0 }}
                         activeDot={{
                           r: 5,
-                          fill: "var(--color-bark)",
+                          fill: "var(--color-moss)",
                           stroke: "var(--color-paper)",
                           strokeWidth: 2,
                         }}
@@ -169,6 +169,7 @@ export default function ScorePage() {
                 </div>
                 <Progress
                   value={factor.value / 100}
+                  tone="moss"
                   className="mt-2.5"
                   label={`${factor.label} score`}
                 />

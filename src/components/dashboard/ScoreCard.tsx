@@ -34,6 +34,7 @@ export function ScoreCard({ compact = false }: { compact?: boolean }) {
             </div>
             <Progress
               value={factor.value / 100}
+              tone="moss"
               size="sm"
               className="mt-2"
               label={`${factor.label} score`}
