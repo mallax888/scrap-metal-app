@@ -18,10 +18,15 @@ export default function RentPage() {
   const toast = useToast();
   const joined = state.waitlist.includes(RENT_PRODUCT.id);
 
+  // Rent is a genuine run-rate, so 52 weeks of it is the right figure. The
+  // Litchi side is not: the plan is capped at the bond, and the final payment
+  // is trimmed to land on it exactly. Multiplying the weekly payment by 52
+  // overshoots by 20c and invents money the renter never pays.
+  const annualRent = tenancy.rentWeekly * 52;
   const annual = [
-    { label: "Rent", value: tenancy.rentWeekly * 52, tone: "text-ink" },
-    { label: "Litchi bond repayment", value: plan.weeklyPayment * 52, tone: "text-ink" },
-    { label: "Total housing", value: derived.totalWeeklyHousing * 52, tone: "text-ink" },
+    { label: "Rent", value: annualRent },
+    { label: "Litchi bond repayment", value: plan.principal },
+    { label: "Total housing", value: annualRent + plan.principal },
   ];
 
   return (
@@ -77,7 +82,8 @@ export default function RentPage() {
         <Card>
           <CardTitle>Over a full year</CardTitle>
           <p className="mt-1 text-sm text-mist">
-            Based on your current rent and Litchi repayment, held flat for 52 weeks.
+            Rent held flat for 52 weeks, plus the whole of your bond — the Litchi side
+            never adds up to more than the {money(plan.principal)} you borrowed.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-3">
             {annual.map((row, index) => (
@@ -92,7 +98,7 @@ export default function RentPage() {
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
                   {row.label}
                 </dt>
-                <dd className={`numeric mt-2 text-[22px] font-semibold ${row.tone}`}>
+                <dd className="numeric mt-2 text-[22px] font-semibold text-ink">
                   {money(row.value)}
                 </dd>
               </div>
