@@ -3,10 +3,20 @@ import { clsx } from "clsx";
 type Tone = "paper" | "cream" | "ink";
 
 const TONES: Record<Tone, string> = {
-  paper: "bg-paper border-sand/70",
-  cream: "bg-cream border-sand",
-  ink: "bg-hero border-hero text-onbrand",
+  paper: "bg-paper",
+  cream: "bg-cream",
+  ink: "bg-hero text-onbrand",
 };
+
+/**
+ * Border and shadow both say "separate object". Spending both on every block
+ * flattens the page, so they are alternatives rather than a pair: `flat` is the
+ * default and `raised` is reserved for the few things that outrank the rest.
+ */
+const ELEVATION = {
+  flat: "border border-sand/70",
+  raised: "shadow-card",
+} as const;
 
 export function Card({
   children,
@@ -14,19 +24,23 @@ export function Card({
   tone = "paper",
   padded = true,
   interactive = false,
+  elevation = "flat",
   ...rest
 }: React.HTMLAttributes<HTMLDivElement> & {
   tone?: Tone;
   padded?: boolean;
   interactive?: boolean;
+  elevation?: keyof typeof ELEVATION;
 }) {
   return (
     <div
       className={clsx(
-        "rounded-card border shadow-card",
+        "rounded-card",
         TONES[tone],
+        ELEVATION[elevation],
         padded && "p-5 sm:p-6",
-        interactive && "transition-shadow duration-300 hover:shadow-lift",
+        interactive &&
+          "transition-[border-color,box-shadow] duration-300 hover:border-clay/60 hover:shadow-card",
         className
       )}
       {...rest}

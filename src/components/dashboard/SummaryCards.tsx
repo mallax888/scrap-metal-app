@@ -2,36 +2,76 @@
 
 import Link from "next/link";
 import { CheckCircle2, TrendingUp } from "lucide-react";
-import { Card, CardLabel } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { ProgressRing } from "@/components/ui/Progress";
-import { SkeletonCard } from "@/components/ui/Skeleton";
+import { clsx } from "clsx";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { bond, plan, renterScore } from "@/lib/data";
 import { money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
-function SummaryCard({
+/**
+ * The four headline figures.
+ *
+ * Deliberately *not* four cards. Card chrome around each one spent most of the
+ * width on borders and padding, forced the numbers small, and — because every
+ * other block on the page carried the same border and shadow — ranked these no
+ * higher than anything else. As one hairline-divided row they get the space to
+ * be read as the headline they are.
+ */
+function Stat({
   label,
   href,
-  children,
+  value,
+  unit,
+  caption,
+  chip,
+  first,
 }: {
   label: string;
   href: string;
-  children: React.ReactNode;
+  value: string;
+  unit?: string;
+  caption: string;
+  chip?: React.ReactNode;
+  first?: boolean;
 }) {
   return (
-    <Card interactive className="flex flex-col p-5">
-      <div className="flex items-start justify-between gap-3">
-        <CardLabel>{label}</CardLabel>
-        <Link
-          href={href}
-          className="text-[11px] font-semibold uppercase tracking-[0.1em] text-clay transition-colors hover:text-bark"
-        >
-          View
-        </Link>
-      </div>
+    <Link
+      href={href}
+      className={clsx(
+        // The whole figure is the target — no "View" link repeated four times.
+        "group flex flex-col rounded-tile px-5 py-4 transition-colors duration-200 hover:bg-paper/70",
+        !first && "sm:border-l sm:border-sand"
+      )}
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-clay">
+        {label}
+      </span>
+      <span className="numeric mt-2 text-[38px] font-semibold leading-none tracking-[-0.035em] text-ink">
+        {value}
+        {unit ? <span className="text-lg font-medium text-mist">{unit}</span> : null}
+      </span>
+      <span className="mt-2 text-[13px] text-mist">{caption}</span>
+      {chip ? <span className="mt-3">{chip}</span> : null}
+    </Link>
+  );
+}
+
+function Chip({
+  children,
+  tone = "moss",
+}: {
+  children: React.ReactNode;
+  tone?: "moss" | "cream";
+}) {
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+        tone === "moss" ? "bg-moss-soft text-moss" : "bg-cream text-bark"
+      )}
+    >
       {children}
-    </Card>
+    </span>
   );
 }
 
@@ -40,69 +80,59 @@ export function SummaryCards() {
 
   if (!ready) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((key) => (
-          <SkeletonCard key={key} />
+          <div key={key} className="px-5 py-4">
+            <Skeleton className="h-2.5 w-20" />
+            <Skeleton className="mt-3 h-9 w-32" />
+            <Skeleton className="mt-3 h-3 w-24" />
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SummaryCard label="Bond" href="/bond">
-        <p className="numeric mt-4 text-[34px] font-semibold leading-none text-ink">
-          {money(bond.amount)}
-        </p>
-        <p className="mt-2 text-sm text-mist">Bond amount</p>
-        <div className="mt-4">
-          <Badge tone="moss">
-            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      <Stat
+        first
+        label="Bond"
+        href="/bond"
+        value={money(bond.amount)}
+        caption="Held by Tenancy Services"
+        chip={
+          <Chip>
+            <CheckCircle2 className="h-3 w-3" aria-hidden />
             Paid &amp; lodged
-          </Badge>
-        </div>
-        <p className="mt-3 text-xs text-mist">Held securely by Tenancy Services</p>
-      </SummaryCard>
-
-      <SummaryCard label="Weekly Litchi payment" href="/payments">
-        <p className="numeric mt-4 text-[34px] font-semibold leading-none text-ink">
-          {money(plan.weeklyPayment)}
-          <span className="text-base font-medium text-mist"> / week</span>
-        </p>
-        <p className="mt-2 text-sm text-mist">Bond repayment</p>
-        <p className="numeric mt-auto pt-4 text-sm font-medium text-bark">
-          {derived.weeksRemaining} weeks remaining
-        </p>
-      </SummaryCard>
-
-      <SummaryCard label="Bond paid off" href="/bond">
-        <div className="mt-4 flex items-center gap-4">
-          <ProgressRing value={derived.progress} size={74} stroke={7}>
-            <span className="numeric text-lg font-semibold text-ink">
-              {percent(derived.progress)}
-            </span>
-          </ProgressRing>
-          <div className="min-w-0">
-            <p className="numeric text-sm font-semibold text-ink">
-              {moneyExact(derived.totalRepaid)}
-            </p>
-            <p className="numeric text-sm text-mist">of {money(plan.principal)} repaid</p>
-          </div>
-        </div>
-      </SummaryCard>
-
-      <SummaryCard label="Renter score" href="/score">
-        <p className="numeric mt-4 text-[34px] font-semibold leading-none text-ink">
-          {renterScore.value}
-          <span className="text-base font-medium text-mist"> / 100</span>
-        </p>
-        <p className="mt-2 text-sm text-mist">{renterScore.band}</p>
-        <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-moss">
-          <TrendingUp className="h-4 w-4" aria-hidden />
-          <span className="numeric">+{renterScore.change}</span>
-          <span className="font-normal text-mist">{renterScore.changeWindow}</span>
-        </div>
-      </SummaryCard>
+          </Chip>
+        }
+      />
+      <Stat
+        label="Weekly payment"
+        href="/payments"
+        value={money(plan.weeklyPayment)}
+        unit=" / wk"
+        caption="Bond repayment"
+        chip={<Chip tone="cream">{derived.weeksRemaining} weeks left</Chip>}
+      />
+      <Stat
+        label="Bond paid off"
+        href="/bond"
+        value={percent(derived.progress)}
+        caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.principal)}`}
+      />
+      <Stat
+        label="Renter score"
+        href="/score"
+        value={String(renterScore.value)}
+        unit=" / 100"
+        caption={renterScore.band}
+        chip={
+          <Chip>
+            <TrendingUp className="h-3 w-3" aria-hidden />+{renterScore.change} this month
+          </Chip>
+        }
+      />
     </div>
   );
 }

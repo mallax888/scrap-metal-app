@@ -38,7 +38,7 @@ export default function OverviewPage() {
         }
       />
 
-      <div className="space-y-6">
+      <div className="stagger space-y-6">
         <SummaryCards />
 
         <HeroBondCard />

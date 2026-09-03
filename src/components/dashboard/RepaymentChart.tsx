@@ -62,7 +62,7 @@ export function RepaymentChart() {
   ];
 
   return (
-    <Card className="flex flex-col">
+    <Card elevation="raised" className="flex flex-col">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <CardTitle>Bond repayment</CardTitle>
