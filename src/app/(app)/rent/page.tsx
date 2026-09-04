@@ -19,14 +19,14 @@ export default function RentPage() {
   const joined = state.waitlist.includes(RENT_PRODUCT.id);
 
   // Rent is a genuine run-rate, so 52 weeks of it is the right figure. The
-  // Litchi side is not: the plan is capped at the bond, and the final payment
-  // is trimmed to land on it exactly. Multiplying the weekly payment by 52
-  // overshoots by 20c and invents money the renter never pays.
+  // Litchi side is not: the plan is capped at the total repayable, and the
+  // final payment is trimmed to land on it exactly. Multiplying the weekly
+  // payment by 52 overshoots and invents money the renter never pays.
   const annualRent = tenancy.rentWeekly * 52;
   const annual = [
     { label: "Rent", value: annualRent },
-    { label: "Litchi bond repayment", value: plan.principal },
-    { label: "Total housing", value: annualRent + plan.principal },
+    { label: "Litchi bond repayment", value: plan.totalRepayable },
+    { label: "Total housing", value: annualRent + plan.totalRepayable },
   ];
 
   return (
@@ -82,8 +82,9 @@ export default function RentPage() {
         <Card>
           <CardTitle>Over a full year</CardTitle>
           <p className="mt-1 text-sm text-mist">
-            Rent held flat for 52 weeks, plus the whole of your bond — the Litchi side
-            never adds up to more than the {money(plan.principal)} you borrowed.
+            Rent held flat for 52 weeks, plus everything you repay Litchi — the{" "}
+            {money(plan.principal)} bond and the {money(plan.fee)} fee, and not a cent
+            beyond it.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-3">
             {annual.map((row, index) => (

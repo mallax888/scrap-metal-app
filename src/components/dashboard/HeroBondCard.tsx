@@ -89,7 +89,7 @@ export function HeroBondCard() {
               label="Bond repayment progress"
             />
             <p className="numeric mt-3 text-sm text-onbrand/55">
-              {percent(derived.progress)} of your bond repaid
+              {percent(derived.progress)} of your plan repaid
             </p>
           </div>
 

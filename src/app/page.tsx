@@ -42,9 +42,11 @@ const STEPS = [
   {
     n: "03",
     title: "You repay a fixed weekly amount",
-    body: `${money(
-      plan.weeklyPayment
-    )} a week for ${plan.termWeeks} weeks. Same amount every week, no interest, no establishment fee. Pay it off early whenever you like.`,
+    body: `${money(plan.weeklyPayment)} a week for ${plan.termWeeks} weeks. One flat ${
+      plan.feeRate * 100
+    }% fee of ${money(
+      plan.fee
+    )} is included in that, and it is the only thing Litchi charges. No interest, and you can pay it off early whenever you like.`,
   },
 ];
 
@@ -61,6 +63,12 @@ const CLARITY = [
     body: `${money(
       plan.weeklyPayment
     )} a week comes to Litchi for the bond we financed. It is a repayment, not rent, and it is shown separately everywhere in the app.`,
+  },
+  {
+    yes: "One fee, quoted up front",
+    body: `${money(plan.principal)} bond plus a flat ${money(plan.fee)} fee — ${money(
+      plan.totalRepayable
+    )} in total, fixed on day one. No interest, so it never grows, and nothing is added later.`,
   },
 ];
 

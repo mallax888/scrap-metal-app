@@ -105,8 +105,8 @@ export interface PlanProjection {
  * removes payments off the end, which pulls the date back on its own.
  */
 export function projectPlan(totalRepaidInput: number): PlanProjection {
-  const totalRepaid = Math.min(plan.principal, Math.max(0, round2(totalRepaidInput)));
-  const balance = round2(plan.principal - totalRepaid);
+  const totalRepaid = Math.min(plan.totalRepayable, Math.max(0, round2(totalRepaidInput)));
+  const balance = round2(plan.totalRepayable - totalRepaid);
   const weeksRemaining =
     balance <= 0 ? 0 : Math.max(1, Math.round(balance / plan.weeklyPayment));
   const payoffDate =
@@ -114,7 +114,7 @@ export function projectPlan(totalRepaidInput: number): PlanProjection {
   return {
     totalRepaid,
     balance,
-    progress: totalRepaid / plan.principal,
+    progress: totalRepaid / plan.totalRepayable,
     weeksRemaining,
     payoffDate,
     weeksSaved: Math.max(0, Math.round(daysBetween(payoffDate, originalEndDate) / 7)),
@@ -153,10 +153,10 @@ function buildChartSeries(
   ].sort((a, b) => (a.date < b.date ? -1 : 1));
 
   const points: ChartPoint[] = [
-    { date: tenancy.startDate, actual: plan.principal, projected: null },
+    { date: tenancy.startDate, actual: plan.totalRepayable, projected: null },
   ];
 
-  let running: number = plan.principal;
+  let running: number = plan.totalRepayable;
   for (const entry of paid) {
     running = round2(running - entry.amount);
     const last = points[points.length - 1];

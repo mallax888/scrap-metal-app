@@ -31,7 +31,7 @@ const STEPS = [
   {
     icon: ShieldCheck,
     title: "You repay Litchi weekly",
-    body: `${money(plan.weeklyPayment)} every Friday until the bond is repaid. No interest, no early repayment fee.`,
+    body: `${money(plan.weeklyPayment)} every Friday until the ${money(plan.totalRepayable)} is repaid. No interest and no penalty for paying it off early.`,
   },
 ];
 
@@ -71,7 +71,7 @@ export default function BondPage() {
               {moneyExact(derived.totalRepaid)}
             </p>
             <p className="numeric mt-2 text-sm text-moss">
-              {percent(derived.progress)} of your bond
+              {percent(derived.progress)} of your plan
             </p>
           </div>
           <div>
@@ -133,6 +133,9 @@ export default function BondPage() {
             <Badge tone="cream">Lender: {plan.partner}</Badge>
             <Badge tone="outline">Agreement {plan.agreementRef}</Badge>
             <Badge tone="moss">0% interest</Badge>
+            <Badge tone="cream">
+              {plan.feeRate * 100}% fee &middot; {money(plan.fee)}
+            </Badge>
             <ButtonLink href="/documents" variant="ghost" size="sm" className="ml-auto">
               <FileText className="h-4 w-4" aria-hidden />
               Bond documents

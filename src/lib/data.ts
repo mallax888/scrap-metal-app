@@ -48,12 +48,34 @@ export const bond = {
 } as const;
 
 /**
- * The financed side of the bond: 52 weekly payments of $53.85, with the last
- * one trimmed to settle the balance at exactly $2,800.
+ * The financed side of the bond.
+ *
+ * Two amounts, and the app must never let them blur into one. `principal` is
+ * the bond itself — what the lending partner pays the agent and what Tenancy
+ * Services holds. `totalRepayable` is what the renter actually pays back: the
+ * bond plus Litchi's fee. Anything showing "the bond" means the first;
+ * anything showing progress, balance or a schedule means the second.
+ *
+ * The fee is Litchi's whole revenue model: a flat 5% of the bond, quoted up
+ * front and spread evenly across the instalments. Not interest, so it does not
+ * grow with time and paying early does not reduce it — it is a fixed price for
+ * the service, which is why the repayment is the same figure every week.
+ *
+ * 52 payments of $56.54 with the last trimmed to $56.46 settles the balance at
+ * exactly $2,940.
  */
+const BOND_AMOUNT = 2800;
+const FEE_RATE = 0.05;
+
 export const plan = {
-  principal: 2800,
-  weeklyPayment: 53.85,
+  /** The bond. Paid to the agent, lodged with Tenancy Services. */
+  principal: BOND_AMOUNT,
+  /** Litchi's only charge. */
+  feeRate: FEE_RATE,
+  fee: Math.round(BOND_AMOUNT * FEE_RATE * 100) / 100,
+  /** Bond + fee. What the schedule repays and what progress is measured against. */
+  totalRepayable: Math.round(BOND_AMOUNT * (1 + FEE_RATE) * 100) / 100,
+  weeklyPayment: 56.54,
   termWeeks: 52,
   nextPaymentDate: "2026-09-25",
   /** First repayment — the Friday after the tenancy started. */
@@ -107,7 +129,7 @@ export const paymentMethods: PaymentMethod[] = [
 
 /**
  * Repayments to date: payments 1-10 of 52, every Friday from 17 July 2026.
- * Ten payments x $53.85 is the $538.50 (19%) shown on the dashboard.
+ * Ten payments x $56.54 is the $565.40 (19%) shown on the dashboard.
  */
 export const repaymentHistory: { date: string; amount: number; kind: "repayment" | "extra" }[] = [
   "2026-07-17",

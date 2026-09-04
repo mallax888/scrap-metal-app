@@ -119,7 +119,7 @@ export function SummaryCards() {
         label="Bond paid off"
         href="/bond"
         value={percent(derived.progress)}
-        caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.principal)}`}
+        caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.totalRepayable)}`}
       />
       <Stat
         label="Renter score"

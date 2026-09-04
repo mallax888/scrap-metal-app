@@ -26,9 +26,17 @@ export function RepaymentPlanModal({ open, onClose }: { open: boolean; onClose: 
       size="lg"
       footer={<Button onClick={onClose}>Done</Button>}
     >
+      {/*
+        The bond and the fee are itemised rather than shown only as a total.
+        This is the screen a renter opens to check what they actually owe, so
+        the one number Litchi earns should be visible on it, not folded into a
+        larger figure where it cannot be picked out.
+      */}
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-4">
         {[
           { label: "Bond financed", value: money(plan.principal) },
+          { label: `Litchi fee (${plan.feeRate * 100}%)`, value: money(plan.fee) },
+          { label: "Total repayable", value: money(plan.totalRepayable) },
           { label: "Weekly payment", value: money(plan.weeklyPayment) },
           { label: "Repaid so far", value: moneyExact(derived.totalRepaid) },
           { label: "Balance", value: moneyExact(derived.balance) },
@@ -47,7 +55,7 @@ export function RepaymentPlanModal({ open, onClose }: { open: boolean; onClose: 
         <Badge tone="moss">
           {plan.interestRate === 0 ? "0% interest" : `${plan.interestRate}% interest`}
         </Badge>
-        <Badge tone="outline">No early repayment fee</Badge>
+        <Badge tone="outline">No early repayment penalty</Badge>
       </div>
 
       <h3 className="mt-7 text-sm font-semibold text-ink">Upcoming payments</h3>

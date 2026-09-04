@@ -52,7 +52,7 @@ export function RepaymentChart() {
   const data: ChartPoint[] = derived.chart;
 
   const stats = [
-    { label: "Starting balance", value: money(plan.principal), tone: "text-mist" },
+    { label: "Starting balance", value: money(plan.totalRepayable), tone: "text-mist" },
     { label: "Current balance", value: moneyExact(derived.balance), tone: "text-ink" },
     {
       label: "Projected completion",
@@ -128,7 +128,7 @@ export function RepaymentChart() {
                 tick={{ fill: "var(--color-mist)", fontSize: 11 }}
               />
               <YAxis
-                domain={[0, plan.principal]}
+                domain={[0, plan.totalRepayable]}
                 tickFormatter={(value: number) => money(value)}
                 tickLine={false}
                 axisLine={false}

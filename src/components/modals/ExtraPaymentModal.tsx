@@ -45,7 +45,7 @@ export function ExtraPaymentModal({ open, onClose }: { open: boolean; onClose: (
         message: `You cleared it ${derived.weeksRemaining} ${
           derived.weeksRemaining === 1 ? "week" : "weeks"
         } early. Nothing more to pay.`,
-        stat: `${money(plan.principal)} repaid in full`,
+        stat: `${money(plan.totalRepayable)} repaid in full`,
       });
     } else {
       toast(`${money(parsed)} paid towards your bond`);
