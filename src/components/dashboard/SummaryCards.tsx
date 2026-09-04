@@ -115,8 +115,11 @@ export function SummaryCards() {
         caption="Bond repayment"
         chip={<Chip tone="cream">{derived.weeksRemaining} weeks left</Chip>}
       />
+      {/* Not "Bond paid off": the figure underneath is measured against the
+          total repayable, and calling that the bond is the exact conflation
+          the fee split exists to prevent. */}
       <Stat
-        label="Bond paid off"
+        label="Plan paid off"
         href="/bond"
         value={percent(derived.progress)}
         caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.totalRepayable)}`}
