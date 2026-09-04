@@ -34,11 +34,12 @@ export function HeroBondCard() {
           }}
           aria-hidden
         />
-        {/* Centred in the card rather than tucked into a corner, where it was
-            clipped by two edges and read as a mistake. Kept faint enough that
-            the copy sitting over it loses nothing. */}
+        {/* Held to the right, clear of the copy. Centred it sat behind the
+            headline and the stat row; tucked into a corner it was clipped by
+            two edges at once and read as a mistake. Cropped by the right edge
+            alone looks deliberate, and leaves the text column untouched. */}
         <PiggyMark
-          className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 text-onbrand/[0.05] sm:h-96 sm:w-96"
+          className="pointer-events-none absolute right-0 top-1/2 h-64 w-64 -translate-y-1/2 translate-x-[18%] text-onbrand/[0.05] sm:h-80 sm:w-80 lg:h-[22rem] lg:w-[22rem]"
           accent="var(--hero)"
         />
 
