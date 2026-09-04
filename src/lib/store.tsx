@@ -27,7 +27,7 @@ import {
   type ActivityItem,
   type RewardTier,
 } from "./data";
-import { addWeeks, daysBetween } from "./format";
+import { addDays, addWeeks, daysBetween } from "./format";
 
 /* ------------------------------------------------------------------ */
 /* Persisted state                                                     */
@@ -37,6 +37,30 @@ export interface LedgerEntry {
   id: string;
   date: string;
   amount: number;
+}
+
+/**
+ * A payment that failed, and where Litchi has got to about it.
+ *
+ * The stages are derived from the missed payment's date rather than stored, so
+ * the renter is never shown a vague "we'll be in touch" — they can see exactly
+ * what happens and when. Nothing here charges a fee: a late fee on a product
+ * for people who could not find a bond charges the least able to pay for being
+ * least able to pay.
+ */
+export interface MissedStage {
+  key: string;
+  label: string;
+  detail: string;
+  date: string;
+  done: boolean;
+}
+
+export interface MissedPayment {
+  date: string;
+  amount: number;
+  daysAgo: number;
+  stages: MissedStage[];
 }
 
 export interface Redemption {
@@ -54,6 +78,14 @@ export interface LitchiState {
   activePaymentMethodId: string;
   autoTopUp: boolean;
   waitlist: string[];
+  /**
+   * A payment the renter asked to move before it was due. Free, and the whole
+   * point of the feature: the cheapest missed payment is the one someone tells
+   * you about in advance.
+   */
+  movedPayment: { from: string; to: string } | null;
+  /** A payment that failed. The demo can trigger this to show what happens. */
+  missedPayment: string | null;
 }
 
 const INITIAL_STATE: LitchiState = {
@@ -63,6 +95,8 @@ const INITIAL_STATE: LitchiState = {
   activePaymentMethodId: paymentMethods[0].id,
   autoTopUp: true,
   waitlist: [],
+  movedPayment: null,
+  missedPayment: null,
 };
 
 const store = createLocalStore<LitchiState>("litchi.state.v1", INITIAL_STATE);
@@ -193,6 +227,9 @@ export interface LitchiDerived {
   chart: ChartPoint[];
   nextPayment: ScheduledPayment | null;
   extraPaid: number;
+  /** Trouble, and what is being done about it */
+  movedPayment: { from: string; to: string } | null;
+  missedPayment: MissedPayment | null;
   /** Moving Fund */
   fundSaved: number;
   fundProgress: number;
@@ -257,6 +294,54 @@ function derive(state: LitchiState): LitchiDerived {
       )
     : null;
 
+  /*
+   * A missed payment and the staged response to it. Every date counts from the
+   * payment itself, so someone in trouble can see what happens next without
+   * having to ring and ask.
+   */
+  const missedDate = state.missedPayment;
+  const missedPayment: MissedPayment | null = missedDate
+    ? {
+        date: missedDate,
+        amount: plan.weeklyPayment,
+        daysAgo: Math.max(0, daysBetween(missedDate, TODAY)),
+        stages: (
+          [
+            [
+              "missed",
+              "Payment didn't go through",
+              "Your bank declined it. Nothing was charged for the attempt.",
+              0,
+            ],
+            [
+              "notice",
+              "We let you know",
+              "A message, not a demand. No fee, and nothing reported to anyone.",
+              1,
+            ],
+            [
+              "retry",
+              "We try once more",
+              "A single retry, on a day you pick. We never re-present it over and over.",
+              4,
+            ],
+            [
+              "talk",
+              "A person gets in touch",
+              "To agree a plan that works — not to chase you.",
+              8,
+            ],
+          ] as const
+        ).map(([key, label, detail, afterDays]) => ({
+          key,
+          label,
+          detail,
+          date: addDays(missedDate, afterDays),
+          done: Math.max(0, daysBetween(missedDate, TODAY)) >= afterDays,
+        })),
+      }
+    : null;
+
   const userActivity: ActivityItem[] = [
     ...state.extraPayments.map((entry) => ({
       id: entry.id,
@@ -294,6 +379,8 @@ function derive(state: LitchiState): LitchiDerived {
     schedule,
     chart: buildChartSeries(state.extraPayments, balance, schedule),
     nextPayment: schedule[0] ?? null,
+    movedPayment: state.movedPayment,
+    missedPayment,
     extraPaid,
     fundSaved,
     fundProgress: Math.min(1, fundSaved / movingFund.goal),
@@ -323,6 +410,12 @@ export interface LitchiActions {
   setPaymentMethod: (id: string) => void;
   toggleAutoTopUp: () => void;
   toggleWaitlist: (productId: string) => void;
+  /** Move an upcoming payment to a later date. Free, and always allowed. */
+  movePayment: (toDate: string) => void;
+  /** Pay a missed payment now and clear the arrears state. */
+  catchUpPayment: () => void;
+  /** Demo only: show what a failed payment looks like, or put it back. */
+  setMissedPayment: (date: string | null) => void;
   reset: () => void;
 }
 
@@ -402,6 +495,38 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
     store.setState((prev) => ({ ...prev, autoTopUp: !prev.autoTopUp }));
   }, []);
 
+  const movePayment = useCallback((toDate: string) => {
+    store.setState((prev) => ({
+      ...prev,
+      movedPayment: { from: plan.nextPaymentDate, to: toDate },
+      // Moving a payment before it is due is the opposite of missing one, so
+      // it clears any arrears state rather than sitting alongside it.
+      missedPayment: null,
+    }));
+  }, []);
+
+  const catchUpPayment = useCallback(() => {
+    store.setState((prev) => {
+      if (!prev.missedPayment) return prev;
+      return {
+        ...prev,
+        missedPayment: null,
+        extraPayments: [
+          ...prev.extraPayments,
+          {
+            id: `catchup_${Date.now()}`,
+            date: TODAY,
+            amount: plan.weeklyPayment,
+          },
+        ],
+      };
+    });
+  }, []);
+
+  const setMissedPayment = useCallback((date: string | null) => {
+    store.setState((prev) => ({ ...prev, missedPayment: date }));
+  }, []);
+
   const toggleWaitlist = useCallback((productId: string) => {
     store.setState((prev) => ({
       ...prev,
@@ -424,11 +549,17 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       setPaymentMethod,
       toggleAutoTopUp,
       toggleWaitlist,
+      movePayment,
+      catchUpPayment,
+      setMissedPayment,
       reset,
     }),
     [
       state,
       ready,
+      movePayment,
+      catchUpPayment,
+      setMissedPayment,
       makeExtraPayment,
       addToMovingFund,
       redeemReward,

@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NextPaymentCard } from "@/components/dashboard/NextPaymentCard";
+import { MissedPaymentCard } from "@/components/dashboard/MissedPaymentCard";
+import { IfThingsGetTight } from "@/components/dashboard/IfThingsGetTight";
+import { DemoScenario } from "@/components/marketing/DemoScenario";
 import { ActivityRow } from "@/components/dashboard/ActivityFeed";
 import { ExtraPaymentModal } from "@/components/modals/ExtraPaymentModal";
 import { plan, type ActivityKind } from "@/lib/data";
@@ -54,6 +57,8 @@ export default function PaymentsPage() {
       />
 
       <div className="space-y-6">
+        <MissedPaymentCard />
+
         <div className="grid gap-6 xl:grid-cols-3">
           <NextPaymentCard />
 
@@ -180,6 +185,9 @@ export default function PaymentsPage() {
             </ul>
           )}
         </Card>
+        <IfThingsGetTight />
+
+        <DemoScenario />
       </div>
 
       <ExtraPaymentModal open={extraOpen} onClose={() => setExtraOpen(false)} />

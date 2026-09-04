@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { HeroBondCard } from "@/components/dashboard/HeroBondCard";
+import { MissedPaymentCard } from "@/components/dashboard/MissedPaymentCard";
 import { RepaymentChart } from "@/components/dashboard/RepaymentChart";
 import { NextPaymentCard } from "@/components/dashboard/NextPaymentCard";
 import { BondLodgementCard } from "@/components/dashboard/BondLodgementCard";
@@ -39,6 +40,10 @@ export default function OverviewPage() {
       />
 
       <div className="stagger space-y-6">
+        {/* Above everything, including the headline figures. Someone with a
+            failed payment did not open the app to admire their progress. */}
+        <MissedPaymentCard />
+
         <SummaryCards />
 
         <HeroBondCard />

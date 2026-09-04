@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, CheckCircle2, CreditCard } from "lucide-react";
+import { CalendarClock, CalendarDays, CheckCircle2, CreditCard } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ManagePaymentModal } from "@/components/modals/ManagePaymentModal";
+import { MovePaymentModal } from "@/components/modals/MovePaymentModal";
 import { formatDayDate, formatDayShort, moneyExact } from "@/lib/format";
 import { useActivePaymentMethod, useLitchi } from "@/lib/store";
 
@@ -13,6 +14,7 @@ export function NextPaymentCard() {
   const { derived, ready } = useLitchi();
   const method = useActivePaymentMethod();
   const [open, setOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const next = derived.nextPayment;
   const after = derived.schedule.slice(1, 4);
 
@@ -88,14 +90,22 @@ export function NextPaymentCard() {
           Payment method active
         </div>
 
-        <div className="mt-auto pt-5">
-          <Button variant="secondary" className="w-full" onClick={() => setOpen(true)}>
+        {/* Two actions, and the order is deliberate. Moving a payment is the
+            thing a renter in trouble needs and the thing Litchi most wants them
+            to do, so it is not buried inside "Manage payment". */}
+        <div className="mt-auto flex flex-col gap-2.5 pt-5">
+          <Button variant="secondary" className="w-full" onClick={() => setMoveOpen(true)}>
+            <CalendarClock className="h-4 w-4" aria-hidden />
+            Move this payment
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => setOpen(true)}>
             Manage payment
           </Button>
         </div>
       </Card>
 
       <ManagePaymentModal open={open} onClose={() => setOpen(false)} />
+      <MovePaymentModal open={moveOpen} onClose={() => setMoveOpen(false)} />
     </>
   );
 }
