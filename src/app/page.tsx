@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { ArrowRight, Check, Minus } from "lucide-react";
+import { clsx } from "clsx";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { ButtonLink } from "@/components/ui/Button";
 import { DemoBadge } from "@/components/marketing/DemoBadge";
 import { WeekSplit } from "@/components/marketing/WeekSplit";
-import { bond, plan, rent, tenancy } from "@/lib/data";
+import { bond, movingChecklist, plan, rent, tenancy } from "@/lib/data";
 import { money } from "@/lib/format";
 import { APP_HOME } from "@/lib/nav";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     absolute: "Litchi — Move in. Pay smarter.",
   },
   description:
-    "A rental bond is four weeks' rent, due in the same week as your movers, your letting costs and your first rent. Litchi pays it up front and you repay a fixed weekly amount.",
+    "Moving costs thousands in a single week — bond, rent in advance, movers, a professional clean. Litchi pays the bond up front and you repay a fixed weekly amount.",
 };
 
 /**
@@ -113,9 +114,10 @@ export default function LandingPage() {
               Pay smarter.
             </h1>
             <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
-              A rental bond is four weeks&rsquo; rent, and it falls due in the same week as your
-              movers, your first rent and everything else about moving. Litchi pays it up front. You
-              repay a fixed weekly amount.
+              A bond is four weeks&rsquo; rent, and it is the biggest of a pile of costs that all
+              land in the same week &mdash; rent in advance, movers, a professional clean of the
+              place you&rsquo;re leaving, power and internet reconnected. Litchi pays the bond up
+              front. You repay a fixed weekly amount.
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -160,6 +162,53 @@ export default function LandingPage() {
 
           {/* The claim the product rests on, drawn rather than described. */}
           <WeekSplit />
+        </section>
+
+        {/* The problem, named. "Everything else about moving" means nothing
+            until the list is actually written out. Unpriced on purpose. */}
+        <section className="mt-24 sm:mt-32">
+          <h2 className="text-[28px] font-semibold tracking-tight text-ink sm:text-[34px]">
+            What a move actually involves
+          </h2>
+          <p className="mt-3 max-w-2xl text-[17px] leading-relaxed text-mist">
+            All of it inside a fortnight, most of it in the same week. Litchi takes the biggest
+            one off the list.
+          </p>
+
+          <ul className="mt-8 grid max-w-4xl gap-3 sm:grid-cols-2">
+            {movingChecklist.map((item) => (
+              <li
+                key={item.label}
+                className={clsx(
+                  "flex items-start gap-3 rounded-card border p-5",
+                  item.covered
+                    ? "border-moss/30 bg-moss-soft/40"
+                    : "border-sand/70 bg-paper"
+                )}
+              >
+                <span
+                  className={clsx(
+                    "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                    item.covered ? "bg-moss text-onbrand" : "bg-cream text-clay"
+                  )}
+                  aria-hidden
+                >
+                  {item.covered ? <Check className="h-3.5 w-3.5" /> : <Minus className="h-3 w-3" />}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="flex flex-wrap items-center gap-2 text-[15px] font-semibold text-ink">
+                    {item.label}
+                    {item.covered ? (
+                      <span className="rounded-full bg-moss-soft px-2 py-0.5 text-[11px] font-semibold text-moss">
+                        Litchi covers this
+                      </span>
+                    ) : null}
+                  </h3>
+                  <p className="mt-1 text-[13px] leading-relaxed text-mist">{item.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* How it works */}

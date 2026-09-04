@@ -99,6 +99,49 @@ export const rent = {
   nextDue: "2026-09-04",
 } as const;
 
+/**
+ * Everything a move actually involves.
+ *
+ * Deliberately unpriced. The point is the length of the list and the fact that
+ * it all falls due in the same week — put figures on it and the conversation
+ * becomes an argument about whether the movers really cost that, which is not
+ * the argument worth having here.
+ */
+export interface MovingTask {
+  label: string;
+  detail: string;
+  /** The one line Litchi takes off the list. */
+  covered?: boolean;
+}
+
+export const movingChecklist: MovingTask[] = [
+  {
+    label: "The bond",
+    detail: `${bond.weeksOfRent} weeks' rent, lodged with Tenancy Services before you move in`,
+    covered: true,
+  },
+  {
+    label: "Rent in advance",
+    detail: "Up to two weeks of it, paid before you get the keys",
+  },
+  {
+    label: "Movers",
+    detail: "A truck and a couple of people, booked for the day",
+  },
+  {
+    label: "A professional clean",
+    detail: "Of the place you're leaving, or you can lose part of your old bond",
+  },
+  {
+    label: "Power and internet",
+    detail: "Disconnected at one address and connected at the other",
+  },
+  {
+    label: "Whatever the agency charges",
+    detail: "Admin and referencing costs, where they apply",
+  },
+];
+
 export interface PaymentMethod {
   id: string;
   brand: string;
