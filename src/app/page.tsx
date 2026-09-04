@@ -114,10 +114,14 @@ export default function LandingPage() {
               Pay smarter.
             </h1>
             <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
-              A bond is four weeks&rsquo; rent, and it is the biggest of a pile of costs that all
-              land in the same week &mdash; rent in advance, movers, a professional clean of the
-              place you&rsquo;re leaving, power and internet reconnected. Litchi pays the bond up
-              front. You repay a fixed weekly amount.
+              A bond is typically four weeks&rsquo; rent &mdash; and it&rsquo;s often the biggest
+              cost in a pile of expenses that all hit at once. You&rsquo;re paying rent in advance,
+              moving costs, professional cleaning, and getting your power and internet connected,
+              all within the same week.
+            </p>
+            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
+              Litchi pays your bond upfront. You repay it in a simple, fixed weekly amount &mdash;
+              making moving into your next home easier and more manageable.
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
