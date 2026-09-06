@@ -11,7 +11,8 @@ import { BondLodgementCard } from "@/components/dashboard/BondLodgementCard";
 import { RepaymentChart } from "@/components/dashboard/RepaymentChart";
 import { ExtraPaymentModal } from "@/components/modals/ExtraPaymentModal";
 import { RepaymentPlanModal } from "@/components/modals/RepaymentPlanModal";
-import { bond, plan, tenancy } from "@/lib/data";
+import { EndOfTenancy } from "@/components/dashboard/EndOfTenancy";
+import { bond, plan } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
@@ -143,16 +144,9 @@ export default function BondPage() {
           </div>
         </Card>
 
-        <Card tone="cream">
-          <CardTitle>At the end of your tenancy</CardTitle>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist">
-            Your bond is refunded by {bond.lodgedWith} through the usual process once you and your
-            landlord agree the tenancy has ended. Your tenancy at {tenancy.property} started{" "}
-            {formatDate(tenancy.startDate)}. If any Litchi balance is still outstanding at that
-            point, it&rsquo;s settled then — we&rsquo;ll walk you through it well before your
-            tenancy ends.
-          </p>
-        </Card>
+        {/* Replaced a card that said any outstanding balance "is settled
+            then" — reassuring in tone and empty of content. */}
+        <EndOfTenancy />
       </div>
 
       <RepaymentPlanModal open={planOpen} onClose={() => setPlanOpen(false)} />

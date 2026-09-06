@@ -115,8 +115,9 @@ export function MovePaymentModal({
         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-moss" aria-hidden />
         <p className="text-[13px] leading-relaxed text-moss">
           <span className="numeric font-semibold">{moneyExact(plan.weeklyPayment)}</span> comes
-          out on {formatDayDate(newDate)} instead. Your other payments don&rsquo;t change, and
-          your payoff date stays where it is.
+          out on {formatDayDate(newDate)}{" "}
+          instead. Your other payments don&rsquo;t change, and your payoff date stays where it
+          is.
         </p>
       </div>
     </Modal>

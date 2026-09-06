@@ -33,9 +33,14 @@ export const tenancy = {
   property: "12 Example Street",
   suburb: "Mount Eden, Auckland",
   startDate: "2026-07-14",
+  /** A twelve-month fixed term, which is the usual first tenancy. */
+  fixedTermMonths: 12,
+  endDate: "2027-07-14",
   landlordAgency: "Example Property Co.",
   rentWeekly: 700,
   rentDay: "Friday",
+  /** Notice a tenant must give to end a periodic tenancy. */
+  noticeDays: 28,
 } as const;
 
 export const bond = {

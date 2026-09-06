@@ -133,8 +133,9 @@ export function ApplyFlow() {
                 {money(result.bond)}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-mist">
-                {bondRules.weeksOfRent} weeks&rsquo; rent — the most a landlord can legally take.
-                You don&rsquo;t choose this figure and neither do we.
+                {bondRules.weeksOfRent}{" "}
+                weeks&rsquo; rent — the most a landlord can legally take. You don&rsquo;t choose
+                this figure and neither do we.
               </p>
             </div>
           </div>
