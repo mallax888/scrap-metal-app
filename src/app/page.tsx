@@ -97,10 +97,23 @@ export default function LandingPage() {
           <PiggyBadge />
           <Wordmark className="text-[17px]" />
         </span>
-        <ButtonLink href={APP_HOME} size="sm">
-          View the demo
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </ButtonLink>
+        <span className="flex items-center gap-2">
+          {/* Two buttons overflow a 390px header, so the secondary one steps
+              aside on a phone — the eligibility check is still in the body of
+              the page. Wrapped rather than given a "hidden" class: the button's
+              own inline-flex is also a display utility, and which of the two
+              wins is decided by their order in the stylesheet, not by the order
+              they appear in the class attribute. */}
+          <span className="hidden sm:block">
+            <ButtonLink href="/apply" size="sm" variant="secondary">
+              Check eligibility
+            </ButtonLink>
+          </span>
+          <ButtonLink href={APP_HOME} size="sm">
+            View the demo
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </ButtonLink>
+        </span>
       </header>
 
       <main className="mx-auto max-w-6xl px-5 pb-24 sm:px-8">
@@ -272,10 +285,13 @@ export default function LandingPage() {
             The demo is a full working dashboard for one tenant, filled with sample data. Make an
             extra payment, top up the Moving Fund, redeem a reward — everything responds.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href={APP_HOME} size="lg" variant="onHero">
               Open the demo
               <ArrowRight className="h-4 w-4" aria-hidden />
+            </ButtonLink>
+            <ButtonLink href="/apply" size="lg" variant="onHeroGhost">
+              See if we&rsquo;d cover your bond
             </ButtonLink>
           </div>
         </section>
