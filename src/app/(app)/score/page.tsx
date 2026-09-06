@@ -217,10 +217,10 @@ export default function ScorePage() {
         <Card className="flex gap-4">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-clay" aria-hidden />
           <p className="text-sm leading-relaxed text-mist">
-            <span className="font-semibold text-ink">This is not a credit score.</span> The Litchi
-            Score is Litchi&rsquo;s own measure of how you&rsquo;re tracking with us. It is not a
-            legally recognised credit score, it isn&rsquo;t reported to credit bureaux, and it has
-            no effect on your credit file.
+            <span className="font-semibold text-ink">This is not a credit score.</span>{" "}
+            The Litchi Score is Litchi&rsquo;s own measure of how you&rsquo;re tracking with us. It
+            is not a legally recognised credit score, it isn&rsquo;t reported to credit bureaux, and
+            it has no effect on your credit file.
           </p>
         </Card>
       </div>

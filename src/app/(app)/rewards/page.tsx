@@ -137,9 +137,9 @@ export default function RewardsPage() {
                 </div>
 
                 <p className="mt-8 text-xs leading-relaxed text-onbrand/45">
-                  <span className="numeric">{points(lifetimeEarned)}</span> earned all up. Tier
-                  status runs on what you&rsquo;ve earned, so spending points never moves you back
-                  down.
+                  <span className="numeric">{points(lifetimeEarned)}</span>{" "}
+                  earned all up. Tier status runs on what you&rsquo;ve earned, so spending points
+                  never moves you back down.
                 </p>
               </div>
             </Card>

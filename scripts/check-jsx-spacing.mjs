@@ -10,7 +10,9 @@
  *       can legally take.
  *     </p>
  *
- * renders as "4weeks’ rent". Remove the entity and the space comes back;
+ * renders as "4weeks’ rent". It bites after a closing tag too, so
+ * <span>{n}</span> earned... loses its space the same way. Remove the entity
+ * and the space comes back;
  * put the text on one line and it comes back. Nothing warns you, and it only
  * shows up if someone reads the rendered page closely — which is how three of
  * these reached the app before anyone noticed.
@@ -32,9 +34,9 @@ const files = [];
 const findings = [];
 for (const file of files) {
   const source = readFileSync(file, "utf8");
-  // Text sitting between the close of a JSX expression and the next tag or
-  // expression, where that text is the thing about to lose its space.
-  const pattern = /\}[ \t]+([^<>{}]*?)(?=[<{])/gs;
+  // Text sitting between the close of an expression or an element and the
+  // next tag or expression — the text node about to lose its space.
+  const pattern = /[>}][ \t]+([^<>{}]*?)(?=[<{])/gs;
   for (const match of source.matchAll(pattern)) {
     const text = match[1];
     if (!text.includes("\n")) continue;
