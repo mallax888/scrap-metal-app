@@ -21,11 +21,17 @@ import {
   plan,
   repaymentHistory,
   rewardCatalogue,
+  SCORE_EFFECTS,
+  renterScore,
   rewardTiers,
   rewards,
+  scoreBand,
+  scoreFactors,
+  weeklyPaymentsMade,
   tenancy,
   type ActivityItem,
   type RewardTier,
+  type ScoreFactor,
 } from "./data";
 import { addDays, addWeeks, daysBetween } from "./format";
 
@@ -37,6 +43,14 @@ export interface LedgerEntry {
   id: string;
   date: string;
   amount: number;
+  /**
+   * Catching up a missed payment is not the same act as choosing to pay ahead,
+   * even though both land in the ledger as an extra payment. Without the
+   * distinction, missing a week and then paying it would earn the "paid ahead"
+   * reward points and nudge the score up — leaving someone better off than if
+   * they had never missed it at all.
+   */
+  kind?: "extra" | "catchup";
 }
 
 /**
@@ -230,6 +244,14 @@ export interface LitchiDerived {
   /** Trouble, and what is being done about it */
   movedPayment: { from: string; to: string } | null;
   missedPayment: MissedPayment | null;
+  /** Renter score, derived from behaviour rather than stated. */
+  score: {
+    value: number;
+    band: string;
+    change: number;
+    factors: ScoreFactor[];
+    history: { month: string; value: number }[];
+  };
   /** Moving Fund */
   fundSaved: number;
   fundProgress: number;
@@ -268,7 +290,8 @@ function derive(state: LitchiState): LitchiDerived {
    * the balance would have meant using the programme demoted you, which
    * punishes the one behaviour it exists to encourage.
    */
-  const earnedFromExtras = state.extraPayments.reduce(
+  const voluntaryExtras = state.extraPayments.filter((e) => e.kind !== "catchup");
+  const earnedFromExtras = voluntaryExtras.reduce(
     (sum, e) => sum + Math.floor(e.amount / 50) * POINTS.perFiftyPaidEarly,
     0
   );
@@ -342,6 +365,53 @@ function derive(state: LitchiState): LitchiDerived {
       }
     : null;
 
+  /*
+   * The score, derived rather than stated.
+   *
+   * It sat at a hardcoded 94 while the dashboard could be showing a failed
+   * payment right beside it — and the Score page promises in as many words
+   * that missing one costs you. A number that never moves is not a signal,
+   * it is decoration, and it is the first thing a sceptical reader pokes.
+   */
+  const missedNow = state.missedPayment !== null;
+  const paymentsOnTime = weeklyPaymentsMade - (missedNow ? 1 : 0);
+
+  const factors: ScoreFactor[] = scoreFactors.map((factor) => {
+    let value = factor.value;
+    let detail = factor.detail;
+
+    if (factor.key === "payment-history") {
+      if (missedNow) {
+        value += SCORE_EFFECTS.missedPaymentHistory;
+        detail = `${paymentsOnTime} of ${weeklyPaymentsMade + 1} payments made on time.`;
+      }
+      value += voluntaryExtras.length * SCORE_EFFECTS.extraPaymentHistory;
+    }
+    if (factor.key === "consistency" && missedNow) {
+      value += SCORE_EFFECTS.missedConsistency;
+      detail = "One missed payment. This recovers as you keep paying on time.";
+    }
+
+    return { ...factor, value: Math.max(0, Math.min(100, value)), detail };
+  });
+
+  const scoreValue = Math.round(
+    factors.reduce((sum, factor) => sum + factor.value * factor.weight, 0)
+  );
+  /* The last history point is this month, so it tracks the live figure. */
+  const scoreHistory = renterScore.history.map((point, index) =>
+    index === renterScore.history.length - 1 ? { ...point, value: scoreValue } : { ...point }
+  );
+  const previousMonth = renterScore.history[renterScore.history.length - 2].value;
+
+  const score = {
+    value: scoreValue,
+    band: scoreBand(scoreValue),
+    change: scoreValue - previousMonth,
+    factors,
+    history: scoreHistory,
+  };
+
   const userActivity: ActivityItem[] = [
     ...state.extraPayments.map((entry) => ({
       id: entry.id,
@@ -381,6 +451,7 @@ function derive(state: LitchiState): LitchiDerived {
     nextPayment: schedule[0] ?? null,
     movedPayment: state.movedPayment,
     missedPayment,
+    score,
     extraPaid,
     fundSaved,
     fundProgress: Math.min(1, fundSaved / movingFund.goal),
@@ -517,6 +588,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
             id: `catchup_${Date.now()}`,
             date: TODAY,
             amount: plan.weeklyPayment,
+            kind: "catchup" as const,
           },
         ],
       };

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, TrendingUp } from "lucide-react";
+import { CheckCircle2, TrendingDown, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { bond, plan, renterScore } from "@/lib/data";
-import { money, moneyExact, percent } from "@/lib/format";
+import { bond, plan } from "@/lib/data";
+import { money, moneyExact, percent, signed } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
 /**
@@ -61,13 +61,17 @@ function Chip({
   tone = "moss",
 }: {
   children: React.ReactNode;
-  tone?: "moss" | "cream";
+  tone?: "moss" | "cream" | "amber";
 }) {
   return (
     <span
       className={clsx(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-        tone === "moss" ? "bg-moss-soft text-moss" : "bg-cream text-bark"
+        tone === "moss"
+          ? "bg-moss-soft text-moss"
+          : tone === "amber"
+            ? "bg-amber-soft text-amber-warm"
+            : "bg-cream text-bark"
       )}
     >
       {children}
@@ -127,12 +131,17 @@ export function SummaryCards() {
       <Stat
         label="Renter score"
         href="/score"
-        value={String(renterScore.value)}
+        value={String(derived.score.value)}
         unit=" / 100"
-        caption={renterScore.band}
+        caption={derived.score.band}
         chip={
-          <Chip>
-            <TrendingUp className="h-3 w-3" aria-hidden />+{renterScore.change} this month
+          <Chip tone={derived.score.change < 0 ? "amber" : "moss"}>
+            {derived.score.change < 0 ? (
+              <TrendingDown className="h-3 w-3" aria-hidden />
+            ) : (
+              <TrendingUp className="h-3 w-3" aria-hidden />
+            )}
+            {signed(derived.score.change)} this month
           </Chip>
         }
       />

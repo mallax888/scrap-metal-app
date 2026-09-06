@@ -1,32 +1,48 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { renterScore, scoreFactors } from "@/lib/data";
+import { signed } from "@/lib/format";
+import { useLitchi } from "@/lib/store";
+
 
 export function ScoreCard({ compact = false }: { compact?: boolean }) {
+  const { derived } = useLitchi();
+  // The chip has to be able to say bad news too, so tone and icon follow the
+  // direction rather than always assuming the score went up.
+  const down = derived.score.change < 0;
+
   return (
     <Card className="flex h-full flex-col">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <CardTitle>Your Litchi Score</CardTitle>
           <p className="numeric mt-3 text-[40px] font-semibold tracking-[-0.02em] leading-none text-ink">
-            {renterScore.value}
+            {derived.score.value}
             <span className="text-lg font-medium text-mist"> / 100</span>
           </p>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-moss-soft px-3 py-1.5 text-sm font-medium text-moss">
-          <TrendingUp className="h-4 w-4" aria-hidden />
-          <span className="numeric">+{renterScore.change}</span>
-          <span className="font-normal">{renterScore.band}</span>
+        <div
+          className={clsx(
+            "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
+            down ? "bg-amber-soft text-amber-warm" : "bg-moss-soft text-moss"
+          )}
+        >
+          {down ? (
+            <TrendingDown className="h-4 w-4" aria-hidden />
+          ) : (
+            <TrendingUp className="h-4 w-4" aria-hidden />
+          )}
+          <span className="numeric">{signed(derived.score.change)}</span>
+          <span className="font-normal">{derived.score.band}</span>
         </div>
       </div>
 
       <dl className={clsx("mt-7 space-y-4", compact && "sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0")}>
-        {scoreFactors.map((factor) => (
+        {derived.score.factors.map((factor) => (
           <div
             key={factor.key}
             className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 text-sm"

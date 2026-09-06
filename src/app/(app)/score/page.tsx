@@ -8,14 +8,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Info, TrendingUp } from "lucide-react";
+import { Info, TrendingDown, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardLabel, CardTitle } from "@/components/ui/Card";
 import { Progress, ProgressRing } from "@/components/ui/Progress";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { renterScore, scoreFactors } from "@/lib/data";
-import { formatMonth, percent } from "@/lib/format";
+import { renterScore } from "@/lib/data";
+import { clsx } from "clsx";
+import { formatMonth, percent, signed } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
 const TIPS = [
@@ -52,8 +53,10 @@ function ScoreTooltip({
 }
 
 export default function ScorePage() {
-  const { ready } = useLitchi();
-  const history = renterScore.history.map((point) => ({ ...point }));
+  const { ready, derived } = useLitchi();
+  const { score } = derived;
+  const history = score.history;
+  const down = score.change < 0;
 
   return (
     <>
@@ -68,17 +71,31 @@ export default function ScorePage() {
           <Card className="flex flex-col items-start">
             <CardLabel>Your Litchi Score</CardLabel>
             <div className="mt-6 flex items-center gap-6">
-              <ProgressRing value={renterScore.value / 100} size={112} stroke={9} tone="moss">
+              <ProgressRing
+                value={score.value / 100}
+                size={112}
+                stroke={9}
+                tone={down ? "litchi" : "moss"}
+              >
                 <span className="numeric text-[30px] font-semibold tracking-[-0.02em] text-ink">
-                  {renterScore.value}
+                  {score.value}
                 </span>
               </ProgressRing>
               <div>
                 <p className="numeric text-sm text-mist">out of 100</p>
-                <p className="mt-1 text-[19px] font-semibold text-ink">{renterScore.band}</p>
-                <div className="mt-3 flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-moss-soft px-2.5 py-1 text-[13px] font-medium text-moss">
-                  <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-                  <span className="numeric">+{renterScore.change}</span>
+                <p className="mt-1 text-[19px] font-semibold text-ink">{score.band}</p>
+                <div
+                  className={clsx(
+                    "mt-3 flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-medium",
+                    down ? "bg-amber-soft text-amber-warm" : "bg-moss-soft text-moss"
+                  )}
+                >
+                  {down ? (
+                    <TrendingDown className="h-3.5 w-3.5" aria-hidden />
+                  ) : (
+                    <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+                  )}
+                  <span className="numeric">{signed(score.change)}</span>
                   <span className="font-normal">{renterScore.changeWindow}</span>
                 </div>
               </div>
@@ -97,9 +114,14 @@ export default function ScorePage() {
                   <CardTitle>Score over time</CardTitle>
                   <p className="mt-1 text-sm text-mist">Updated at the start of each month.</p>
                 </div>
-                <Badge tone="moss">
-                  <TrendingUp className="h-3 w-3" aria-hidden />
-                  Up {renterScore.value - history[0].value} since{" "}
+                <Badge tone={down ? "amber" : "moss"}>
+                  {down ? (
+                    <TrendingDown className="h-3 w-3" aria-hidden />
+                  ) : (
+                    <TrendingUp className="h-3 w-3" aria-hidden />
+                  )}
+                  {score.value >= history[0].value ? "Up" : "Down"}{" "}
+                  {Math.abs(score.value - history[0].value)} since{" "}
                   {formatMonth(history[0].month, "long")}
                 </Badge>
               </div>
@@ -158,7 +180,7 @@ export default function ScorePage() {
           </p>
 
           <dl className="mt-7 grid gap-7 md:grid-cols-2">
-            {scoreFactors.map((factor) => (
+            {score.factors.map((factor) => (
               <div
                 key={factor.key}
                 className="grid grid-cols-[1fr_auto] items-baseline gap-x-4"

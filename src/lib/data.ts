@@ -188,7 +188,7 @@ export const repaymentHistory: { date: string; amount: number; kind: "repayment"
 ].map((date) => ({ date, amount: plan.weeklyPayment, kind: "repayment" as const }));
 
 /** On-time weekly payments made so far — drives the score and rewards copy. */
-const weeklyPaymentsMade = repaymentHistory.filter((entry) => entry.kind === "repayment").length;
+export const weeklyPaymentsMade = repaymentHistory.filter((entry) => entry.kind === "repayment").length;
 
 /** Repaid to date, summed from the history rather than stated separately. */
 export const baseRepaid = repaymentHistory.reduce(
@@ -205,8 +205,15 @@ export interface ScoreFactor {
 }
 
 /**
- * Litchi's own renter score. Weights are chosen so the factors below round to
- * the headline 94 — this is a Litchi product signal, not a credit score.
+ * Litchi's own renter score.
+ *
+ * These are the factors for a clean record — the baseline the score starts
+ * from. What actually moves them lives in the store, because the score has to
+ * answer to what the renter has done rather than sit at a flattering number
+ * while the dashboard says a payment failed.
+ *
+ * Weights are chosen so a clean record rounds to 94. Deliberately not a credit
+ * score, and never reported anywhere.
  */
 export const scoreFactors: ScoreFactor[] = [
   {
@@ -221,7 +228,13 @@ export const scoreFactors: ScoreFactor[] = [
     label: "Consistency",
     value: 95,
     weight: 0.2,
-    detail: "No missed or rescheduled payments since you joined.",
+    /*
+     * Not "no missed or rescheduled payments". Moving a payment before it is
+     * due is free and explicitly does not touch the score — saying otherwise
+     * here contradicted the promise made everywhere else, and would have
+     * quietly discouraged the one behaviour the product most wants.
+     */
+    detail: "No missed payments since you joined. Moving one never counts against you.",
   },
   {
     key: "profile",
@@ -239,10 +252,41 @@ export const scoreFactors: ScoreFactor[] = [
   },
 ];
 
+/**
+ * What a missed payment costs, and what paying ahead earns.
+ *
+ * Sized to be felt without being punitive: one missed payment takes the score
+ * from 94 to 87 — enough that it clearly matters, not so much that someone
+ * who had a bad week concludes the damage is done and stops trying. A product
+ * that pays for hardship support and then wrecks the score anyway is only
+ * pretending to be humane.
+ */
+export const SCORE_EFFECTS = {
+  missedPaymentHistory: -12,
+  missedConsistency: -15,
+  /** Per voluntary extra payment. Catching up a missed one does not count. */
+  extraPaymentHistory: 1,
+} as const;
+
+export interface ScoreBand {
+  at: number;
+  label: string;
+}
+
+/** Highest first — the first one the score reaches is the band. */
+export const SCORE_BANDS: ScoreBand[] = [
+  { at: 90, label: "Excellent" },
+  { at: 75, label: "Strong" },
+  { at: 60, label: "Building" },
+  { at: 0, label: "Needs work" },
+];
+
+export function scoreBand(value: number): string {
+  return (SCORE_BANDS.find((b) => value >= b.at) ?? SCORE_BANDS[SCORE_BANDS.length - 1]).label;
+}
+
 export const renterScore = {
   value: Math.round(scoreFactors.reduce((sum, f) => sum + f.value * f.weight, 0)),
-  band: "Excellent",
-  change: 2,
   changeWindow: "in the last 30 days",
   history: [
     { month: "2026-03", value: 84 },

@@ -107,3 +107,11 @@ export function formatRelativeDay(iso: string, todayISO: string): string {
   if (diff === 1) return "Yesterday";
   return formatDayMonth(iso);
 }
+
+/**
+ * A signed figure, for a change that can go either way. Rendering "+" in the
+ * markup breaks the moment the number is negative and you get "+-7".
+ */
+export function signed(value: number): string {
+  return `${value > 0 ? "+" : ""}${value}`;
+}
