@@ -34,8 +34,8 @@ export const metadata: Metadata = {
 const CHANGES = [
   {
     icon: Banknote,
-    title: "The bond arrives a week early",
-    body: `One cleared payment from our lending partner, normally in your trust account a week or more before the tenant moves in — we only take applications ${bond.clearDaysBeforeMoveIn} days out or more, so there is nothing to chase on the morning of the move. For ${bond.weeksOfRent} weeks' rent at ${money(
+    title: "The bond arrives before the keys do",
+    body: `One cleared payment from our lending partner when the tenancy agreement is signed — in your trust account days before possession, the same as any tenant who had the cash. Nothing in instalments, and nothing to chase on the morning of the move. For ${bond.weeksOfRent} weeks' rent at ${money(
       rent.weekly
     )}, that is ${money(bond.amount)}.`,
   },

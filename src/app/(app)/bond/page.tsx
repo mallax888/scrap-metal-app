@@ -22,7 +22,7 @@ const STEPS = [
     title: "Litchi's partner paid your bond",
     body: `${plan.partner} paid ${money(bond.amount)} to your agent on ${formatDate(
       bond.paidDate
-    )} — a clear week before you moved in, so the bond was never the thing holding up your keys.`,
+    )}, before you picked up the keys — which is the moment the place was actually yours.`,
   },
   {
     icon: Landmark,

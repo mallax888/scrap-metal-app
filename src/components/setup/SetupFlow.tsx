@@ -241,7 +241,7 @@ export function SetupFlow() {
               icon: Banknote,
               date: timeline.bondPaid,
               title: `${plan.partner} pays ${money(q.bondAmount)}`,
-              body: `Straight to your agent's trust account, referenced so they can match it — not to us and not to you. Payments settle in business-day batches, so it lands the working day after you sign rather than tonight, and that is why we ask you to apply at least ${bondRules.clearDaysBeforeMoveIn} days before you move: the bond should never be the thing holding up your keys.`,
+              body: `Straight to your agent's trust account, referenced so they can match it — not to us and not to you. It sits there until your possession date, which is what secures the place: most agents will not release keys until the bond and rent in advance have cleared. Payments settle in business-day batches, so it lands the working day after you sign rather than tonight.`,
             },
             {
               icon: Landmark,

@@ -57,8 +57,17 @@ export const bond = {
   paidDate: "2026-07-06",
   /** When the agent lodged it. A separate event, days later. */
   lodgedDate: "2026-07-14",
-  /** The least notice the lender gives itself before a move-in date. */
-  clearDaysBeforeMoveIn: 7,
+  /**
+   * Days between the bond clearing and the tenant getting the keys.
+   *
+   * Not a statutory period — there isn't one. In practice the bond and up to
+   * two weeks' rent in advance are paid when the tenancy agreement is signed,
+   * sit in the agency's trust account until the possession date, and are a
+   * condition of the keys being handed over. That gap is what "securing the
+   * place" actually consists of, and it is the week Litchi is buying back for
+   * a tenant who does not have four weeks' rent lying around.
+   */
+  typicalDaysBeforeMoveIn: 8,
   status: "Lodged with Tenancy Services",
   weeksOfRent: 4,
 } as const;
@@ -133,7 +142,9 @@ export interface MovingTask {
 export const movingChecklist: MovingTask[] = [
   {
     label: "The bond",
-    detail: `${bond.weeksOfRent} weeks' rent, lodged with Tenancy Services before you move in`,
+    // Paid before the keys, lodged afterwards — the landlord has 23 working
+    // days from receiving it, so lodgement almost always lands after move-in.
+    detail: `${bond.weeksOfRent} weeks' rent, paid to your agent before you get the keys`,
     covered: true,
   },
   {
