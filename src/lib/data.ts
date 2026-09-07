@@ -722,7 +722,7 @@ export const faqs = [
   },
   {
     q: "What happens to my bond at the end of the tenancy?",
-    a: "It is refunded by Tenancy Services under the usual process. If you still owe Litchi anything at that point, the balance is settled then — we'll walk you through it well before your tenancy ends.",
+    a: "Tenancy Services refunds it to your own account once you and your landlord both request it. Litchi has no claim on that refund and never takes repayments out of it. If you still owe us anything, the plan simply carries on at the same weekly amount — or you can use the refund to clear it in one go.",
   },
   {
     q: "Can I pay it off early?",
@@ -737,3 +737,131 @@ export const faqs = [
     a: "Talk to us before the payment date. We can move a payment or set up a short pause — doing it in advance means it won't count against your Litchi Score.",
   },
 ];
+
+/* ------------------------------------------------------------------ *
+ * The other side of the product.
+ *
+ * Litchi reaches renters through property managers, so the agency has a
+ * view of its own — and what it does *not* contain is the point. An agent
+ * sees that the bond was paid and lodged, because that is their job. They
+ * do not see the repayment schedule, the balance, a missed payment or the
+ * Litchi Score, because that is the tenant's business and no part of the
+ * tenancy.
+ * ------------------------------------------------------------------ */
+
+export const agency = {
+  name: "Example Property Co.",
+  manager: "Priya Raman",
+  managerRole: "Senior Property Manager",
+  initials: "PR",
+  /** Roughly a mid-sized Auckland agency's book. */
+  propertiesManaged: 218,
+} as const;
+
+/**
+ * Where a tenancy has got to, from the agency's point of view. Deliberately
+ * about the bond and nothing else — there is no "behind on payments" status
+ * here because an agent has no business being told that.
+ */
+export type BondStage = "lodged" | "paid" | "approved" | "applying";
+
+export interface AgentTenancy {
+  id: string;
+  property: string;
+  suburb: string;
+  tenant: string;
+  weeklyRent: number;
+  bond: number;
+  stage: BondStage;
+  /** When the lending partner paid the agency. Null until it is approved. */
+  paidDate: string | null;
+  /** Tenancy Services reference, once lodged. */
+  bondId: string | null;
+  moveIn: string;
+}
+
+export const agentTenancies: AgentTenancy[] = [
+  {
+    // The tenancy the rest of this app belongs to, seen from the other side.
+    id: "AT-01",
+    property: "12 Example Street",
+    suburb: "Mount Eden",
+    tenant: "Malcolm Moffett",
+    weeklyRent: 700,
+    bond: 2800,
+    stage: "lodged",
+    paidDate: "2026-07-14",
+    bondId: "NZB-284731",
+    moveIn: "2026-07-14",
+  },
+  {
+    id: "AT-02",
+    property: "5/218 Sandringham Road",
+    suburb: "Sandringham",
+    tenant: "Tere Ngata",
+    weeklyRent: 620,
+    bond: 2480,
+    stage: "lodged",
+    paidDate: "2026-08-21",
+    bondId: "NZB-291044",
+    moveIn: "2026-08-22",
+  },
+  {
+    id: "AT-03",
+    property: "41B Onslow Avenue",
+    suburb: "Epsom",
+    tenant: "Danielle Cooper",
+    weeklyRent: 815,
+    bond: 3260,
+    stage: "paid",
+    paidDate: "2026-09-16",
+    bondId: null,
+    moveIn: "2026-09-19",
+  },
+  {
+    id: "AT-04",
+    property: "Unit 9, 33 Rialto Street",
+    suburb: "New Lynn",
+    tenant: "Sam Iosefa",
+    weeklyRent: 560,
+    bond: 2240,
+    stage: "approved",
+    paidDate: null,
+    bondId: null,
+    moveIn: "2026-09-26",
+  },
+  {
+    id: "AT-05",
+    property: "7 Kereru Lane",
+    suburb: "Massey",
+    tenant: "Aroha Wilson",
+    weeklyRent: 690,
+    bond: 2760,
+    stage: "applying",
+    paidDate: null,
+    bondId: null,
+    moveIn: "2026-10-03",
+  },
+];
+
+/**
+ * What an agency can and cannot see about a tenant Litchi has financed.
+ *
+ * Written as two lists rather than a paragraph because the boundary is the
+ * thing a property manager will ask about first, and a paragraph lets you
+ * skate over the second half.
+ */
+export const agentVisibility = {
+  can: [
+    "That the bond was paid, in full, and on what date",
+    "The amount, and the Tenancy Services bond reference once it is lodged",
+    "Whether an application is still in progress before move-in",
+    "A receipt for your file and your trust accounting",
+  ],
+  cannot: [
+    "The repayment schedule, or how much is left to repay",
+    "Whether a payment has been missed, moved or paid early",
+    "The tenant's Litchi Score, or anything behind it",
+    "Whether the tenant has asked us for hardship help",
+  ],
+} as const;

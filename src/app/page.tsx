@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowRight, Check, Minus } from "lucide-react";
 import { clsx } from "clsx";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
@@ -293,6 +294,9 @@ export default function LandingPage() {
             <ButtonLink href="/apply" size="lg" variant="onHeroGhost">
               See if we&rsquo;d cover your bond
             </ButtonLink>
+            <ButtonLink href="/agents" size="lg" variant="onHeroGhost">
+              For property managers
+            </ButtonLink>
           </div>
         </section>
       </main>
@@ -303,10 +307,18 @@ export default function LandingPage() {
             <PiggyBadge className="h-7 w-7" />
             <Wordmark className="text-[14px]" />
           </span>
-          <p className="max-w-xl text-[13px] leading-relaxed text-clay">
-            A design prototype. Every figure shown is sample data for a fictional tenancy, not a
-            real account or a live financial product.
-          </p>
+          <div className="flex flex-col gap-4 sm:items-end">
+            <Link
+              href="/agents"
+              className="tap text-[13px] font-medium text-mist transition-colors hover:text-ink"
+            >
+              For property managers
+            </Link>
+            <p className="max-w-xl text-[13px] leading-relaxed text-clay">
+              A design prototype. Every figure shown is sample data for a fictional tenancy, not a
+              real account or a live financial product.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
