@@ -887,3 +887,82 @@ export const agentVisibility = {
     "Whether the tenant has asked us for hardship help",
   ],
 } as const;
+
+/* ------------------------------------------------------------------ *
+ * The two jobs either side of a bond.
+ *
+ * The bond is the money; the clean and the truck are the work. They belong
+ * in the same product because the exit clean is what decides whether the
+ * bond comes back whole — cleaning is one of the most common reasons a
+ * landlord claims against it. Litchi paying the bond in and then helping
+ * get it back out is one story, not two.
+ *
+ * Deliberately a shortlist rather than a marketplace. Recommend a bad
+ * cleaner and the tenant loses bond money and blames Litchi, so a handful
+ * of vetted operators who get real volume beats a directory of everyone.
+ * ------------------------------------------------------------------ */
+
+export const PROPERTY_SIZES = [
+  { value: "small", label: "1–2 bedrooms" },
+  { value: "medium", label: "3 bedrooms" },
+  { value: "large", label: "4+ bedrooms" },
+] as const;
+
+export type PropertySize = (typeof PROPERTY_SIZES)[number]["value"];
+
+export interface MoveService {
+  id: string;
+  name: string;
+  /** What it is for, in the tenant's terms. */
+  blurb: string;
+  provider: string;
+  /** How long the vetted operator has been on the shortlist. */
+  providerNote: string;
+  includes: string[];
+  prices: Record<PropertySize, number>;
+}
+
+export const moveServices: MoveService[] = [
+  {
+    id: "bond-clean",
+    name: "Bond clean",
+    blurb:
+      "The end-of-tenancy clean your agent inspects against. Cleaning is one of the most common things landlords claim a bond for, so this is the job that decides how much of yours comes back.",
+    provider: "Kōrero Clean",
+    providerNote: "On the shortlist since 2025. 340 bond cleans, 6 re-dos.",
+    includes: [
+      "Oven, rangehood and inside all cupboards",
+      "Carpets steam cleaned, including under furniture",
+      "Windows, tracks, sills and blinds",
+      "Bathrooms descaled, walls spot-washed",
+    ],
+    prices: { small: 320, medium: 450, large: 620 },
+  },
+  {
+    id: "removals",
+    name: "Removals",
+    blurb:
+      "A truck and two people for the day, insured for the load. Booked for your possession date rather than whenever a slot happens to be free.",
+    provider: "Tui Movers",
+    providerNote: "On the shortlist since 2024. 1,100 moves, 4.8 average.",
+    includes: [
+      "Truck, two movers, blankets and straps",
+      "Up to four hours, then charged by the half hour",
+      "Goods in transit cover included",
+      "Boxes dropped off a week before, free",
+    ],
+    prices: { small: 420, medium: 650, large: 890 },
+  },
+];
+
+/**
+ * What the provider pays Litchi for the booking.
+ *
+ * Disclosed in the app rather than buried, because a renter who finds out
+ * later that the "recommendation" was paid for has been sold something, and
+ * the whole product depends on them not feeling that.
+ */
+export const SERVICE_COMMISSION_RATE = 0.15;
+
+/** Services are a smaller advance than a bond, so they run over half the term. */
+export const SERVICE_TERM_WEEKS = 26;

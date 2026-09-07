@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  Truck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/rent", label: "Rent", icon: Receipt },
   { href: "/rewards", label: "Rewards", icon: Sparkles },
   { href: "/score", label: "Renter Score", icon: Gauge },
+  { href: "/services", label: "Cleaners & movers", icon: Truck },
   { href: "/moving-fund", label: "Moving Fund", icon: Target },
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/support", label: "Support", icon: LifeBuoy },
