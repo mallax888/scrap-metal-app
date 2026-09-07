@@ -42,16 +42,6 @@ function Rail() {
   // screen would be worse than not appearing, so it checks.
   const visible = stop !== null && dismissed !== raw && pathname === stop.href;
 
-  // Reserves the column the panel sits in, so it is beside the app rather than
-  // over it. Paired with a CSS rule so the width only applies where there is
-  // room for it; the attribute comes off the moment the rail does.
-  useEffect(() => {
-    if (!visible) return;
-    const root = document.documentElement;
-    root.setAttribute("data-tour-rail", "on");
-    return () => root.removeAttribute("data-tour-rail");
-  }, [visible]);
-
   useEffect(() => {
     const bar = barRef.current;
     if (!bar) {
@@ -85,21 +75,20 @@ function Rail() {
   return (
     <>
       {/* Keeps the end of the page reachable above the bar on a phone. */}
-      <div className="min-[1400px]:hidden" style={{ height: barHeight }} aria-hidden />
+      <div className="lg:hidden" style={{ height: barHeight }} aria-hidden />
 
       {/* A landmark, so the rail's copy is not content adrift outside one.
-          A bar across the bottom until the window is wide enough to give the
-          panel a column of its own down the right-hand side, centred, with the
-          page padded to match so it sits beside the app rather than over it.
-          The threshold is where that column can be carved out and still leave
-          the app a workable width — below it, reserving 380px squeezed the
-          content to a word per line. */}
+          A panel in the top-right corner on a desktop, floating over the app
+          without moving it — the screen underneath has to stay exactly as it
+          is, because it is the thing being demonstrated. On a phone it goes to
+          the bottom instead, since the top corner there is the app's own
+          header. */}
       <aside
         ref={barRef}
         aria-label="Guided tour"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5 min-[1400px]:inset-x-auto min-[1400px]:bottom-auto min-[1400px]:right-0 min-[1400px]:top-1/2 min-[1400px]:-translate-y-1/2 min-[1400px]:justify-end"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5 lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:justify-end"
       >
-        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-lift sm:px-6 sm:py-5 min-[1400px]:w-[340px] min-[1400px]:max-w-none">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-lift sm:px-6 sm:py-5 lg:w-[340px] lg:max-w-none">
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
               <p className="numeric text-[11px] font-semibold uppercase tracking-[0.16em] text-onbrand/60">

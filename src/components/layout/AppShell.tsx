@@ -3,13 +3,34 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Compass, Menu, X } from "lucide-react";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { SidebarNav } from "./SidebarNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { APP_HOME } from "@/lib/nav";
 import { DemoTag } from "@/components/marketing/DemoTag";
 import { UserChip } from "./UserChip";
+
+/**
+ * A way back into the tour, from anywhere.
+ *
+ * Leaving the tour used to be one-way: dismiss the rail, or reach the last
+ * stop, and the only route back in was knowing the /tour URL. That is exactly
+ * the moment someone wants it again — to re-check something, or to walk a
+ * second person through it.
+ */
+function TourLink({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Link
+      href="/tour"
+      onClick={onNavigate}
+      className="tap flex items-center gap-3 rounded-full px-4 py-2.5 text-[13px] font-medium text-mist transition-colors hover:bg-cream hover:text-ink"
+    >
+      <Compass className="h-4 w-4 shrink-0" aria-hidden />
+      Take the tour
+    </Link>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -62,6 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="mt-6 flex shrink-0 flex-col gap-3">
+          <TourLink />
           <ThemeToggle />
           <UserChip />
         </div>
@@ -116,6 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarNav onNavigate={() => setDrawerOpen(false)} />
             </div>
             <div className="mt-6 flex flex-col gap-3">
+              <TourLink onNavigate={() => setDrawerOpen(false)} />
               <ThemeToggle />
               <UserChip />
             </div>

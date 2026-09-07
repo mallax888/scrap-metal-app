@@ -326,22 +326,3 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
-
-/*
- * A column reserved for the guided tour.
- *
- * The tour panel is fixed to the right-hand edge, and a fixed panel covers
- * whatever is under it — on a wide screen that was the page's own action
- * buttons and, at the top of the document, controls that cannot be scrolled
- * clear. Padding the body instead of overlaying it means the app lays out in a
- * narrower column for the duration and nothing is ever hidden. The attribute is
- * set by the rail only while it is on screen, so the app is untouched otherwise.
- *
- * Narrower windows keep the panel at the bottom of the screen instead: below
- * this width, carving out 380px leaves the app too little to lay out in.
- */
-@media (min-width: 1400px) {
-  html[data-tour-rail="on"] body {
-    padding-right: 380px;
-  }
-}
