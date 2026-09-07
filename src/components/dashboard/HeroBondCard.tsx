@@ -44,7 +44,7 @@ export function HeroBondCard() {
         />
 
         <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-clay">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-onbrand/60">
             Bond Assist
           </p>
           <h2 className="mt-3 max-w-md text-[30px] font-semibold leading-[1.15] tracking-tight sm:text-[38px]">

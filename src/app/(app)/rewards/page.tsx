@@ -85,7 +85,7 @@ export default function RewardsPage() {
                 aria-hidden
               />
               <div className="relative">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-clay">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-onbrand/60">
                   Points balance
                 </p>
                 <p className="numeric mt-4 text-[52px] font-semibold leading-none tracking-[-0.02em]">

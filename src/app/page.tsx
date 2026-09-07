@@ -110,8 +110,8 @@ export default function LandingPage() {
               Check eligibility
             </ButtonLink>
           </span>
-          <ButtonLink href={APP_HOME} size="sm">
-            View the demo
+          <ButtonLink href="/tour" size="sm">
+            Take the tour
             <ArrowRight className="h-4 w-4" aria-hidden />
           </ButtonLink>
         </span>
@@ -287,9 +287,12 @@ export default function LandingPage() {
             extra payment, top up the Moving Fund, redeem a reward — everything responds.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href={APP_HOME} size="lg" variant="onHero">
-              Open the demo
+            <ButtonLink href="/tour" size="lg" variant="onHero">
+              Take the tour
               <ArrowRight className="h-4 w-4" aria-hidden />
+            </ButtonLink>
+            <ButtonLink href={APP_HOME} size="lg" variant="onHeroGhost">
+              Skip to the demo
             </ButtonLink>
             <ButtonLink href="/apply" size="lg" variant="onHeroGhost">
               See if we&rsquo;d cover your bond
