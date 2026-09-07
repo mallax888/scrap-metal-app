@@ -26,10 +26,12 @@ function Rail() {
   // stop is a different value, and the rail comes back for it.
   const [dismissed, setDismissed] = useState<string | null>(null);
 
-  // The bar is fixed, so it takes up no space and sits on top of whatever is at
-  // the bottom of the page — on /payments that was the demo control the tour
-  // tells you to use. A spacer in normal flow gives the page somewhere to
-  // scroll to, measured rather than guessed because the copy sets the height.
+  // On a phone the rail sits at the bottom, where it takes up no space and
+  // covers whatever is at the end of the page — on /payments that was the demo
+  // control the tour tells you to use. A spacer in normal flow gives the page
+  // somewhere to scroll to, measured rather than guessed because the copy sets
+  // the height. On a wide screen the rail moves to the top corner instead, so
+  // the spacer is not needed and is hidden there.
   const barRef = useRef<HTMLElement>(null);
   const [barHeight, setBarHeight] = useState(0);
 
@@ -72,16 +74,21 @@ function Rail() {
 
   return (
     <>
-      {/* Keeps the end of the page reachable above the bar. */}
-      <div style={{ height: barHeight }} aria-hidden />
+      {/* Keeps the end of the page reachable above the bar on a phone. */}
+      <div className="lg:hidden" style={{ height: barHeight }} aria-hidden />
 
-      {/* A landmark, so the rail's copy is not content adrift outside one. */}
+      {/* A landmark, so the rail's copy is not content adrift outside one.
+          Bottom of the screen on a phone, where the app's own header is stuck
+          to the top; a corner panel on a wide screen, dropped below the page
+          header row — pinned to the very top it would sit permanently over the
+          "Back" link and the page's own action buttons, and you cannot scroll
+          anything out from under a panel fixed to the top of the viewport. */}
       <aside
         ref={barRef}
         aria-label="Guided tour"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5 lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-[140px] lg:justify-end"
       >
-        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-card sm:px-6 sm:py-5">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-lift sm:px-6 sm:py-5 lg:max-w-[360px]">
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
               <p className="numeric text-[11px] font-semibold uppercase tracking-[0.16em] text-onbrand/60">
