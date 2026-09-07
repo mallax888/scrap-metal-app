@@ -98,7 +98,14 @@ export function MoveServices() {
             const quote = quoteService(service, size);
             const chosen = selected.includes(service.id);
             return (
-              <Card key={service.id} className={clsx(chosen && "ring-2 ring-brand")}>
+              // A column, so the provider and the button sit on the floor of
+              // the card rather than wherever the copy above happens to end —
+              // the two blurbs are different lengths and the sizes change them
+              // again, so without this the buttons never line up.
+              <Card
+                key={service.id}
+                className={clsx("flex h-full flex-col", chosen && "ring-2 ring-brand")}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream text-bark">
                     <Icon className="h-[18px] w-[18px]" aria-hidden />
@@ -123,13 +130,16 @@ export function MoveServices() {
                   ))}
                 </ul>
 
-                <div className="mt-5 rounded-tile bg-cream px-4 py-3">
-                  <p className="text-[13px] font-medium text-ink">{service.provider}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-bark">{service.providerNote}</p>
-                </div>
+                <div className="mt-auto pt-5">
+                  <div className="rounded-tile bg-cream px-4 py-3">
+                    <p className="text-[13px] font-medium text-ink">{service.provider}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-bark">
+                      {service.providerNote}
+                    </p>
+                  </div>
 
-                <div className="mt-5">
                   <Button
+                    className="mt-5"
                     variant={chosen ? "secondary" : "primary"}
                     onClick={() => toggle(service.id)}
                   >
