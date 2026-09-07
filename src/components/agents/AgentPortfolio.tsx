@@ -95,11 +95,11 @@ function Row({ tenancy }: { tenancy: AgentTenancy }) {
               </dd>
             </div>
             <div className="flex justify-between gap-4 sm:block">
-              <dt className="text-mist">Move-in</dt>
+              <dt className="text-mist">Tenant moves in</dt>
               <dd className="font-medium text-ink sm:mt-0.5">{formatDate(tenancy.moveIn)}</dd>
             </div>
             <div className="flex justify-between gap-4 sm:block">
-              <dt className="text-mist">Bond paid to you</dt>
+              <dt className="text-mist">Paid to your trust account</dt>
               <dd className="font-medium text-ink sm:mt-0.5">
                 {tenancy.paidDate ? formatDate(tenancy.paidDate) : "On approval"}
               </dd>

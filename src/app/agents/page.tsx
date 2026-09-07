@@ -13,7 +13,7 @@ import { HOME_HREF } from "@/lib/nav";
 export const metadata: Metadata = {
   title: "For property managers",
   description:
-    "What changes for an agency when Litchi finances a tenant's bond: the bond arrives in full before move-in, you lodge it as you always do, and nothing about the repayment reaches you.",
+    "What changes for an agency when Litchi finances a tenant's bond: the bond clears a week before move-in, you lodge it as you always do, and nothing about the repayment reaches you.",
 };
 
 /**
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
  * are now expected to know about their tenant.
  *
  * So the promises here are small on purpose. The bond arrives in one payment
- * before move-in, it is lodged the usual way in the agency's name, and the
+ * a week before move-in, it is lodged the usual way in the agency's name, and the
  * repayment is between Litchi and the tenant. An agency that has to chase
  * anything, or is asked to collect anything, is a worse deal than the bond it
  * replaced.
@@ -34,10 +34,10 @@ export const metadata: Metadata = {
 const CHANGES = [
   {
     icon: Banknote,
-    title: "The bond arrives in full",
-    body: `One payment from our lending partner, cleared before move-in — not instalments to you and nothing to chase. For ${bond.weeksOfRent} weeks' rent at ${money(
+    title: "The bond arrives a week early",
+    body: `One cleared payment from our lending partner, normally in your trust account a week or more before the tenant moves in — we only take applications ${bond.clearDaysBeforeMoveIn} days out or more, so there is nothing to chase on the morning of the move. For ${bond.weeksOfRent} weeks' rent at ${money(
       rent.weekly
-    )}, that is ${money(bond.amount)} in your trust account on the day.`,
+    )}, that is ${money(bond.amount)}.`,
   },
   {
     icon: Landmark,
@@ -157,8 +157,8 @@ export default function AgentsPage() {
                   2
                 </span>
                 <span>
-                  <span className="font-medium text-ink">Move-ins happen sooner.</span> A bond that
-                  clears before move-in beats a tenant asking for a fortnight to save one, and an
+                  <span className="font-medium text-ink">Move-ins happen sooner.</span> A bond
+                  that cleared a week ago beats a tenant asking for a fortnight to save one, and an
                   empty week is the expensive part for the owner.
                 </span>
               </li>

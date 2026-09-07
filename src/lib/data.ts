@@ -47,7 +47,18 @@ export const bond = {
   amount: 2800,
   bondId: "NZB-284731",
   lodgedWith: "Tenancy Services",
+  /**
+   * When the lender paid the agent, which is deliberately not move-in day.
+   * The bond clearing a week ahead is the point of the product: it is the
+   * agent's condition of handing over keys, so leaving it to the morning of
+   * the move puts the tenant back in exactly the scramble Litchi exists to
+   * remove.
+   */
+  paidDate: "2026-07-06",
+  /** When the agent lodged it. A separate event, days later. */
   lodgedDate: "2026-07-14",
+  /** The least notice the lender gives itself before a move-in date. */
+  clearDaysBeforeMoveIn: 7,
   status: "Lodged with Tenancy Services",
   weeksOfRent: 4,
 } as const;
@@ -790,7 +801,7 @@ export const agentTenancies: AgentTenancy[] = [
     weeklyRent: 700,
     bond: 2800,
     stage: "lodged",
-    paidDate: "2026-07-14",
+    paidDate: "2026-07-06",
     bondId: "NZB-284731",
     moveIn: "2026-07-14",
   },
@@ -802,7 +813,7 @@ export const agentTenancies: AgentTenancy[] = [
     weeklyRent: 620,
     bond: 2480,
     stage: "lodged",
-    paidDate: "2026-08-21",
+    paidDate: "2026-08-14",
     bondId: "NZB-291044",
     moveIn: "2026-08-22",
   },
@@ -814,7 +825,7 @@ export const agentTenancies: AgentTenancy[] = [
     weeklyRent: 815,
     bond: 3260,
     stage: "paid",
-    paidDate: "2026-09-16",
+    paidDate: "2026-09-11",
     bondId: null,
     moveIn: "2026-09-19",
   },

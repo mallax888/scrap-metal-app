@@ -241,7 +241,7 @@ export function SetupFlow() {
               icon: Banknote,
               date: timeline.bondPaid,
               title: `${plan.partner} pays ${money(q.bondAmount)}`,
-              body: `Straight to your agent's trust account, referenced so they can match it — not to us and not to you. Payments settle in business-day batches, which is why it is the next working day rather than tonight.`,
+              body: `Straight to your agent's trust account, referenced so they can match it — not to us and not to you. Payments settle in business-day batches, so it lands the working day after you sign rather than tonight, and that is why we ask you to apply at least ${bondRules.clearDaysBeforeMoveIn} days before you move: the bond should never be the thing holding up your keys.`,
             },
             {
               icon: Landmark,

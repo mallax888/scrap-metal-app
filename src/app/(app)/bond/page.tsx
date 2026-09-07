@@ -20,9 +20,9 @@ const STEPS = [
   {
     icon: Banknote,
     title: "Litchi's partner paid your bond",
-    body: `${plan.partner} paid ${money(bond.amount)} on your behalf on ${formatDate(
-      bond.lodgedDate
-    )}, so you didn't need it in cash to move in.`,
+    body: `${plan.partner} paid ${money(bond.amount)} to your agent on ${formatDate(
+      bond.paidDate
+    )} — a clear week before you moved in, so the bond was never the thing holding up your keys.`,
   },
   {
     icon: Landmark,
