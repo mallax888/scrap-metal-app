@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Info, Minus, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Card } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/Button";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { bond as bondRules, plan } from "@/lib/data";
@@ -195,7 +196,7 @@ export function ApplyFlow() {
               <OutcomeIcon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
               <div>
                 <h2 className="text-[17px] font-semibold">{OUTCOME.title}</h2>
-                <p className="mt-1 max-w-xl text-sm leading-relaxed opacity-90">{OUTCOME.body}</p>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed">{OUTCOME.body}</p>
               </div>
             </div>
 
@@ -276,6 +277,26 @@ export function ApplyFlow() {
                 a week left once rent and the repayment are paid.
               </p>
             </div>
+
+            {/* Approval used to be the end of the road. It is the middle of
+                one: nothing has been agreed and no money has moved. */}
+            {result.outcome !== "declined" ? (
+              <div className="mt-8 border-t border-sand/70 pt-6">
+                <h3 className="text-[15px] font-semibold text-ink">What happens next</h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-mist">
+                  Four steps before anything is committed &mdash; we verify who you are, check the
+                  repayment against your actual bank account rather than your estimate, show you
+                  every term of the agreement, and set up the direct debit. You can walk away at
+                  any point in it.
+                </p>
+                <div className="mt-5">
+                  <ButtonLink href={`/setup?rent=${app.weeklyRent}`} size="lg">
+                    Set up my plan
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </ButtonLink>
+                </div>
+              </div>
+            ) : null}
 
             {result.outcome === "declined" ? (
               <div className="mt-6 rounded-tile bg-cream px-5 py-4">

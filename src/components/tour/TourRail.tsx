@@ -80,15 +80,18 @@ function Rail() {
       {/* A landmark, so the rail's copy is not content adrift outside one.
           A panel in the top-right corner on a desktop, floating over the app
           without moving it — the screen underneath has to stay exactly as it
-          is, because it is the thing being demonstrated. On a phone it goes to
-          the bottom instead, since the top corner there is the app's own
-          header. */}
+          is, because it is the thing being demonstrated. It starts below the
+          page's own header row rather than flush with the top: a panel fixed
+          to the viewport cannot be scrolled out from under, so at top: 0 it
+          permanently clipped the bond ID, the "Back" link and the page action
+          buttons. On a phone it goes to the bottom instead, since the top
+          corner there is the app's own header. */}
       <aside
         ref={barRef}
         aria-label="Guided tour"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5 lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:justify-end"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-5 lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-[150px] lg:justify-end"
       >
-        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-lift sm:px-6 sm:py-5 lg:w-[340px] lg:max-w-none">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-card bg-hero px-4 py-4 text-onbrand shadow-lift sm:px-6 sm:py-5 lg:w-[320px] lg:max-w-none">
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
               <p className="numeric text-[11px] font-semibold uppercase tracking-[0.16em] text-onbrand/60">
