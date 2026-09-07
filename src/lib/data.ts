@@ -135,8 +135,10 @@ export const rent = {
 export interface MovingTask {
   label: string;
   detail: string;
-  /** The one line Litchi takes off the list. */
+  /** The one line Litchi pays outright. */
   covered?: boolean;
+  /** Litchi does not pay for it, but it can be booked and spread. */
+  bookable?: boolean;
 }
 
 export const movingChecklist: MovingTask[] = [
@@ -154,10 +156,12 @@ export const movingChecklist: MovingTask[] = [
   {
     label: "Movers",
     detail: "A truck and a couple of people, booked for the day",
+    bookable: true,
   },
   {
     label: "A professional clean",
     detail: "Of the place you're leaving, or you can lose part of your old bond",
+    bookable: true,
   },
   {
     label: "Power and internet",
@@ -702,28 +706,16 @@ export const ecosystem: EcosystemProduct[] = [
     status: "live",
   },
   {
-    id: "eco_rent",
-    name: "Rent payments",
-    blurb: "Pay rent and your Litchi repayment in one place.",
-    status: "soon",
-  },
-  {
     id: "eco_insurance",
     name: "Contents insurance",
     blurb: "Cover priced for renters, not homeowners.",
     status: "soon",
   },
   {
-    id: "eco_utilities",
-    name: "Utilities",
-    blurb: "Power and broadband connected on moving day.",
-    status: "planned",
-  },
-  {
     id: "eco_moving",
-    name: "Moving services",
-    blurb: "Vetted movers, booked and paid through Litchi.",
-    status: "planned",
+    name: "Cleaners & movers",
+    blurb: "A vetted bond clean and a truck, booked through Litchi.",
+    status: "live",
   },
   {
     id: "eco_furniture",

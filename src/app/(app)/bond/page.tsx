@@ -12,6 +12,7 @@ import { RepaymentChart } from "@/components/dashboard/RepaymentChart";
 import { ExtraPaymentModal } from "@/components/modals/ExtraPaymentModal";
 import { RepaymentPlanModal } from "@/components/modals/RepaymentPlanModal";
 import { EndOfTenancy } from "@/components/dashboard/EndOfTenancy";
+import { RentSeparation } from "@/components/dashboard/RentSeparation";
 import { bond, plan } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
@@ -143,6 +144,10 @@ export default function BondPage() {
             </ButtonLink>
           </div>
         </Card>
+
+        {/* The separation used to be a screen of its own called "Rent",
+            which named a page after the one thing Litchi does not do. */}
+        <RentSeparation />
 
         {/* Replaced a card that said any outstanding balance "is settled
             then" — reassuring in tone and empty of content. */}

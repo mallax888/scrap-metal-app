@@ -221,6 +221,11 @@ export default function LandingPage() {
                         Litchi covers this
                       </span>
                     ) : null}
+                    {item.bookable ? (
+                      <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-bark">
+                        Book through Litchi
+                      </span>
+                    ) : null}
                   </h3>
                   <p className="mt-1 text-[13px] leading-relaxed text-mist">{item.detail}</p>
                 </div>

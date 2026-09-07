@@ -164,7 +164,7 @@ export function SetupFlow() {
     {
       label: "Credit fee",
       value: money(q.fee),
-      note: `A flat ${plan.feeRate * 100}% of the bond, charged once at the start. It is the only fee.`,
+      note: `A flat ${plan.feeRate * 100}% of the bond, charged once at the start. It is the only charge on this agreement.`,
     },
     {
       label: "Annual interest rate",

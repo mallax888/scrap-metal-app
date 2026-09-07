@@ -29,16 +29,10 @@ export const TOUR: TourStop[] = [
     look: "The bond was paid up front and is being repaid weekly. Every figure on every screen from here comes off this one schedule.",
   },
   {
-    href: "/rent",
-    label: "Rent stays rent",
-    title: "Litchi never touches the rent",
-    look: "Rent goes to the agent exactly as it did before. The Litchi payment is a separate line, and the two are never added together anywhere in the app.",
-  },
-  {
     href: "/bond",
     label: "Whose bond it is",
-    title: "The bond is not ours to hold",
-    look: "It sits with Tenancy Services under a bond ID, in the landlord's name. Scroll to the end of the page for what happens when the tenancy finishes.",
+    title: "The bond is not ours, and neither is the rent",
+    look: "The bond sits with Tenancy Services in the landlord's name. Scroll down for rent and the Litchi payment side by side — two payments, never added together — and for what happens when the tenancy ends.",
   },
   {
     href: "/payments",

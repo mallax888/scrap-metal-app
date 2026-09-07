@@ -19,7 +19,7 @@ const PROMISES = [
   {
     icon: Ban,
     title: "No late fees. Ever.",
-    body: "Charging someone for being short on money is charging the least able to pay for being least able to pay. The 5% fee is the only thing Litchi ever charges you.",
+    body: "Charging someone for being short on money is charging the least able to pay for being least able to pay. The flat 5% on what you borrow is all Litchi charges, and nothing is ever added to it.",
   },
   {
     icon: RefreshCw,
