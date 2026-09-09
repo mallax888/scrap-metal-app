@@ -168,8 +168,11 @@ export const movingChecklist: MovingTask[] = [
     detail: "Disconnected at one address and connected at the other",
   },
   {
-    label: "Whatever the agency charges",
-    detail: "Admin and referencing costs, where they apply",
+    // Not a letting fee: charging a tenant one has been unlawful since
+    // 12 December 2018. A pet bond is the genuine extra, and it is new —
+    // the pet-friendly tenancy rules only started on 1 December 2025.
+    label: "A pet bond, if a pet is coming",
+    detail: "Up to another two weeks' rent, on top of the bond itself",
   },
 ];
 

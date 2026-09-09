@@ -6,6 +6,7 @@ import { DemoBadge } from "@/components/marketing/DemoBadge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { AgentPortfolio } from "@/components/agents/AgentPortfolio";
+import { VerificationQueue } from "@/components/agents/VerificationQueue";
 import { agency, bond, plan, rent } from "@/lib/data";
 import { money } from "@/lib/format";
 import { HOME_HREF } from "@/lib/nav";
@@ -110,6 +111,26 @@ export default function AgentsPage() {
           </p>
           <div className="mt-7">
             <AgentPortfolio />
+          </div>
+        </section>
+
+        {/*
+          The only thing Litchi ever asks an agency to do, and the only thing
+          it asks them to hand out. Both belong on this page rather than behind
+          a portal login, because a property manager will decide whether this
+          is worth their time from this screen alone.
+        */}
+        <section className="mt-16 sm:mt-24">
+          <h2 className="text-[24px] font-semibold tracking-tight text-ink sm:text-[30px]">
+            What we ask of you
+          </h2>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-mist">
+            One confirmation per tenancy, from a link, with no account to create. That is the
+            entire ask &mdash; and it is what lets a lender treat the rent and bond as facts
+            rather than as something a tenant typed.
+          </p>
+          <div className="mt-7">
+            <VerificationQueue />
           </div>
         </section>
 

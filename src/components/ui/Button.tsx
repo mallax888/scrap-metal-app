@@ -56,16 +56,25 @@ export function ButtonLink({
   variant = "primary",
   size = "md",
   className,
+  target,
   children,
 }: {
   href: string;
   variant?: Variant;
   size?: Size;
   className?: string;
+  /** For the few links that genuinely belong in a second tab. */
+  target?: "_blank";
   children: React.ReactNode;
 }) {
   return (
-    <Link href={href} className={clsx(BASE, "tap", VARIANTS[variant], SIZES[size], className)}>
+    <Link
+      href={href}
+      target={target}
+      // Opener access is never wanted here, and older browsers do not imply it.
+      rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      className={clsx(BASE, "tap", VARIANTS[variant], SIZES[size], className)}
+    >
       {children}
     </Link>
   );

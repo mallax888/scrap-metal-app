@@ -23,6 +23,12 @@ export interface TourStop {
 
 export const TOUR: TourStop[] = [
   {
+    href: "/move",
+    label: "Where it starts",
+    title: "The first question is not how much you want",
+    look: "It's your tenancy. Upload the sample agreement and watch the rent, bond and dates come off it — every figure after this is derived from those, and the amount is capped at what the move actually costs.",
+  },
+  {
     href: "/dashboard",
     label: "The plan",
     title: "One tenancy, ten weeks in",
@@ -56,7 +62,7 @@ export const TOUR: TourStop[] = [
     href: "/agents",
     label: "The agency's side",
     title: "What a property manager sees",
-    look: "Open any tenancy in the list. The panel on the right — everything the agency is not told about the tenant — is the one that matters.",
+    look: "Open any tenancy in the list, then scroll to the verification queue. The panel of things the agency is never told, and the fact that confirming a tenancy needs no account, are the two that matter.",
   },
 ];
 

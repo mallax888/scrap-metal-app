@@ -25,8 +25,34 @@ export function createLocalStore<T>(key: string, fallback: T) {
     }
   }
 
+  function notify() {
+    listeners.forEach((listener) => listener());
+  }
+
+  /*
+   * Another tab wrote to this key. The tenancy verification flow depends on
+   * exactly this — the agent answers in one tab and the application updates in
+   * the other — and without it the first tab shows stale state until reload.
+   */
+  let watching = false;
+  function watchOtherTabs() {
+    if (watching || typeof window === "undefined") return;
+    watching = true;
+    window.addEventListener("storage", (event) => {
+      if (event.key !== key) return;
+      try {
+        state = event.newValue === null ? fallback : (JSON.parse(event.newValue) as T);
+      } catch {
+        return; // a malformed write elsewhere should not blow up this tab
+      }
+      initialized = true;
+      notify();
+    });
+  }
+
   return {
     subscribe(listener: () => void) {
+      watchOtherTabs();
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
@@ -41,7 +67,7 @@ export function createLocalStore<T>(key: string, fallback: T) {
       ensureInitialized();
       state = typeof updater === "function" ? (updater as (prev: T) => T)(state) : updater;
       persist();
-      listeners.forEach((listener) => listener());
+      notify();
     },
   };
 }
