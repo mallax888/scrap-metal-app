@@ -250,6 +250,20 @@ export const verificationDisclosure = {
   ],
 } as const;
 
+/**
+ * The same boundary, told to the tenant.
+ *
+ * The list above is written for the agent reading it on their own screen, and
+ * pasting it onto the tenant's dashboard leaves them reading about "the
+ * tenant" in the third person. Same four facts, second person.
+ */
+export const withheldFromAgency = [
+  "Your tenancy agreement — they are never sent the document",
+  "What you applied for, or how much",
+  "Your income, employer, bank or credit history",
+  "Whether you were approved, declined, or are still deciding",
+] as const;
+
 /* ------------------------------------------------------------------ *
  * Application status.
  *

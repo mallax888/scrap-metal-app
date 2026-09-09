@@ -961,3 +961,83 @@ export const SERVICE_COMMISSION_RATE = 0.15;
 
 /** Services are a smaller advance than a bond, so they run over half the term. */
 export const SERVICE_TERM_WEEKS = 26;
+
+/* ------------------------------------------------------------------ *
+ * The move itself.
+ *
+ * The record at the centre of the app. Not the loan — the move. A tenancy
+ * that an agency confirmed, a set of costs that were actually incurred, and
+ * who ended up paying each one.
+ *
+ * Only part of it was financed, and that is the point. Litchi covered the
+ * bond because that is the line nobody has in cash; the rent in advance and
+ * the exit clean were paid outright, and the truck was booked through Litchi
+ * but paid straight to the mover. A screen that showed only the financed
+ * line would be a loan statement, and would leave out three-quarters of what
+ * the person actually did.
+ * ------------------------------------------------------------------ */
+
+/** How a given cost was handled. Mirrors the Coverage union in lib/move. */
+export type MoveCoverage = "self" | "book" | "litchi";
+
+export interface CompletedMoveLine {
+  id: string;
+  label: string;
+  amount: number;
+  coverage: MoveCoverage;
+  /** Who the money went to. */
+  paidTo: string;
+  /** When it was settled. */
+  date: string;
+  note?: string;
+}
+
+export const myMove = {
+  /** The tenancy this move was into. */
+  property: tenancy.property,
+  suburb: tenancy.suburb,
+  movedIn: tenancy.startDate,
+  agencyName: tenancy.landlordAgency,
+  /** The verification that made the application quick — and the lender comfortable. */
+  verifiedBy: "Priya Raman",
+  verifiedOn: "2026-07-03",
+  verifiedFields: ["Weekly rent", "Bond", "Tenancy start date", "Property address"],
+  lines: [
+    {
+      id: "bond",
+      label: "Bond",
+      amount: 2800,
+      coverage: "litchi",
+      paidTo: tenancy.landlordAgency,
+      date: "2026-07-06",
+      note: "Paid direct to the agency's trust account, eight days before you got the keys.",
+    },
+    {
+      id: "rent-advance",
+      label: "Rent in advance",
+      amount: 1400,
+      coverage: "self",
+      paidTo: tenancy.landlordAgency,
+      date: "2026-07-06",
+      note: "Two weeks, which is the most a landlord can require.",
+    },
+    {
+      id: "removals",
+      label: "Movers",
+      amount: 650,
+      coverage: "book",
+      paidTo: "Tui Movers",
+      date: "2026-07-14",
+      note: "Booked through Litchi, paid straight to them on the day.",
+    },
+    {
+      id: "bond-clean",
+      label: "Bond clean",
+      amount: 450,
+      coverage: "self",
+      paidTo: "Kōrero Clean",
+      date: "2026-07-11",
+      note: "Of the flat you left. Your old bond came back whole.",
+    },
+  ] as CompletedMoveLine[],
+} as const;

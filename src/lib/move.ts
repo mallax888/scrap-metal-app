@@ -204,6 +204,72 @@ export function directShare(lines: MoveCostLine[]): number {
 }
 
 /* ------------------------------------------------------------------ *
+ * How each cost gets handled.
+ *
+ * The important idea in the whole file. A costed move is worth something on
+ * its own: knowing that this move is $5,300 and which $2,800 of it is legally
+ * capped is useful whether or not anybody borrows a cent. So coverage is a
+ * per-line choice with three answers, and financing is one of them rather
+ * than the destination the screen is walking you towards.
+ *
+ * A calculator that only exists to produce a loan application is a loan
+ * application with extra steps.
+ * ------------------------------------------------------------------ */
+
+export type Coverage = "self" | "book" | "litchi";
+
+export const COVERAGE_LABELS: Record<Coverage, string> = {
+  self: "I'll pay this myself",
+  book: "Book it through Litchi",
+  litchi: "Add it to my Litchi facility",
+};
+
+export const COVERAGE_SHORT: Record<Coverage, string> = {
+  self: "Paying yourself",
+  book: "Booked",
+  litchi: "Financed",
+};
+
+/** Only a job done by a provider can be booked; a bond can only be paid. */
+export function canBook(line: MoveCostLine): boolean {
+  return line.payee === "provider";
+}
+
+/**
+ * The opening position: the bond, and nothing else.
+ *
+ * It is the line people cannot cover and the reason they are here. Everything
+ * else starts at "I'll pay this myself", so the total to finance goes up only
+ * because someone chose to put it up.
+ */
+export function defaultCoverage(line: MoveCostLine): Coverage {
+  return line.id === "bond" ? "litchi" : "self";
+}
+
+export interface CoverageSplit {
+  self: number;
+  booked: number;
+  financed: number;
+  total: number;
+}
+
+export function coverageSplit(
+  lines: MoveCostLine[],
+  coverage: Record<string, Coverage>
+): CoverageSplit {
+  const split: CoverageSplit = { self: 0, booked: 0, financed: 0, total: 0 };
+  for (const line of lines) {
+    if (!line.selected || line.amount <= 0) continue;
+    const how = coverage[line.id] ?? defaultCoverage(line);
+    split.total += line.amount;
+    if (how === "litchi") split.financed += line.amount;
+    else if (how === "book") split.booked += line.amount;
+    else split.self += line.amount;
+  }
+  return split;
+}
+
+/* ------------------------------------------------------------------ *
  * Finance partners.
  *
  * Litchi is not the lender. It owns the customer, the tenancy verification

@@ -25,13 +25,19 @@ import { PROPERTY_SIZES, TODAY, type PropertySize } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import {
   buildMoveCosts,
+  canBook,
   costedTotal,
+  COVERAGE_LABELS,
+  COVERAGE_SHORT,
+  coverageSplit,
+  defaultCoverage,
   defaultPartner,
   directShare,
   litchiRevenue,
   PAYEE_LABELS,
   quoteMove,
   RTA_CAPS,
+  type Coverage,
   type MoveCostLine,
 } from "@/lib/move";
 import {
@@ -46,19 +52,25 @@ import {
 import { useVerificationStatus } from "@/lib/verification-store";
 
 /**
- * Litchi Move, from "I got the place" to "it's submitted".
+ * Litchi Move: from "I got the place" to a costed, verified move plan.
  *
- * The order of these steps is the product. Every other lender starts with "how
- * much do you want", which makes the tenant guess and makes the number an
- * ambition rather than a fact. Here the tenancy comes first, the agency
- * confirms it, the costs fall out of it, and the amount is the last thing
- * decided — capped at what the move actually costs.
+ * This is a calculator, not a loan application. The distinction is the whole
+ * product, and it shows up in three places.
  *
- * That cap is not a nicety. An open-ended request on a screen headed with a
- * calculated total is an invitation to round up, and the difference between a
- * rental-specific facility and a personal loan in a moving-themed skin is
- * exactly whether the money is tied to the costs. You can take less than your
- * move costs. You cannot take more.
+ * The order. Every other lender starts with "how much do you want", which
+ * makes the tenant guess and makes the number an ambition. Here the tenancy
+ * comes first, the agency confirms it, and the costs fall out of the verified
+ * rent — so the figures are facts before anybody discusses money.
+ *
+ * The amount, which is never typed in. It is the sum of the lines someone
+ * chose to have Litchi cover, so it cannot exceed the move: there is no field
+ * to put a bigger number in. Wanting less means paying for a line yourself,
+ * which is a decision about the move rather than about borrowing.
+ *
+ * The ending. Financing nothing is a perfectly good outcome and the flow
+ * finishes just as happily — you keep a verified tenancy, a costed move and a
+ * record of who is paying what. A calculator that only exists to produce a
+ * loan application is a loan application with extra steps.
  *
  * Nothing here is submitted anywhere. The whole journey runs in the browser.
  */
@@ -67,7 +79,7 @@ const STEPS = [
   "Check the details",
   "Agency confirms",
   "What it costs",
-  "Your estimate",
+  "How you'll cover it",
 ] as const;
 
 const CONFIDENCE_TONE: Record<Confidence, string> = {
@@ -193,7 +205,7 @@ export function MoveFlow() {
 
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
-  const [requestedOverride, setRequestedOverride] = useState<number | null>(null);
+  const [coverage, setCoverage] = useState<Record<string, Coverage>>({});
   const [termWeeks, setTermWeeks] = useState<number>(52);
 
   const agencyName = extracted?.agencyName.value ?? "";
@@ -223,15 +235,27 @@ export function MoveFlow() {
   });
 
   const total = costedTotal(lines);
-  const direct = directShare(lines);
+  /** The lines actually in the move, which is what every later step iterates. */
+  const covered = lines.filter((line) => line.selected && line.amount > 0);
 
-  // The amount can be trimmed but never inflated: the ceiling is the move.
-  const ceiling = Math.min(total, partner.maxAdvance);
-  const requested = Math.max(
-    0,
-    Math.min(requestedOverride === null ? ceiling : requestedOverride, ceiling)
+  /*
+   * The amount is not typed in. It is the sum of the lines someone chose to
+   * finance, which is why it can never exceed the move — there is no field to
+   * put a bigger number in. Trimming the request means moving a line back to
+   * "I'll pay this myself", which is a decision about the move rather than a
+   * decision about how much to borrow.
+   */
+  const split = coverageSplit(lines, coverage);
+  const requested = Math.min(split.financed, partner.maxAdvance);
+  const financing = requested > 0;
+  const belowMinimum = financing && requested < partner.minAdvance;
+
+  /* The disbursement claim has to be about the financed lines only. Averaging
+     it over money the tenant is paying themselves would flatter it. */
+  const financedLines = covered.filter(
+    (line) => (coverage[line.id] ?? defaultCoverage(line)) === "litchi"
   );
-  const belowMinimum = requested > 0 && requested < partner.minAdvance;
+  const direct = directShare(financedLines);
 
   const quote = useMemo(
     () => quoteMove(requested, termWeeks, partner),
@@ -240,12 +264,18 @@ export function MoveFlow() {
 
   const uncertain = extracted ? lowConfidenceFields(extracted) : [];
 
+  /*
+   * Note what step 3 no longer requires: a total big enough to lend against.
+   * A move that costs less than the smallest facility is still a move worth
+   * costing, and the calculator has no business refusing to finish because
+   * the answer turned out to be one nobody needs to borrow for.
+   */
   const blocked =
     (step === 0 && !extracted) ||
     (step === 1 && (!confirmed || rent < 100)) ||
     (step === 2 && verification !== "verified") ||
-    (step === 3 && (total <= 0 || total < partner.minAdvance)) ||
-    (step === 4 && (!consent || requested <= 0 || belowMinimum));
+    (step === 3 && total <= 0) ||
+    (step === 4 && financing && (!consent || belowMinimum));
 
   function readDocument(name: string) {
     setFileName(null);
@@ -262,11 +292,15 @@ export function MoveFlow() {
   }
 
   /* ---------------------------------------------------------------- *
-   * Submitted: the tracker.
+   * Saved: the move plan.
+   *
+   * Not "your application". The plan is the thing that was made, and it is
+   * worth something whether or not any of it is financed — a costed move, a
+   * verified tenancy, and a record of who is paying what. Where finance is
+   * involved the application appears inside the plan as one section, which is
+   * the right proportion: it is part of the move, not the point of it.
    * ---------------------------------------------------------------- */
   if (submitted) {
-    // The partner is assessing. Everything before that is done; the decision
-    // and the drawdown are not ours to claim.
     const current = APPLICATION_STAGES.findIndex((s) => s.key === "assessment");
     const revenue = litchiRevenue(quote, partner);
 
@@ -274,75 +308,80 @@ export function MoveFlow() {
       <div className="space-y-6">
         <Card tone="ink">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-onbrand/60">
-            Application {request?.token.toUpperCase() ?? "LM-000000"}
+            {request?.property ?? "Your move"}
           </p>
           <h2 className="mt-3 text-[26px] font-semibold leading-tight tracking-tight sm:text-[32px]">
-            We&rsquo;re reviewing your application
+            Your move plan is saved
           </h2>
           <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-onbrand/75">
-            Submitted to {partner.name}{" "}
-            with your verified tenancy attached. Most decisions come back the same day, and
-            you&rsquo;ll hear from us either way.
+            {financing ? (
+              <>
+                A verified tenancy, {money(total)}{" "}
+                of costs, and an application with {partner.name} for the{" "}
+                {money(requested)} you asked us to cover.
+              </>
+            ) : (
+              <>
+                A verified tenancy and {money(total)}{" "}
+                of costs, all covered by you. Nothing was applied for, and you can change any
+                line whenever you like.
+              </>
+            )}
           </p>
         </Card>
 
+        {/* The plan itself comes first, because it is the deliverable. */}
         <Card>
-          <CardTitle>Where it&rsquo;s up to</CardTitle>
-          <ol className="mt-6 space-y-5">
-            {APPLICATION_STAGES.map((stage, index) => {
-              const state = index < current ? "done" : index === current ? "now" : "todo";
+          <CardTitle>The move</CardTitle>
+          <ul className="mt-5 divide-y divide-sand/70">
+            {covered.map((line) => {
+              const how = coverage[line.id] ?? defaultCoverage(line);
               return (
-                <li key={stage.key} className="flex items-start gap-4">
-                  <span
-                    className={clsx(
-                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
-                      state === "done" && "bg-moss text-onbrand",
-                      state === "now" && "bg-brand text-onbrand",
-                      state === "todo" && "border border-sand bg-paper text-clay"
-                    )}
-                    aria-hidden
-                  >
-                    {state === "done" ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : state === "now" ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      index + 1
-                    )}
-                  </span>
+                <li
+                  key={line.id}
+                  className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3.5"
+                >
                   <div className="min-w-0">
-                    <p
-                      className={clsx(
-                        "text-[15px] font-semibold",
-                        state === "todo" ? "text-clay" : "text-ink"
-                      )}
-                    >
-                      {stage.label}
-                      <span className="sr-only">
-                        {state === "done"
-                          ? " — done"
-                          : state === "now"
-                            ? " — in progress"
-                            : " — not started"}
-                      </span>
+                    <p className="text-sm font-medium text-ink">{line.label}</p>
+                    <p className="mt-0.5 text-[12px] text-mist">
+                      {how === "self" ? "You" : line.payeeName}
                     </p>
-                    <p className="mt-1 text-[13px] leading-relaxed text-mist">{stage.detail}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <Badge tone={how === "litchi" ? "bark" : how === "book" ? "cream" : "outline"}>
+                      {COVERAGE_SHORT[how]}
+                    </Badge>
+                    <span className="numeric w-20 text-right text-sm font-semibold text-ink">
+                      {money(line.amount)}
+                    </span>
                   </div>
                 </li>
               );
             })}
-          </ol>
+          </ul>
+          <dl className="mt-5 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
+            {[
+              { label: "You're paying", value: money(split.self) },
+              { label: "Booked", value: money(split.booked) },
+              { label: "Litchi covers", value: money(split.financed) },
+            ].map((item) => (
+              <div key={item.label} className="bg-paper px-4 py-3.5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
+                  {item.label}
+                </dt>
+                <dd className="numeric mt-1.5 text-[17px] font-semibold text-ink">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
         </Card>
 
         <Card>
-          <CardTitle>What you applied for</CardTitle>
+          <CardTitle>Your tenancy</CardTitle>
           <dl className="mt-5 divide-y divide-sand/70 text-sm">
             {[
-              { label: "Amount", value: money(quote.amount) },
-              { label: "Term", value: `${quote.termWeeks} weeks` },
-              { label: "Estimated repayment", value: `${moneyExact(quote.weekly)} a week` },
-              { label: "Lender", value: partner.name },
-              { label: "Tenancy", value: `${request?.property ?? ""} — verified` },
+              { label: "Property", value: `${request?.property ?? ""}, ${request?.suburb ?? ""}` },
+              { label: "Weekly rent", value: money(rent) },
+              { label: "Confirmed by", value: `${request?.manager ?? ""}, ${request?.agencyName ?? ""}` },
             ].map((row) => (
               <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
                 <dt className="text-mist">{row.label}</dt>
@@ -350,38 +389,126 @@ export function MoveFlow() {
               </div>
             ))}
           </dl>
-        </Card>
-
-        {/* The commercial side, shown rather than hidden. Litchi is paid by the
-            lender for the introduction and the platform, and a tenant who
-            finds that out later has been sold something. */}
-        <Card tone="cream">
-          <div className="flex items-start gap-3">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
-            <div>
-              <h2 className="text-[15px] font-semibold text-ink">How Litchi is paid for this</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-bark">
-                {partner.name}{" "}
-                pays Litchi for introducing and servicing this facility &mdash; about{" "}
-                {money(revenue.total)} across the {quote.termWeeks} weeks. It is paid by the
-                lender, not added to what you repay, and it is the same whether you borrow{" "}
-                {money(partner.minAdvance)} or {money(partner.maxAdvance)}.
-              </p>
-            </div>
+          <div className="mt-5 flex items-start gap-3 rounded-tile bg-moss-soft/40 px-4 py-3.5">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-moss" aria-hidden />
+            <p className="text-[13px] leading-relaxed text-ink">
+              Verified at source. That is what makes the rest of this quick &mdash; and it is the
+              part you keep, whether or not you ever borrow anything.
+            </p>
           </div>
         </Card>
 
+        {financing ? (
+          <>
+            <Card>
+              <CardTitle>The application</CardTitle>
+              <p className="mt-1.5 text-sm leading-relaxed text-mist">
+                For the {money(requested)} you asked Litchi to cover. Everything above stands
+                whatever the answer is.
+              </p>
+              <ol className="mt-6 space-y-5">
+                {APPLICATION_STAGES.map((stage, index) => {
+                  const state = index < current ? "done" : index === current ? "now" : "todo";
+                  return (
+                    <li key={stage.key} className="flex items-start gap-4">
+                      <span
+                        className={clsx(
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                          state === "done" && "bg-moss text-onbrand",
+                          state === "now" && "bg-brand text-onbrand",
+                          state === "todo" && "border border-sand bg-paper text-clay"
+                        )}
+                        aria-hidden
+                      >
+                        {state === "done" ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : state === "now" ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          index + 1
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <p
+                          className={clsx(
+                            "text-[15px] font-semibold",
+                            state === "todo" ? "text-clay" : "text-ink"
+                          )}
+                        >
+                          {stage.label}
+                          <span className="sr-only">
+                            {state === "done"
+                              ? " — done"
+                              : state === "now"
+                                ? " — in progress"
+                                : " — not started"}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-[13px] leading-relaxed text-mist">
+                          {stage.detail}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+              <dl className="mt-6 divide-y divide-sand/70 border-t border-sand/70 pt-2 text-sm">
+                {[
+                  { label: "Amount", value: money(quote.amount) },
+                  { label: "Term", value: `${quote.termWeeks} weeks` },
+                  { label: "Estimated repayment", value: `${moneyExact(quote.weekly)} a week` },
+                  { label: "Lender", value: partner.name },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
+                    <dt className="text-mist">{row.label}</dt>
+                    <dd className="text-right font-medium text-ink">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
+
+            <Card tone="cream">
+              <div className="flex items-start gap-3">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
+                <div>
+                  <h2 className="text-[15px] font-semibold text-ink">
+                    How Litchi is paid for this
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-bark">
+                    {partner.name}{" "}
+                    pays Litchi for introducing and servicing this facility &mdash; about{" "}
+                    {money(revenue.total)} across the {quote.termWeeks} weeks. It is paid by the
+                    lender, not added to what you repay, and it is the same whether you borrow{" "}
+                    {money(partner.minAdvance)} or {money(partner.maxAdvance)}.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </>
+        ) : null}
+
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/dashboard" size="lg">
-            See a funded account
+          <ButtonLink href="/my-move" size="lg">
+            See a live move plan
             <ArrowRight className="h-4 w-4" aria-hidden />
           </ButtonLink>
           <Button
             variant="ghost"
             size="lg"
+            // Everything, not just the step counter. "Start again" that leaves
+            // the previous tenancy document loaded is a different button.
             onClick={() => {
               setSubmitted(false);
               setStep(0);
+              setFileName(null);
+              setConfirmed(false);
+              setConsent(false);
+              setRent(0);
+              setBondAmount(0);
+              setAmounts({});
+              setToggles({});
+              setCoverage({});
+              setTermWeeks(52);
             }}
           >
             Start again
@@ -757,61 +884,68 @@ export function MoveFlow() {
         {step === 4 ? (
           <StepPanel
             icon={Wallet}
-            title="Your estimate"
-            body="An indicative quote, not an offer. The lender decides the final terms after its own credit and affordability checks."
+            title="How you'll cover it"
+            body="Line by line. Most people pay for most of it themselves — the question is which parts you can't, and those are the only ones Litchi needs to be involved in."
           >
-            <div className="mt-7 grid gap-6 sm:grid-cols-2">
-              <Field
-                label="How much should Litchi cover?"
-                hint={`Anything up to your move cost of ${money(total)}. You can take less.`}
-              >
-                <MoneyInput
-                  value={requested}
-                  max={ceiling}
-                  onChange={(next) => setRequestedOverride(next)}
-                  label="Amount requested"
-                />
-              </Field>
-              <Field label="Over how long?" hint="A shorter term costs less overall.">
-                <div className="flex flex-wrap gap-2">
-                  {partner.termsWeeks.map((weeks) => (
-                    <button
-                      key={weeks}
-                      type="button"
-                      onClick={() => setTermWeeks(weeks)}
-                      aria-pressed={termWeeks === weeks}
-                      className={clsx(
-                        "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                        termWeeks === weeks
-                          ? "bg-brand text-onbrand"
-                          : "border border-sand text-mist hover:bg-cream hover:text-ink"
-                      )}
+            <ul className="mt-7 divide-y divide-sand/70">
+              {covered.map((line) => {
+                const how = coverage[line.id] ?? defaultCoverage(line);
+                const options: Coverage[] = canBook(line)
+                  ? ["self", "book", "litchi"]
+                  : ["self", "litchi"];
+                return (
+                  <li key={line.id} className="py-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <p className="text-sm font-semibold text-ink">{line.label}</p>
+                      <p className="numeric text-sm font-semibold text-ink">
+                        {money(line.amount)}
+                      </p>
+                    </div>
+                    <div
+                      className="mt-3 flex flex-wrap gap-2"
+                      role="group"
+                      aria-label={`How to cover ${line.label}`}
                     >
-                      {weeks} weeks
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            </div>
+                      {options.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          aria-pressed={how === option}
+                          onClick={() =>
+                            setCoverage((prev) => ({ ...prev, [line.id]: option }))
+                          }
+                          className={clsx(
+                            "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
+                            how === option
+                              ? "bg-brand text-onbrand"
+                              : "border border-sand text-mist hover:bg-cream hover:text-ink"
+                          )}
+                        >
+                          {COVERAGE_LABELS[option]}
+                        </button>
+                      ))}
+                    </div>
+                    {how !== "self" ? (
+                      <p className="mt-2 text-[12px] leading-relaxed text-clay">
+                        {how === "book"
+                          ? `Litchi books ${line.payeeName} and you pay them on the day. Nothing is added to their price.`
+                          : `Paid direct to ${line.payeeName} on your move date, out of the facility.`}
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
 
-            {requestedOverride !== null && requested < total ? (
-              <p className="mt-4 text-[13px] leading-relaxed text-mist">
-                You&rsquo;re covering {money(total - requested)} of the move yourself.
-              </p>
-            ) : null}
-            {belowMinimum ? (
-              <p className="mt-4 text-[13px] leading-relaxed text-litchi">
-                {partner.name} does not write facilities under {money(partner.minAdvance)}.
-              </p>
-            ) : null}
-
-            <dl className="mt-7 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
+            {/* The three totals, always visible, so the trade is on screen
+                rather than one step away. */}
+            <dl className="mt-6 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
               {[
-                { label: "Weekly repayment", value: moneyExact(quote.weekly) },
-                { label: "Term", value: `${quote.termWeeks} weeks` },
-                { label: "Total repayable", value: money(quote.totalRepayable) },
+                { label: "You're paying", value: money(split.self) },
+                { label: "Booked, paid on the day", value: money(split.booked) },
+                { label: "Litchi covers", value: money(split.financed) },
               ].map((item) => (
-                <div key={item.label} className="bg-paper px-4 py-4">
+                <div key={item.label} className="bg-paper px-4 py-3.5">
                   <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
                     {item.label}
                   </dt>
@@ -822,69 +956,151 @@ export function MoveFlow() {
               ))}
             </dl>
 
-            <dl className="mt-5 divide-y divide-sand/70 text-sm">
-              {[
-                { label: "Amount advanced", value: money(quote.amount) },
-                { label: "Establishment fee", value: money(quote.establishmentFee) },
-                {
-                  label: "Interest rate",
-                  value: `${percent(quote.annualRate, 2)} p.a. on the reducing balance`,
-                },
-                { label: "Total cost of credit", value: money(quote.costOfCredit) },
-              ].map((row) => (
-                <div key={row.label} className="flex items-baseline justify-between gap-4 py-2.5">
-                  <dt className="text-mist">{row.label}</dt>
-                  <dd className="text-right font-medium text-ink">{row.value}</dd>
+            {financing ? (
+              <div className="mt-8 border-t border-sand/70 pt-7">
+                <h3 className="text-[17px] font-semibold tracking-tight text-ink">
+                  What the financed part costs
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-mist">
+                  An indicative quote on the {money(requested)}{" "}
+                  above, not an offer. {partner.name} decides the final terms after its own credit
+                  and affordability checks.
+                </p>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <span className="text-[13px] font-semibold text-ink">Over how long?</span>
+                  <span className="flex flex-wrap gap-2" role="group" aria-label="Term">
+                    {partner.termsWeeks.map((weeks) => (
+                      <button
+                        key={weeks}
+                        type="button"
+                        onClick={() => setTermWeeks(weeks)}
+                        aria-pressed={termWeeks === weeks}
+                        className={clsx(
+                          "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
+                          termWeeks === weeks
+                            ? "bg-brand text-onbrand"
+                            : "border border-sand text-mist hover:bg-cream hover:text-ink"
+                        )}
+                      >
+                        {weeks} weeks
+                      </button>
+                    ))}
+                  </span>
                 </div>
-              ))}
-            </dl>
 
-            {/* Where it goes. The part that makes this a move facility rather
-                than cash. */}
-            <div className="mt-7">
-              <h3 className="text-[13px] font-semibold text-ink">Where the money goes</h3>
-              <ul className="mt-3 space-y-2.5">
-                {lines
-                  .filter((line) => line.selected && line.amount > 0)
-                  .map((line) => (
-                    <li
-                      key={line.id}
-                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px]"
-                    >
-                      <span className="text-mist">
-                        {line.label}
-                        <span className="text-clay"> &mdash; {PAYEE_LABELS[line.payee]}</span>
+                {belowMinimum ? (
+                  <p className="mt-5 text-[13px] leading-relaxed text-litchi">
+                    {partner.name}{" "}
+                    does not write facilities under {money(partner.minAdvance)}. Either cover
+                    another line with Litchi, or pay this one outright &mdash; for an amount this
+                    size, paying it outright is almost always the better answer.
+                  </p>
+                ) : (
+                  <>
+                    <dl className="mt-6 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
+                      {[
+                        { label: "Weekly repayment", value: moneyExact(quote.weekly) },
+                        { label: "Term", value: `${quote.termWeeks} weeks` },
+                        { label: "Total repayable", value: money(quote.totalRepayable) },
+                      ].map((item) => (
+                        <div key={item.label} className="bg-paper px-4 py-4">
+                          <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
+                            {item.label}
+                          </dt>
+                          <dd className="numeric mt-1.5 text-[19px] font-semibold text-ink">
+                            {item.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+
+                    <dl className="mt-5 divide-y divide-sand/70 text-sm">
+                      {[
+                        { label: "Amount advanced", value: money(quote.amount) },
+                        { label: "Establishment fee", value: money(quote.establishmentFee) },
+                        {
+                          label: "Interest rate",
+                          value: `${percent(quote.annualRate, 2)} p.a. on the reducing balance`,
+                        },
+                        { label: "Total cost of credit", value: money(quote.costOfCredit) },
+                      ].map((row) => (
+                        <div
+                          key={row.label}
+                          className="flex items-baseline justify-between gap-4 py-2.5"
+                        >
+                          <dt className="text-mist">{row.label}</dt>
+                          <dd className="text-right font-medium text-ink">{row.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+
+                    <div className="mt-7">
+                      <h4 className="text-[13px] font-semibold text-ink">Where the money goes</h4>
+                      <ul className="mt-3 space-y-2.5">
+                        {covered
+                          .filter((line) => (coverage[line.id] ?? defaultCoverage(line)) === "litchi")
+                          .map((line) => (
+                            <li
+                              key={line.id}
+                              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px]"
+                            >
+                              <span className="text-mist">
+                                {line.label}
+                                <span className="text-clay">
+                                  {" "}
+                                  &mdash; {PAYEE_LABELS[line.payee]}
+                                </span>
+                              </span>
+                              <span className="numeric font-medium text-ink">
+                                {money(line.amount)}
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                      <p className="mt-4 text-[13px] leading-relaxed text-mist">
+                        Paid on your move dates, straight to the people owed. {percent(direct)}{" "}
+                        of this facility never lands in your account, so there is nothing for you
+                        to hold, forward or accidentally spend.
+                      </p>
+                    </div>
+
+                    <label className="mt-7 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
+                      <input
+                        type="checkbox"
+                        checked={consent}
+                        onChange={(e) => setConsent(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--bark)]"
+                      />
+                      <span className="text-[13px] leading-relaxed text-bark">
+                        I understand this is an estimate, that {partner.name}{" "}
+                        is the lender and makes the decision, and that Litchi may pass my verified
+                        tenancy and application details to them to assess it.
                       </span>
-                      <span className="numeric font-medium text-ink">{money(line.amount)}</span>
-                    </li>
-                  ))}
-              </ul>
-              <p className="mt-4 text-[13px] leading-relaxed text-mist">
-                Paid on your move dates, straight to the people owed. {percent(direct)} of this
-                facility never lands in your account, so there is nothing for you to hold, forward
-                or accidentally spend.
-              </p>
-            </div>
+                    </label>
 
-            <label className="mt-7 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--bark)]"
-              />
-              <span className="text-[13px] leading-relaxed text-bark">
-                I understand this is an estimate, that {partner.name} is the lender and makes the
-                decision, and that Litchi may pass my verified tenancy and application details to
-                them to assess it.
-              </span>
-            </label>
-
-            <p className="mt-4 text-[13px] leading-relaxed text-clay">
-              {partner.name} is a licensed consumer lender, FSPR {partner.fspr}, and a member of{" "}
-              {partner.disputesScheme}. Litchi arranges and services the facility. Litchi is not
-              the lender and does not decide the outcome.
-            </p>
+                    <p className="mt-4 text-[13px] leading-relaxed text-clay">
+                      {partner.name}{" "}
+                      is a licensed consumer lender, FSPR {partner.fspr}, and a member of{" "}
+                      {partner.disputesScheme}. Litchi arranges and services the facility. Litchi
+                      is not the lender and does not decide the outcome.
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              /* The screen has to work when the answer is "no finance". If it
+                 nagged here it would be a loan application wearing a
+                 calculator's clothes. */
+              <div className="mt-7 flex items-start gap-3 rounded-tile bg-cream px-4 py-4">
+                <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-bark" aria-hidden />
+                <p className="text-[13px] leading-relaxed text-bark">
+                  You&rsquo;re covering the whole move yourself, so there is nothing to apply for.
+                  Save the plan and you keep the costed breakdown, your verified tenancy and the
+                  dates &mdash; and you can change your mind on any line later.
+                </p>
+              </div>
+            )}
           </StepPanel>
         ) : null}
 
@@ -904,7 +1120,7 @@ export function MoveFlow() {
             </Button>
           ) : (
             <Button onClick={() => setSubmitted(true)} disabled={blocked}>
-              Submit application
+              {financing ? "Save plan and apply" : "Save my move plan"}
               <Send className="h-4 w-4" aria-hidden />
             </Button>
           )}
