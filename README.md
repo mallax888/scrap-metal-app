@@ -18,6 +18,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## The backend that does not exist yet
+
+Every figure in this app comes out of `src/lib/data.ts`. There is no database,
+no auth and no server — which is why it needs no login, has nothing to break in
+a meeting, and holds no personal information.
+
+`docs/data-model.md` is the schema for the system this fakes, with runnable
+migrations and an RLS test suite under `supabase/`. Designed and tested, not
+deployed.
+
 The app runs entirely on realistic local sample data — no backend, no keys, no setup.
 Every figure sits on one schedule: 52 weekly payments of $53.85 taken every Friday from
 17 July 2026, with the last trimmed to $53.65 so the plan settles at exactly $2,800.
