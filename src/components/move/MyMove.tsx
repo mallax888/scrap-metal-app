@@ -15,6 +15,7 @@ import { Card, CardLabel, CardTitle } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
+import { StatGrid } from "@/components/ui/StatGrid";
 import { bond, myMove, plan, tenancy, type MoveCoverage } from "@/lib/data";
 import { formatDate, formatDateShort, money, moneyExact, percent } from "@/lib/format";
 import { withheldFromAgency } from "@/lib/verification";
@@ -144,20 +145,15 @@ export function MyMove() {
           ))}
         </ul>
 
-        <dl className="mt-6 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
-          {[
+        <StatGrid
+          className="mt-6"
+          size="lg"
+          items={[
             { label: "You paid", value: money(self) },
             { label: "Booked", value: money(booked) },
             { label: "Litchi covered", value: money(financed) },
-          ].map((item) => (
-            <div key={item.label} className="bg-paper px-4 py-3.5">
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                {item.label}
-              </dt>
-              <dd className="numeric mt-1.5 text-[19px] font-semibold text-ink">{item.value}</dd>
-            </div>
-          ))}
-        </dl>
+          ]}
+        />
 
         <p className="mt-5 text-[13px] leading-relaxed text-mist">
           Litchi covered {percent(financed / total)}{" "}

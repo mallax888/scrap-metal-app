@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Info, Minus, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Card } from "@/components/ui/Card";
+import { StatGrid } from "@/components/ui/StatGrid";
 import { ButtonLink } from "@/components/ui/Button";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
@@ -201,23 +202,16 @@ export function ApplyFlow() {
             </div>
 
             {result.outcome !== "declined" ? (
-              <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-4">
-                {[
+              <StatGrid
+                className="mt-6"
+                columns={4}
+                items={[
                   { label: "Bond financed", value: money(result.bond) },
                   { label: `Litchi fee (${plan.feeRate * 100}%)`, value: money(result.fee) },
                   { label: "Total repayable", value: money(result.totalRepayable) },
                   { label: "Weekly", value: moneyExact(result.weeklyPayment) },
-                ].map((item) => (
-                  <div key={item.label} className="bg-paper px-4 py-3.5">
-                    <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                      {item.label}
-                    </dt>
-                    <dd className="numeric mt-1.5 text-[17px] font-semibold text-ink">
-                      {item.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+                ]}
+              />
             ) : null}
 
             {/* The workings, not just the verdict. Someone declined deserves to

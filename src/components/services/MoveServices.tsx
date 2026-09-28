@@ -6,6 +6,8 @@ import { clsx } from "clsx";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { StatGrid } from "@/components/ui/StatGrid";
+import { ChoiceChip } from "@/components/ui/ChoiceChip";
 import { useToast } from "@/components/ui/Toast";
 import {
   moveServices,
@@ -74,20 +76,13 @@ export function MoveServices() {
           <h2 className="text-[19px] font-semibold tracking-tight text-ink">Book a job</h2>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Property size">
             {PROPERTY_SIZES.map((option) => (
-              <button
+              <ChoiceChip
                 key={option.value}
-                type="button"
+                pressed={size === option.value}
                 onClick={() => setSize(option.value)}
-                aria-pressed={size === option.value}
-                className={clsx(
-                  "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                  size === option.value
-                    ? "bg-brand text-onbrand"
-                    : "border border-sand text-mist hover:bg-cream hover:text-ink"
-                )}
               >
                 {option.label}
-              </button>
+              </ChoiceChip>
             ))}
           </div>
         </div>
@@ -238,25 +233,17 @@ export function MoveServices() {
             </div>
 
             {finance ? (
-              <dl className="mt-5 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
-                {[
+              <StatGrid
+                className="mt-5"
+                items={[
                   { label: "Bond repayment", value: moneyExact(plan.weeklyPayment) },
                   { label: "This booking", value: moneyExact(basket.weekly) },
                   {
                     label: `Weekly for ${basket.termWeeks} weeks`,
                     value: moneyExact(plan.weeklyPayment + basket.weekly),
                   },
-                ].map((item) => (
-                  <div key={item.label} className="bg-paper px-4 py-3.5">
-                    <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                      {item.label}
-                    </dt>
-                    <dd className="numeric mt-1.5 text-[17px] font-semibold text-ink">
-                      {item.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+                ]}
+              />
             ) : null}
 
             <div className="mt-6">

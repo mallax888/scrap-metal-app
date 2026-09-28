@@ -18,9 +18,12 @@ import {
   Wallet,
 } from "lucide-react";
 import { clsx } from "clsx";
-import { Card, CardTitle } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { StatGrid } from "@/components/ui/StatGrid";
+import { ChoiceChip } from "@/components/ui/ChoiceChip";
+import { MovePlan } from "@/components/move/MovePlan";
 import { PROPERTY_SIZES, TODAY, type PropertySize } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import {
@@ -28,12 +31,10 @@ import {
   canBook,
   costedTotal,
   COVERAGE_LABELS,
-  COVERAGE_SHORT,
   coverageSplit,
   defaultCoverage,
   defaultPartner,
   directShare,
-  litchiRevenue,
   PAYEE_LABELS,
   quoteMove,
   RTA_CAPS,
@@ -41,7 +42,6 @@ import {
   type MoveCostLine,
 } from "@/lib/move";
 import {
-  APPLICATION_STAGES,
   DEMO_VERIFICATION_TOKEN,
   extractTenancy,
   findVerification,
@@ -208,6 +208,26 @@ export function MoveFlow() {
   const [coverage, setCoverage] = useState<Record<string, Coverage>>({});
   const [termWeeks, setTermWeeks] = useState<number>(52);
 
+  /**
+   * Back to an empty flow.
+   *
+   * Every field, not just the step counter — "Start again" that leaves the
+   * previous tenancy document loaded is a different button.
+   */
+  function reset() {
+    setSubmitted(false);
+    setStep(0);
+    setFileName(null);
+    setConfirmed(false);
+    setConsent(false);
+    setRent(0);
+    setBondAmount(0);
+    setAmounts({});
+    setToggles({});
+    setCoverage({});
+    setTermWeeks(52);
+  }
+
   const agencyName = extracted?.agencyName.value ?? "";
 
   /*
@@ -291,230 +311,25 @@ export function MoveFlow() {
     }, 900);
   }
 
-  /* ---------------------------------------------------------------- *
-   * Saved: the move plan.
-   *
-   * Not "your application". The plan is the thing that was made, and it is
-   * worth something whether or not any of it is financed — a costed move, a
-   * verified tenancy, and a record of who is paying what. Where finance is
-   * involved the application appears inside the plan as one section, which is
-   * the right proportion: it is part of the move, not the point of it.
-   * ---------------------------------------------------------------- */
+  /* The saved plan is a screen, not a sixth step: it replaces the wizard
+     rather than continuing it, so it lives in its own component. */
   if (submitted) {
-    const current = APPLICATION_STAGES.findIndex((s) => s.key === "assessment");
-    const revenue = litchiRevenue(quote, partner);
-
     return (
-      <div className="space-y-6">
-        <Card tone="ink">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-onbrand/60">
-            {request?.property ?? "Your move"}
-          </p>
-          <h2 className="mt-3 text-[26px] font-semibold leading-tight tracking-tight sm:text-[32px]">
-            Your move plan is saved
-          </h2>
-          <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-onbrand/75">
-            {financing ? (
-              <>
-                A verified tenancy, {money(total)}{" "}
-                of costs, and an application with {partner.name} for the{" "}
-                {money(requested)} you asked us to cover.
-              </>
-            ) : (
-              <>
-                A verified tenancy and {money(total)}{" "}
-                of costs, all covered by you. Nothing was applied for, and you can change any
-                line whenever you like.
-              </>
-            )}
-          </p>
-        </Card>
-
-        {/* The plan itself comes first, because it is the deliverable. */}
-        <Card>
-          <CardTitle>The move</CardTitle>
-          <ul className="mt-5 divide-y divide-sand/70">
-            {covered.map((line) => {
-              const how = coverage[line.id] ?? defaultCoverage(line);
-              return (
-                <li
-                  key={line.id}
-                  className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3.5"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-ink">{line.label}</p>
-                    <p className="mt-0.5 text-[12px] text-mist">
-                      {how === "self" ? "You" : line.payeeName}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <Badge tone={how === "litchi" ? "bark" : how === "book" ? "cream" : "outline"}>
-                      {COVERAGE_SHORT[how]}
-                    </Badge>
-                    <span className="numeric w-20 text-right text-sm font-semibold text-ink">
-                      {money(line.amount)}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <dl className="mt-5 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
-            {[
-              { label: "You're paying", value: money(split.self) },
-              { label: "Booked", value: money(split.booked) },
-              { label: "Litchi covers", value: money(split.financed) },
-            ].map((item) => (
-              <div key={item.label} className="bg-paper px-4 py-3.5">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                  {item.label}
-                </dt>
-                <dd className="numeric mt-1.5 text-[17px] font-semibold text-ink">{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </Card>
-
-        <Card>
-          <CardTitle>Your tenancy</CardTitle>
-          <dl className="mt-5 divide-y divide-sand/70 text-sm">
-            {[
-              { label: "Property", value: `${request?.property ?? ""}, ${request?.suburb ?? ""}` },
-              { label: "Weekly rent", value: money(rent) },
-              { label: "Confirmed by", value: `${request?.manager ?? ""}, ${request?.agencyName ?? ""}` },
-            ].map((row) => (
-              <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
-                <dt className="text-mist">{row.label}</dt>
-                <dd className="text-right font-medium text-ink">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="mt-5 flex items-start gap-3 rounded-tile bg-moss-soft/40 px-4 py-3.5">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-moss" aria-hidden />
-            <p className="text-[13px] leading-relaxed text-ink">
-              Verified at source. That is what makes the rest of this quick &mdash; and it is the
-              part you keep, whether or not you ever borrow anything.
-            </p>
-          </div>
-        </Card>
-
-        {financing ? (
-          <>
-            <Card>
-              <CardTitle>The application</CardTitle>
-              <p className="mt-1.5 text-sm leading-relaxed text-mist">
-                For the {money(requested)} you asked Litchi to cover. Everything above stands
-                whatever the answer is.
-              </p>
-              <ol className="mt-6 space-y-5">
-                {APPLICATION_STAGES.map((stage, index) => {
-                  const state = index < current ? "done" : index === current ? "now" : "todo";
-                  return (
-                    <li key={stage.key} className="flex items-start gap-4">
-                      <span
-                        className={clsx(
-                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
-                          state === "done" && "bg-moss text-onbrand",
-                          state === "now" && "bg-brand text-onbrand",
-                          state === "todo" && "border border-sand bg-paper text-clay"
-                        )}
-                        aria-hidden
-                      >
-                        {state === "done" ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : state === "now" ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          index + 1
-                        )}
-                      </span>
-                      <div className="min-w-0">
-                        <p
-                          className={clsx(
-                            "text-[15px] font-semibold",
-                            state === "todo" ? "text-clay" : "text-ink"
-                          )}
-                        >
-                          {stage.label}
-                          <span className="sr-only">
-                            {state === "done"
-                              ? " — done"
-                              : state === "now"
-                                ? " — in progress"
-                                : " — not started"}
-                          </span>
-                        </p>
-                        <p className="mt-1 text-[13px] leading-relaxed text-mist">
-                          {stage.detail}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-              <dl className="mt-6 divide-y divide-sand/70 border-t border-sand/70 pt-2 text-sm">
-                {[
-                  { label: "Amount", value: money(quote.amount) },
-                  { label: "Term", value: `${quote.termWeeks} weeks` },
-                  { label: "Estimated repayment", value: `${moneyExact(quote.weekly)} a week` },
-                  { label: "Lender", value: partner.name },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
-                    <dt className="text-mist">{row.label}</dt>
-                    <dd className="text-right font-medium text-ink">{row.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Card>
-
-            <Card tone="cream">
-              <div className="flex items-start gap-3">
-                <Info className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
-                <div>
-                  <h2 className="text-[15px] font-semibold text-ink">
-                    How Litchi is paid for this
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-bark">
-                    {partner.name}{" "}
-                    pays Litchi for introducing and servicing this facility &mdash; about{" "}
-                    {money(revenue.total)} across the {quote.termWeeks} weeks. It is paid by the
-                    lender, not added to what you repay, and it is the same whether you borrow{" "}
-                    {money(partner.minAdvance)} or {money(partner.maxAdvance)}.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </>
-        ) : null}
-
-        <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/my-move" size="lg">
-            See a live move plan
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </ButtonLink>
-          <Button
-            variant="ghost"
-            size="lg"
-            // Everything, not just the step counter. "Start again" that leaves
-            // the previous tenancy document loaded is a different button.
-            onClick={() => {
-              setSubmitted(false);
-              setStep(0);
-              setFileName(null);
-              setConfirmed(false);
-              setConsent(false);
-              setRent(0);
-              setBondAmount(0);
-              setAmounts({});
-              setToggles({});
-              setCoverage({});
-              setTermWeeks(52);
-            }}
-          >
-            Start again
-          </Button>
-        </div>
-      </div>
+      <MovePlan
+        plan={{
+          lines: covered,
+          coverage,
+          split,
+          total,
+          rent,
+          requested,
+          financing,
+          quote,
+          partner,
+          tenancy: request,
+        }}
+        onStartAgain={reset}
+      />
     );
   }
 
@@ -797,20 +612,13 @@ export function MoveFlow() {
               <p className="text-[13px] font-semibold text-ink">How big is the place?</p>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Property size">
                 {PROPERTY_SIZES.map((option) => (
-                  <button
+                  <ChoiceChip
                     key={option.value}
-                    type="button"
+                    pressed={size === option.value}
                     onClick={() => setSize(option.value)}
-                    aria-pressed={size === option.value}
-                    className={clsx(
-                      "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                      size === option.value
-                        ? "bg-brand text-onbrand"
-                        : "border border-sand text-mist hover:bg-cream hover:text-ink"
-                    )}
                   >
                     {option.label}
-                  </button>
+                  </ChoiceChip>
                 ))}
               </div>
             </div>
@@ -907,22 +715,13 @@ export function MoveFlow() {
                       aria-label={`How to cover ${line.label}`}
                     >
                       {options.map((option) => (
-                        <button
+                        <ChoiceChip
                           key={option}
-                          type="button"
-                          aria-pressed={how === option}
-                          onClick={() =>
-                            setCoverage((prev) => ({ ...prev, [line.id]: option }))
-                          }
-                          className={clsx(
-                            "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                            how === option
-                              ? "bg-brand text-onbrand"
-                              : "border border-sand text-mist hover:bg-cream hover:text-ink"
-                          )}
+                          pressed={how === option}
+                          onClick={() => setCoverage((prev) => ({ ...prev, [line.id]: option }))}
                         >
                           {COVERAGE_LABELS[option]}
-                        </button>
+                        </ChoiceChip>
                       ))}
                     </div>
                     {how !== "self" ? (
@@ -939,22 +738,15 @@ export function MoveFlow() {
 
             {/* The three totals, always visible, so the trade is on screen
                 rather than one step away. */}
-            <dl className="mt-6 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
-              {[
+            <StatGrid
+              className="mt-6"
+              size="lg"
+              items={[
                 { label: "You're paying", value: money(split.self) },
-                { label: "Booked, paid on the day", value: money(split.booked) },
+                { label: "Booked", value: money(split.booked) },
                 { label: "Litchi covers", value: money(split.financed) },
-              ].map((item) => (
-                <div key={item.label} className="bg-paper px-4 py-3.5">
-                  <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                    {item.label}
-                  </dt>
-                  <dd className="numeric mt-1.5 text-[19px] font-semibold text-ink">
-                    {item.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+              ]}
+            />
 
             {financing ? (
               <div className="mt-8 border-t border-sand/70 pt-7">
@@ -971,20 +763,13 @@ export function MoveFlow() {
                   <span className="text-[13px] font-semibold text-ink">Over how long?</span>
                   <span className="flex flex-wrap gap-2" role="group" aria-label="Term">
                     {partner.termsWeeks.map((weeks) => (
-                      <button
+                      <ChoiceChip
                         key={weeks}
-                        type="button"
+                        pressed={termWeeks === weeks}
                         onClick={() => setTermWeeks(weeks)}
-                        aria-pressed={termWeeks === weeks}
-                        className={clsx(
-                          "tap rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                          termWeeks === weeks
-                            ? "bg-brand text-onbrand"
-                            : "border border-sand text-mist hover:bg-cream hover:text-ink"
-                        )}
                       >
                         {weeks} weeks
-                      </button>
+                      </ChoiceChip>
                     ))}
                   </span>
                 </div>
@@ -998,22 +783,15 @@ export function MoveFlow() {
                   </p>
                 ) : (
                   <>
-                    <dl className="mt-6 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
-                      {[
+                    <StatGrid
+                      className="mt-6"
+                      size="lg"
+                      items={[
                         { label: "Weekly repayment", value: moneyExact(quote.weekly) },
                         { label: "Term", value: `${quote.termWeeks} weeks` },
                         { label: "Total repayable", value: money(quote.totalRepayable) },
-                      ].map((item) => (
-                        <div key={item.label} className="bg-paper px-4 py-4">
-                          <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                            {item.label}
-                          </dt>
-                          <dd className="numeric mt-1.5 text-[19px] font-semibold text-ink">
-                            {item.value}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
+                      ]}
+                    />
 
                     <dl className="mt-5 divide-y divide-sand/70 text-sm">
                       {[

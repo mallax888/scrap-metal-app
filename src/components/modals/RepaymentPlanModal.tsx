@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/Modal";
+import { StatGrid } from "@/components/ui/StatGrid";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { plan } from "@/lib/data";
@@ -32,23 +33,17 @@ export function RepaymentPlanModal({ open, onClose }: { open: boolean; onClose: 
         the one number Litchi earns should be visible on it, not folded into a
         larger figure where it cannot be picked out.
       */}
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-4">
-        {[
+      <StatGrid
+        columns={4}
+        items={[
           { label: "Bond financed", value: money(plan.principal) },
           { label: `Litchi fee (${plan.feeRate * 100}%)`, value: money(plan.fee) },
           { label: "Total repayable", value: money(plan.totalRepayable) },
           { label: "Weekly payment", value: money(plan.weeklyPayment) },
           { label: "Repaid so far", value: moneyExact(derived.totalRepaid) },
           { label: "Balance", value: moneyExact(derived.balance) },
-        ].map((item) => (
-          <div key={item.label} className="bg-paper px-4 py-3.5">
-            <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-              {item.label}
-            </dt>
-            <dd className="numeric mt-1.5 text-lg font-semibold text-ink">{item.value}</dd>
-          </div>
-        ))}
-      </dl>
+        ]}
+      />
 
       <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-mist">
         <Badge tone="cream">{derived.weeksRemaining} payments left</Badge>
