@@ -23,12 +23,12 @@ export default function NotFound() {
         We couldn&rsquo;t find that page
       </h1>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-mist">
-        The link may be out of date. Your bond, payments and rewards are all still where you left
-        them.
+        The link may be out of date. Your move, your bond and your plan are all still where you
+        left them.
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <ButtonLink href={APP_HOME} size="lg">
-          Back to your overview
+          Back to your move
         </ButtonLink>
         <ButtonLink href={HOME_HREF} size="lg" variant="ghost">
           What is Litchi?

@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { bond, plan } from "@/lib/data";
-import { money, moneyExact, percent, signed } from "@/lib/format";
+import { plan } from "@/lib/data";
+import { formatDateShort, money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
 /**
- * The four headline figures.
+ * The four headline figures of the repayment plan.
+ *
+ * All four are about the plan itself, which is what this page is for. The bond
+ * and the renter score used to sit here, from when this was the app's home
+ * screen; they belong to their own pages and to the move, and repeating them
+ * here made the plan look like a digest of everything rather than the detail
+ * of one thing.
  *
  * Deliberately *not* four cards. Card chrome around each one spent most of the
  * width on borders and padding, forced the numbers small, and — because every
@@ -27,22 +33,23 @@ function Stat({
   first,
 }: {
   label: string;
-  href: string;
+  /** Omitted where the figure is already on the page it would link to. */
+  href?: string;
   value: string;
   unit?: string;
   caption: string;
   chip?: React.ReactNode;
   first?: boolean;
 }) {
-  return (
-    <Link
-      href={href}
-      className={clsx(
-        // The whole figure is the target — no "View" link repeated four times.
-        "group flex flex-col rounded-tile px-5 py-4 transition-colors duration-200 hover:bg-paper/70",
-        !first && "sm:border-l sm:border-sand"
-      )}
-    >
+  const className = clsx(
+    // The whole figure is the target — no "View" link repeated four times.
+    "group flex flex-col rounded-tile px-5 py-4",
+    href && "transition-colors duration-200 hover:bg-paper/70",
+    !first && "sm:border-l sm:border-sand"
+  );
+
+  const body = (
+    <>
       <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-clay">
         {label}
       </span>
@@ -52,7 +59,15 @@ function Stat({
       </span>
       <span className="mt-2 text-[13px] text-mist">{caption}</span>
       {chip ? <span className="mt-3">{chip}</span> : null}
+    </>
+  );
+
+  return href ? (
+    <Link href={href} className={className}>
+      {body}
     </Link>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }
 
@@ -100,49 +115,37 @@ export function SummaryCards() {
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
       <Stat
         first
-        label="Bond"
-        href="/bond"
-        value={money(bond.amount)}
-        caption="Held by Tenancy Services"
-        chip={
-          <Chip>
-            <CheckCircle2 className="h-3 w-3" aria-hidden />
-            Paid &amp; lodged
-          </Chip>
-        }
-      />
-      <Stat
         label="Weekly payment"
         href="/payments"
         value={money(plan.weeklyPayment)}
         unit=" / wk"
-        caption="Bond repayment"
+        caption="Every Friday, by direct debit"
         chip={<Chip tone="cream">{derived.weeksRemaining} weeks left</Chip>}
       />
       {/* Not "Bond paid off": the figure underneath is measured against the
           total repayable, and calling that the bond is the exact conflation
           the fee split exists to prevent. */}
       <Stat
-        label="Plan paid off"
-        href="/bond"
+        label="Paid off"
         value={percent(derived.progress)}
         caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.totalRepayable)}`}
       />
       <Stat
-        label="Renter score"
-        href="/score"
-        value={String(derived.score.value)}
-        unit=" / 100"
-        caption={derived.score.band}
+        label="Still to repay"
+        value={moneyExact(derived.balance)}
+        caption={`${money(plan.principal)} bond plus the ${money(plan.fee)} fee`}
+      />
+      <Stat
+        label="Finishes"
+        value={formatDateShort(derived.payoffDate)}
+        caption={derived.weeksSaved > 0 ? "Brought forward by extra payments" : "On the original schedule"}
         chip={
-          <Chip tone={derived.score.change < 0 ? "amber" : "moss"}>
-            {derived.score.change < 0 ? (
-              <TrendingDown className="h-3 w-3" aria-hidden />
-            ) : (
+          derived.weeksSaved > 0 ? (
+            <Chip>
               <TrendingUp className="h-3 w-3" aria-hidden />
-            )}
-            {signed(derived.score.change)} this month
-          </Chip>
+              {derived.weeksSaved} {derived.weeksSaved === 1 ? "week" : "weeks"} early
+            </Chip>
+          ) : undefined
         }
       />
     </div>
