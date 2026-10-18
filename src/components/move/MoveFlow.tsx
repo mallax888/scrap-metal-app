@@ -13,6 +13,7 @@ import {
   Info,
   Loader2,
   Lock,
+  PiggyBank,
   Send,
   ShieldCheck,
   Wallet,
@@ -29,6 +30,7 @@ import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import {
   buildMoveCosts,
   canBook,
+  cheaperAlternative,
   costedTotal,
   COVERAGE_LABELS,
   coverageSplit,
@@ -277,10 +279,15 @@ export function MoveFlow() {
   );
   const direct = directShare(financedLines);
 
+
   const quote = useMemo(
     () => quoteMove(requested, termWeeks, partner),
     [requested, termWeeks, partner]
   );
+
+  /* Whether the other product covers this selection for less. Null unless the
+     bond is the only thing being financed. */
+  const alternative = cheaperAlternative(lines, coverage, quote);
 
   const uncertain = extracted ? lowConfidenceFields(extracted) : [];
 
@@ -758,6 +765,82 @@ export function MoveFlow() {
                   above, not an offer. {partner.name} decides the final terms after its own credit
                   and affordability checks.
                 </p>
+
+                {/* The screen's most important job when it applies at all. The
+                    opening position of this calculator — bond financed, rest
+                    paid by you — is Bond Assist's exact product at several
+                    times the cost of credit, so leaving the comparison unsaid
+                    would be letting people pay more by taking the obvious
+                    route through the obvious button. */}
+                {alternative ? (
+                  <Card tone="cream" className="mt-6">
+                    <div className="flex items-start gap-3">
+                      <PiggyBank className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
+                      <div className="min-w-0">
+                        <h4 className="text-[15px] font-semibold text-ink">
+                          {alternative.name} would cover this for less
+                        </h4>
+                        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-bark">
+                          You&rsquo;re only financing the bond, and that is exactly what{" "}
+                          {alternative.name} is for. Same {money(alternative.amount)}, same{" "}
+                          {alternative.termWeeks}{" "}
+                          weeks &mdash; one flat fee instead of an establishment fee and a rate,
+                          because a bond comes back to you at the end of the tenancy and a truck
+                          does not.
+                        </p>
+
+                        <dl className="mt-5 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-2">
+                          {[
+                            {
+                              label: alternative.name,
+                              weekly: moneyExact(alternative.weekly),
+                              credit: money(alternative.costOfCredit),
+                              best: true,
+                            },
+                            {
+                              label: "Litchi Move",
+                              weekly: moneyExact(quote.weekly),
+                              credit: money(quote.costOfCredit),
+                              best: false,
+                            },
+                          ].map((option) => (
+                            <div key={option.label} className="bg-paper px-4 py-3.5">
+                              <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
+                                {option.label}
+                              </dt>
+                              <dd className="numeric mt-1.5 text-[19px] font-semibold text-ink">
+                                {option.weekly}
+                                <span className="text-[13px] font-medium tracking-normal text-mist">
+                                  {" "}
+                                  / wk
+                                </span>
+                                <span className="mt-1 block text-[12px] font-normal tracking-normal text-mist">
+                                  {option.credit} cost of credit
+                                </span>
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+
+                        <p className="mt-4 text-sm font-medium text-ink">
+                          Switching saves you {money(alternative.saving)}{" "}
+                          over the {alternative.termWeeks} weeks.
+                        </p>
+
+                        <div className="mt-5 flex flex-wrap gap-3">
+                          <ButtonLink href={alternative.href} size="sm">
+                            Check {alternative.name} instead
+                            <ArrowRight className="h-4 w-4" aria-hidden />
+                          </ButtonLink>
+                        </div>
+                        <p className="mt-4 text-[13px] leading-relaxed text-bark">
+                          Add another line to the facility and this stops applying &mdash;{" "}
+                          {alternative.name} only ever covers a bond.
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ) : null}
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <span className="text-[13px] font-semibold text-ink">Over how long?</span>

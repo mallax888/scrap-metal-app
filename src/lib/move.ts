@@ -1,4 +1,4 @@
-import { moveServices, tenancy, type PropertySize } from "./data";
+import { moveServices, plan, tenancy, type PropertySize } from "./data";
 
 /**
  * Litchi Move: the facility that covers a move, not just the bond.
@@ -267,6 +267,90 @@ export function coverageSplit(
     else split.self += line.amount;
   }
   return split;
+}
+
+/* ------------------------------------------------------------------ *
+ * When the other product is the right one.
+ *
+ * Litchi Move is priced as consumer credit — an establishment fee and a
+ * rate — because it is larger, unsecured, and gone once it is spent. Bond
+ * Assist is priced as a flat fee because a bond is smaller and comes back at
+ * the end of the tenancy. Both are defensible.
+ *
+ * What is not defensible is the collision between them. The calculator starts
+ * with the bond financed and everything else paid by the tenant, because the
+ * bond is the line people cannot cover — and that opening position is exactly
+ * Bond Assist's product, at roughly four times the cost of credit. Someone
+ * who needs only their bond and used the front page's main button would pay
+ * hundreds more than someone who used the smaller link beside it.
+ *
+ * So the screen has to say so. A platform that quietly lets you pick the dear
+ * version of the thing you asked for is not the one this product claims to
+ * be, and "we tell you when the cheaper product covers it" is a better sales
+ * line than any of the ones it replaces.
+ * ------------------------------------------------------------------ */
+
+export interface CheaperAlternative {
+  name: string;
+  /** What the tenant would be borrowing either way. */
+  amount: number;
+  costOfCredit: number;
+  weekly: number;
+  totalRepayable: number;
+  termWeeks: number;
+  /** What switching saves, over the life of it. */
+  saving: number;
+  href: string;
+}
+
+/**
+ * Bond Assist, when the financed selection is a bond and nothing else.
+ *
+ * Returns null the moment anything else is being financed, because then the
+ * products are not comparable and offering the cheaper one would be a worse
+ * answer rather than a kinder one.
+ */
+export function cheaperAlternative(
+  lines: MoveCostLine[],
+  coverage: Record<string, Coverage>,
+  quote: MoveQuote
+): CheaperAlternative | null {
+  const financed = lines.filter(
+    (line) =>
+      line.selected && line.amount > 0 && (coverage[line.id] ?? defaultCoverage(line)) === "litchi"
+  );
+
+  if (financed.length !== 1 || financed[0].id !== "bond") return null;
+
+  const amount = financed[0].amount;
+  const fee = round2(amount * plan.feeRate);
+  const weekly = Math.ceil(((amount + fee) / plan.termWeeks) * 100) / 100;
+
+  /*
+   * The total is the contract, not the instalment times the term. Bond Assist
+   * is a flat fee, so the cost of credit IS the fee — and because the weekly
+   * figure is rounded up to the cent, multiplying it out overstates the total
+   * by a few cents and the last payment is trimmed to absorb exactly that.
+   * Quoting weekly x 52 here would have this screen disagree with every other
+   * one about the same product.
+   */
+  const totalRepayable = round2(amount + fee);
+  const costOfCredit = fee;
+
+  // Only worth saying if it is actually cheaper. If the terms ever move so it
+  // is not, this quietly stops offering it rather than misleading anyone.
+  if (costOfCredit >= quote.costOfCredit) return null;
+
+  return {
+    name: "Bond Assist",
+    amount,
+    costOfCredit,
+    weekly,
+    totalRepayable,
+    termWeeks: plan.termWeeks,
+    saving: round2(quote.costOfCredit - costOfCredit),
+    href: "/apply",
+  };
 }
 
 /* ------------------------------------------------------------------ *
