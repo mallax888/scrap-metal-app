@@ -36,11 +36,24 @@ export const HOME_HREF = "/";
  */
 export const APP_HOME = "/my-tenancy";
 
+/**
+ * Ordered by how often a tenant would actually open each one, not by how
+ * important the subject sounds.
+ *
+ * The first three are the week: where you live, what you owe, and what is
+ * about to come out. "My bond" used to sit second because a bond-financing
+ * company naturally thinks the bond is the headline — but to the tenant it is
+ * reference material. Where it is lodged and what its number is are things you
+ * look up once and then never again, so it sits below the two screens you
+ * check constantly.
+ *
+ * Everything from Cleaners & movers down is occasional by nature.
+ */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/my-tenancy", label: "My tenancy", icon: Home },
-  { href: "/bond", label: "My Bond", icon: ShieldCheck },
   { href: "/dashboard", label: "My plan", icon: LayoutGrid },
   { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/bond", label: "My bond", icon: ShieldCheck },
   { href: "/services", label: "Cleaners & movers", icon: Truck },
   { href: "/moving-fund", label: "Moving Fund", icon: Target },
   { href: "/rewards", label: "Rewards", icon: Sparkles },

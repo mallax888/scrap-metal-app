@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "My Bond",
+  title: "My bond",
   description:
     "Your bond amount, where it is lodged, and how your Litchi Bond Assist finance works.",
 };

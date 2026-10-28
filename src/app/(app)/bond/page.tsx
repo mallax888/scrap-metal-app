@@ -46,7 +46,7 @@ export default function BondPage() {
     <>
       <PageHeader
         eyebrow="Bond Assist"
-        title="My Bond"
+        title="My bond"
         subtitle="What you owe, who holds your bond, and how the finance works."
         actions={
           <>
