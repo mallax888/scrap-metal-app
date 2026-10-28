@@ -84,7 +84,7 @@ export function CoverCalculator() {
    * beside it with its own price, so the steer is still there and is now a
    * choice rather than a default nobody was shown.
    */
-  const [cover, setCover] = useState<"all" | "bond">("all");
+  const [cover, setCover] = useState<"all" | "bond" | null>(null);
 
   const parsed = Number.parseInt(typed, 10);
   const typedIsUsable =
@@ -113,9 +113,19 @@ export function CoverCalculator() {
   }, [weeklyRent, size, ticked]);
 
   const canCoverBondOnly = bondAssist.amount > 0;
+  /**
+   * When the bond is the only line ticked, the two options are the same money
+   * — the choice is of product, not of coverage. Defaulting to "everything"
+   * there quoted the dearer of two identical covers, which is the one thing
+   * this page exists not to do. So the untouched default is whichever is
+   * cheaper for the same amount, and an explicit choice always wins over it.
+   */
+  const sameCoverage = canCoverBondOnly && total === bondAssist.amount;
+  const preferred: "all" | "bond" = sameCoverage ? "bond" : "all";
   // The bond-only option disappears when the bond is not ticked, and the
   // selection has to fall back rather than quote a product for nothing.
-  const showing = cover === "bond" && canCoverBondOnly ? "bond" : "all";
+  const picked = cover ?? preferred;
+  const showing = picked === "bond" && canCoverBondOnly ? "bond" : "all";
   const financed = showing === "bond" ? bondAssist.amount : total;
   const weekly =
     showing === "bond" ? bondAssist.weekly : wholeMove ? wholeMove.weekly : 0;
@@ -286,12 +296,17 @@ export function CoverCalculator() {
                     <input
                       type="checkbox"
                       checked={line.selected}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setTicked((prev) => ({
                           ...prev,
                           [line.id]: event.target.checked,
-                        }))
-                      }
+                        }));
+                        // Changing what is covered makes any earlier choice of
+                        // product a choice about a different move, so it goes
+                        // back to the default — which is the cheaper one
+                        // wherever the two cover the same money.
+                        setCover(null);
+                      }}
                       className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--bark)]"
                     />
                     <span className="min-w-0 flex-1">
@@ -334,8 +349,20 @@ export function CoverCalculator() {
           <div className="mt-3 grid gap-2" role="group" aria-label="What Litchi would cover">
             {(
               [
-                { key: "all" as const, label: "Everything ticked", amount: total, week: wholeMove?.weekly ?? 0 },
-                { key: "bond" as const, label: "Just the bond", amount: bondAssist.amount, week: bondAssist.weekly },
+                {
+                  key: "all" as const,
+                  label: sameCoverage ? "The bond, as a facility" : "Everything ticked",
+                  product: "Litchi Move",
+                  amount: total,
+                  week: wholeMove?.weekly ?? 0,
+                },
+                {
+                  key: "bond" as const,
+                  label: "Just the bond",
+                  product: "Bond Assist",
+                  amount: bondAssist.amount,
+                  week: bondAssist.weekly,
+                },
               ]
             ).map((option) => {
               const available = option.amount > 0;
@@ -365,8 +392,15 @@ export function CoverCalculator() {
                         </span>
                       ) : null}
                     </span>
-                    <span className="numeric mt-0.5 block text-[12px] text-mist">
-                      {available ? money(option.amount) : "nothing ticked"}
+                    <span className="mt-0.5 block text-[12px] text-mist">
+                      {available ? (
+                        <>
+                          <span className="numeric">{money(option.amount)}</span> &middot;{" "}
+                          {option.product}
+                        </>
+                      ) : (
+                        "nothing ticked"
+                      )}
                     </span>
                   </span>
                   <span className="numeric shrink-0 whitespace-nowrap text-[15px] font-semibold text-ink">
