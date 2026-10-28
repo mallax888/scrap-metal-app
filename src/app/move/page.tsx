@@ -40,19 +40,11 @@ export default function MovePage() {
       <main className="mx-auto max-w-3xl px-5 pb-24 sm:px-8">
         <div className="pt-6 sm:pt-12">
           <DemoBadge />
-          <h1 className="mt-6 text-[34px] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px]">
-            You&rsquo;ve got the place. Let&rsquo;s work out the move.
-          </h1>
-          <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-mist">
-            We start with your tenancy, not with a number. Your agency confirms it, the costs come
-            off it, and you decide how much of them to cover &mdash; up to what the move actually
-            costs, never more.
-          </p>
         </div>
 
-        <div className="mt-10">
-          <MoveFlow />
-        </div>
+        {/* The heading belongs to the flow, not the page: it has to stop
+            saying "let's work out the move" once the move is worked out. */}
+        <MoveFlow />
       </main>
     </div>
   );

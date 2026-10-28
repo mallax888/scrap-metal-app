@@ -54,6 +54,16 @@ export function addWeeks(iso: string, weeks: number): string {
   return addDays(iso, weeks * 7);
 }
 
+/**
+ * Calendar months, not 30-day blocks — a twelve-month fixed term ends on the
+ * same day of the month it started, which is what the agreement says.
+ */
+export function addMonths(iso: string, months: number): string {
+  const date = toDate(iso);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return toISO(date);
+}
+
 export function daysBetween(fromISO: string, toISOStr: string): number {
   return Math.round((toDate(toISOStr).getTime() - toDate(fromISO).getTime()) / 86_400_000);
 }

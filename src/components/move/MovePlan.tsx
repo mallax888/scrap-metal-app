@@ -66,10 +66,10 @@ export function MovePlan({
     <div className="space-y-6">
       <Card tone="ink">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-onbrand/60">
-          {tenancy?.property ?? "Your move"}
+          Saved
         </p>
         <h2 className="mt-3 text-[26px] font-semibold leading-tight tracking-tight sm:text-[32px]">
-          Your move plan is saved
+          {tenancy?.property ?? "Your move"}
         </h2>
         <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-onbrand/75">
           {financing ? (
@@ -242,13 +242,18 @@ export function MovePlan({
 
       <div className="flex flex-wrap gap-3">
         <ButtonLink href="/my-move" size="lg">
-          See a live move plan
+          See a funded account
           <ArrowRight className="h-4 w-4" aria-hidden />
         </ButtonLink>
         <Button variant="ghost" size="lg" onClick={onStartAgain}>
           Start again
         </Button>
       </div>
+
+      <p className="text-[13px] leading-relaxed text-clay">
+        The funded account is a different tenant&rsquo;s, ten weeks into repaying a bond Litchi
+        covered &mdash; it is what this plan looks like once a lender has said yes.
+      </p>
     </div>
   );
 }

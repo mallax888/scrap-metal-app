@@ -103,6 +103,18 @@ const CONFIDENCE_LABEL: Record<Confidence, string> = {
 const fieldBase =
   "tap rounded-tile border border-sand bg-paper text-[15px] text-ink outline-none transition-colors focus:border-clay disabled:opacity-45";
 
+/** The page's one h1, which has to change when the task is finished. */
+function Heading({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="mb-10">
+      <h1 className="mt-6 text-[34px] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px]">
+        {title}
+      </h1>
+      <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-mist">{body}</p>
+    </div>
+  );
+}
+
 function StepPanel({
   icon: Icon,
   title,
@@ -322,8 +334,13 @@ export function MoveFlow() {
      rather than continuing it, so it lives in its own component. */
   if (submitted) {
     return (
-      <MovePlan
-        plan={{
+      <>
+        <Heading
+          title="Your move plan"
+          body={`Everything for ${request?.property ?? "your move"} in one place — what it costs, who is covering each line, and the tenancy behind it.`}
+        />
+        <MovePlan
+          plan={{
           lines: covered,
           coverage,
           split,
@@ -335,8 +352,9 @@ export function MoveFlow() {
           partner,
           tenancy: request,
         }}
-        onStartAgain={reset}
-      />
+          onStartAgain={reset}
+        />
+      </>
     );
   }
 
@@ -345,7 +363,11 @@ export function MoveFlow() {
    * ---------------------------------------------------------------- */
   return (
     <div>
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+      <Heading
+        title={"You\u2019ve got the place. Let\u2019s work out the move."}
+        body="We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover \u2014 up to what the move actually costs, never more."
+      />
+      <ol className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
         {STEPS.map((label, index) => (
           <li key={label} className="flex items-center gap-2">
             {index > 0 ? <span className="text-sand">/</span> : null}

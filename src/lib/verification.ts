@@ -1,4 +1,5 @@
 import { agency, renter, tenancy } from "./data";
+import { addMonths } from "./format";
 import { RTA_CAPS } from "./move";
 
 /**
@@ -63,41 +64,57 @@ export function extractTenancy(fileName: string): ExtractedTenancy {
   // the handwritten fields are the first to suffer.
   const soft = (c: Confidence): Confidence => (scanned ? (c === "high" ? "medium" : "low") : c);
 
+  // The agreement being uploaded is the one the journey is about, so it is
+  // read off the same verification request the agency is then asked to
+  // confirm. Deriving it from anywhere else is how the application came to
+  // show one address and the agency another.
+  const applying = findVerification(DEMO_VERIFICATION_TOKEN);
+
   return {
     tenantName: {
-      value: `${renter.firstName} ${renter.lastName}`,
+      value: applying?.tenantName ?? `${renter.firstName} ${renter.lastName}`,
       confidence: soft("high"),
       source: "Clause 1 — The parties",
     },
     property: {
-      value: tenancy.property,
+      value: applying?.property ?? tenancy.property,
       confidence: soft("high"),
       source: "Clause 2 — The premises",
     },
-    suburb: { value: tenancy.suburb, confidence: soft("high"), source: "Clause 2 — The premises" },
+    suburb: {
+      value: applying?.suburb ?? tenancy.suburb,
+      confidence: soft("high"),
+      source: "Clause 2 — The premises",
+    },
     weeklyRent: {
-      value: tenancy.rentWeekly,
+      value: applying?.weeklyRent ?? tenancy.rentWeekly,
       confidence: soft("high"),
       source: "Clause 5 — Rent",
     },
     bond: {
-      value: tenancy.rentWeekly * RTA_CAPS.bondWeeks,
+      value: applying?.bond ?? tenancy.rentWeekly * RTA_CAPS.bondWeeks,
       confidence: soft("medium"),
       source: "Clause 6 — Bond",
     },
     startDate: {
-      value: tenancy.startDate,
+      value: applying?.startDate ?? tenancy.startDate,
       confidence: soft("high"),
       source: "Clause 3 — Term",
     },
     endDate: {
-      value: tenancy.endDate,
+      // A twelve-month fixed term from the start date, which is what these
+      // agreements almost always say.
+      value: applying ? addMonths(applying.startDate, 12) : tenancy.endDate,
       confidence: soft("medium"),
       source: "Clause 3 — Term",
     },
-    manager: { value: agency.manager, confidence: soft("low"), source: "Signature block" },
+    manager: {
+      value: applying?.manager ?? agency.manager,
+      confidence: soft("low"),
+      source: "Signature block",
+    },
     agencyName: {
-      value: tenancy.landlordAgency,
+      value: applying?.agencyName ?? tenancy.landlordAgency,
       confidence: soft("high"),
       source: "Clause 1 — The parties",
     },
@@ -208,8 +225,8 @@ export const verificationRequests: VerificationRequest[] = [
     tenantName: "Aroha Wilson",
     property: "7 Kereru Lane",
     suburb: "Massey",
-    weeklyRent: 690,
-    bond: 2760,
+    weeklyRent: 700,
+    bond: 2800,
     startDate: "2026-10-03",
     manager: "Priya Raman",
     agencyName: "Example Property Co.",
@@ -221,7 +238,7 @@ export const verificationRequests: VerificationRequest[] = [
 ];
 
 /** The demo link the move journey hands you, so the loop can be closed. */
-export const DEMO_VERIFICATION_TOKEN = "vt-302188";
+export const DEMO_VERIFICATION_TOKEN = "vt-302904";
 
 export function findVerification(token: string): VerificationRequest | undefined {
   return verificationRequests.find((request) => request.token === token);

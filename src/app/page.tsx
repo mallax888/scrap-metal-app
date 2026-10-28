@@ -197,7 +197,7 @@ export default function LandingPage() {
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </ButtonLink>
               <ButtonLink href={APP_HOME} size="lg" variant="secondary">
-                See how it works
+                See the demo account
               </ButtonLink>
             </div>
             <p className="mt-4 text-[13px] text-clay">
@@ -475,10 +475,10 @@ export default function LandingPage() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </ButtonLink>
             <ButtonLink href="/move" size="lg" variant="onHeroGhost">
-              Calculate a move
+              Calculate my move
             </ButtonLink>
             <ButtonLink href={APP_HOME} size="lg" variant="onHeroGhost">
-              Skip to the demo
+              See the demo account
             </ButtonLink>
             <ButtonLink href="/agents" size="lg" variant="onHeroGhost">
               For property managers
