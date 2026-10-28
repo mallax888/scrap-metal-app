@@ -537,21 +537,104 @@ export const rewardCatalogue: Reward[] = [
   },
 ];
 
+/* ------------------------------------------------------------------ *
+ * Round-ups.
+ *
+ * Every card purchase rounds up and the difference lands in the Moving
+ * Fund. The mechanic is Feijoa's; what Litchi adds is a deadline — it
+ * already knows what the next move costs and the day the fixed term ends,
+ * so the question is never "how much have I saved" but "will it be there
+ * in time".
+ *
+ * The three rules below are product, not small print. Round-ups come out
+ * of accounts that are sometimes nearly empty, belonging to people who
+ * also owe us money, which makes every one of them a way to do harm:
+ *   - balanceFloor: skip rather than overdraw. An overdraft fee would
+ *     dwarf a week of round-ups.
+ *   - weeklyCap: a habit nobody notices must still have a ceiling.
+ *   - arrears: they stand down entirely while a payment has failed.
+ *     Sweeping change out of someone who is behind with us is
+ *     indefensible, whatever the balance says afterwards.
+ * ------------------------------------------------------------------ */
+
+export interface Purchase {
+  merchant: string;
+  /** Day of the week it landed, for the "this week" list. */
+  day: string;
+  amount: number;
+}
+
+/**
+ * A week of one renter's card spending, used to work out what each rounding
+ * setting would actually collect. Derived rather than asserted: the figure on
+ * the screen is the sum of these, so changing the setting changes the estimate
+ * the same way it would change a real week.
+ */
+export const weeklyPurchases: Purchase[] = [
+  { merchant: "Flat white, Daily Bread", day: "Mon", amount: 5.5 },
+  { merchant: "AT HOP top-up", day: "Mon", amount: 20 },
+  { merchant: "Countdown, Mt Eden", day: "Tue", amount: 23.6 },
+  { merchant: "Z Petrol", day: "Tue", amount: 61.15 },
+  { merchant: "Chemist Warehouse", day: "Wed", amount: 12.4 },
+  { merchant: "Uber Eats", day: "Wed", amount: 34.9 },
+  { merchant: "Countdown, Mt Eden", day: "Thu", amount: 18.75 },
+  { merchant: "Kmart", day: "Thu", amount: 29 },
+  { merchant: "Spotify", day: "Fri", amount: 14.99 },
+  { merchant: "The Coffee Club", day: "Fri", amount: 4.8 },
+  { merchant: "Night 'n Day", day: "Sat", amount: 7.25 },
+  { merchant: "BP Connect", day: "Sun", amount: 45.3 },
+];
+
+/** Weeks already collected, which is why the balance is above the top-ups. */
+const ROUND_UP_WEEKS = [
+  { date: "2026-08-28", amount: 9.85 },
+  { date: "2026-09-04", amount: 12.3 },
+  { date: "2026-09-11", amount: 10.6 },
+];
+
+export const roundUps = {
+  /** What the tenant can round to. Feijoa offers the same three. */
+  options: [1, 2, 5] as const,
+  /** Where the purchases are read from, and by whom. */
+  account: {
+    bank: "ANZ",
+    last4: "2241",
+    via: "Akahu",
+    connectedDate: "2026-09-03",
+  },
+  /** Never take a round-up that leaves the account under this. */
+  balanceFloor: 50,
+  /** However much someone spends, this is the most a week can collect. */
+  weeklyCap: 25,
+  /** Skipped by the floor in the week shown, so the rule is visible working. */
+  skippedThisWeek: 2,
+  skippedDay: "Thursday",
+  weeks: ROUND_UP_WEEKS,
+  collected: ROUND_UP_WEEKS.reduce((sum, week) => sum + week.amount, 0),
+} as const;
+
 export const movingFund = {
   autoTopUp: 20,
   /*
-   * Reachable inside the tenancy it exists to fund. At $20 a week from $680, a
-   * $2,500 goal is 91 weeks away — the plan runs 52, so the old target could
-   * never be met before the move it was saving for.
+   * The honest number rather than the achievable one.
    *
-   * $1,500 is the right number rather than just a smaller one: Litchi finances
-   * the next bond, so this fund is not for the bond. It is for everything else
-   * a move costs — movers, letting costs, rent in advance, a final clean.
+   * It was $1,500, which was a compromise: at $20 a week the real figure was
+   * out of reach inside the tenancy it exists to fund, so the target was cut
+   * to fit the contribution. Round-ups change that arithmetic, so the goal can
+   * go back to what a move actually leaves you to find.
+   *
+   * A move on this tenancy costs about $5,300. Litchi finances the $2,800
+   * bond, so this fund is for the other $2,500 — rent in advance, the movers,
+   * the clean on the way out. It is not for the bond.
    */
-  goal: 1500,
+  goal: 2500,
   openedDate: "2026-07-21",
   get baseSaved() {
-    return FUND_OPENING_DEPOSIT + FUND_TOP_UP_DATES.length * this.autoTopUp;
+    return (
+      FUND_OPENING_DEPOSIT +
+      FUND_TOP_UP_DATES.length * this.autoTopUp +
+      roundUps.collected
+    );
   },
 };
 
@@ -593,6 +676,14 @@ const milestoneActivity: ActivityItem[] = [
     title: "Moving Fund top-up",
     detail: "Automatic weekly top-up",
     amount: movingFund.autoTopUp,
+  })),
+  ...roundUps.weeks.map((week, index) => ({
+    id: `act_roundup_${index}`,
+    date: week.date,
+    kind: "fund" as const,
+    title: "Round-ups",
+    detail: `From ${roundUps.account.bank} •••• ${roundUps.account.last4}`,
+    amount: week.amount,
   })),
   {
     id: "act_fund_opening",

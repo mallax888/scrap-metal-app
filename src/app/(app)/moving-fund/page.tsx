@@ -11,9 +11,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { ActivityRow } from "@/components/dashboard/ActivityFeed";
 import { MovingFundModal } from "@/components/modals/MovingFundModal";
-import { movingFund } from "@/lib/data";
-import { formatDate, money, percent } from "@/lib/format";
+import { RoundUps } from "@/components/fund/RoundUps";
+import { FundProjection } from "@/components/fund/FundProjection";
+import { bond, movingFund, tenancy } from "@/lib/data";
+import { formatDate, money, moneyExact, percent } from "@/lib/format";
+import { buildMoveCosts, costedTotal } from "@/lib/move";
 import { useLitchi } from "@/lib/store";
+
+/* What the goal is derived from, rather than a number someone chose: a move
+   on this tenancy, less the bond Litchi finances. */
+const nextMoveCost = costedTotal(buildMoveCosts(tenancy.rentWeekly, "medium"));
+const nextMoveBond = bond.amount;
 
 const USES = [
   { icon: Wallet, title: "Your next bond", body: "Move without financing it, if you'd rather." },
@@ -27,10 +35,9 @@ export default function MovingFundPage() {
   const [open, setOpen] = useState(false);
 
   const contributions = derived.activity.filter((item) => item.kind === "fund");
-  const weeksToGoal =
-    state.autoTopUp && derived.fundRemaining > 0
-      ? Math.ceil(derived.fundRemaining / movingFund.autoTopUp)
-      : null;
+  // Everything going in, not just the top-up — a figure here that ignored
+  // round-ups would contradict the projection card directly below it.
+  const weeksToGoal = derived.fundProjection.weeks;
 
   return (
     <>
@@ -69,6 +76,21 @@ export default function MovingFundPage() {
                 </p>
                 <p className="numeric text-mist">{money(derived.fundRemaining)} to go</p>
               </div>
+
+              {/* The goal is the honest number now, so it has to show its
+                  working: this is the part of a move Litchi does not finance. */}
+              <p className="mt-5 flex items-start gap-2.5 border-t border-sand/70 pt-4 text-[13px] leading-relaxed text-bark">
+                <Truck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <span>
+                  Your next move costs about{" "}
+                  <span className="numeric font-semibold text-ink">{money(nextMoveCost)}</span>.
+                  Litchi finances the{" "}
+                  <span className="numeric font-semibold text-ink">{money(nextMoveBond)}</span>{" "}
+                  bond, so{" "}
+                  <span className="numeric font-semibold text-ink">{money(movingFund.goal)}</span>{" "}
+                  of it is yours to find &mdash; which is what this goal is set to.
+                </span>
+              </p>
 
               <div className="mt-auto flex flex-wrap gap-3 pt-8">
                 <Button onClick={() => setOpen(true)}>Add to Moving Fund</Button>
@@ -124,7 +146,8 @@ export default function MovingFundPage() {
 
             {weeksToGoal ? (
               <p className="mt-auto pt-6 text-xs leading-relaxed text-mist">
-                At {money(movingFund.autoTopUp)} a week you&rsquo;ll reach{" "}
+                {derived.roundUpWeekly > 0 ? "With round-ups, " : ""}
+                {moneyExact(derived.fundProjection.weekly)} a week goes in &mdash;{" "}
                 {money(movingFund.goal)} in about {weeksToGoal} weeks.
               </p>
             ) : (
@@ -134,6 +157,9 @@ export default function MovingFundPage() {
             )}
           </Card>
         </div>
+
+        <RoundUps />
+        <FundProjection />
 
         <div className="grid gap-6 lg:grid-cols-3">
           {USES.map((use) => {

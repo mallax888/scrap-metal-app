@@ -29,11 +29,18 @@ import {
   scoreFactors,
   weeklyPaymentsMade,
   tenancy,
+  weeklyPurchases,
   type ActivityItem,
   type RewardTier,
   type ScoreFactor,
 } from "./data";
 import { addDays, addWeeks, daysBetween } from "./format";
+import {
+  projectFund,
+  roundingThatMakesIt,
+  weeklyRoundUp,
+  type FundProjection,
+} from "./roundups";
 
 /* ------------------------------------------------------------------ */
 /* Persisted state                                                     */
@@ -91,6 +98,14 @@ export interface LitchiState {
   redemptions: Redemption[];
   activePaymentMethodId: string;
   autoTopUp: boolean;
+  /**
+   * What purchases round up to, or null when round-ups are off.
+   *
+   * Stored rather than derived because it is the one setting that decides
+   * whether the fund arrives in time, and someone who turns it up should find
+   * it still turned up next week.
+   */
+  roundUpTo: number | null;
   waitlist: string[];
   /**
    * A payment the renter asked to move before it was due. Free, and the whole
@@ -108,6 +123,7 @@ const INITIAL_STATE: LitchiState = {
   redemptions: [],
   activePaymentMethodId: paymentMethods[0].id,
   autoTopUp: true,
+  roundUpTo: 2,
   waitlist: [],
   movedPayment: null,
   missedPayment: null,
@@ -256,6 +272,18 @@ export interface LitchiDerived {
   fundSaved: number;
   fundProgress: number;
   fundRemaining: number;
+  /** What this week's spending rounds up to, at the current setting. */
+  roundUpWeekly: number;
+  /**
+   * Round-ups stand down while a payment has failed. Not a setting the tenant
+   * turned off and has to remember to turn back on — the moment the payment is
+   * sorted they resume on the next purchase.
+   */
+  roundUpsPaused: boolean;
+  /** The fund measured against the day the fixed term ends. */
+  fundProjection: FundProjection;
+  /** The smallest setting that would get there in time, if a bigger one would. */
+  fundFix: { rounding: number; projection: FundProjection } | null;
   /** Rewards */
   pointsBalance: number;
   /** Points ever earned. Drives tier status; never goes down. */
@@ -280,6 +308,31 @@ function derive(state: LitchiState): LitchiDerived {
 
   const fundAdded = round2(state.fundContributions.reduce((sum, e) => sum + e.amount, 0));
   const fundSaved = round2(movingFund.baseSaved + fundAdded);
+
+  /*
+   * Round-ups, and what they add up to by moving day.
+   *
+   * Paused rather than switched off while a payment has failed: the setting
+   * survives, the sweeping stops. The projection follows suit, so a tenant in
+   * arrears is shown what they are actually on track for rather than a figure
+   * that assumes money we are not taking.
+   */
+  const roundUpsPaused = state.missedPayment !== null;
+  const roundUpWeekly =
+    state.roundUpTo && !roundUpsPaused
+      ? weeklyRoundUp(weeklyPurchases, state.roundUpTo)
+      : 0;
+  const fundWeekly = (state.autoTopUp ? movingFund.autoTopUp : 0) + roundUpWeekly;
+  const fundProjection = projectFund(fundSaved, fundWeekly);
+  const fundFix =
+    fundProjection.inTime || roundUpsPaused
+      ? null
+      : roundingThatMakesIt(
+          weeklyPurchases,
+          fundSaved,
+          state.autoTopUp ? movingFund.autoTopUp : 0,
+          state.roundUpTo ?? 0
+        );
 
   /*
    * Two separate numbers, deliberately.
@@ -456,6 +509,10 @@ function derive(state: LitchiState): LitchiDerived {
     fundSaved,
     fundProgress: Math.min(1, fundSaved / movingFund.goal),
     fundRemaining: Math.max(0, round2(movingFund.goal - fundSaved)),
+    roundUpWeekly,
+    roundUpsPaused,
+    fundProjection,
+    fundFix,
     pointsBalance,
     lifetimeEarned,
     tier,
@@ -480,6 +537,8 @@ export interface LitchiActions {
   redeemReward: (rewardId: string) => boolean;
   setPaymentMethod: (id: string) => void;
   toggleAutoTopUp: () => void;
+  /** Change what purchases round up to, or pass null to switch round-ups off. */
+  setRoundUpTo: (rounding: number | null) => void;
   toggleWaitlist: (productId: string) => void;
   /** Move an upcoming payment to a later date. Free, and always allowed. */
   movePayment: (toDate: string) => void;
@@ -566,6 +625,10 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
     store.setState((prev) => ({ ...prev, autoTopUp: !prev.autoTopUp }));
   }, []);
 
+  const setRoundUpTo = useCallback((rounding: number | null) => {
+    store.setState((prev) => ({ ...prev, roundUpTo: rounding }));
+  }, []);
+
   const movePayment = useCallback((toDate: string) => {
     store.setState((prev) => ({
       ...prev,
@@ -620,6 +683,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       redeemReward,
       setPaymentMethod,
       toggleAutoTopUp,
+      setRoundUpTo,
       toggleWaitlist,
       movePayment,
       catchUpPayment,
@@ -637,6 +701,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       redeemReward,
       setPaymentMethod,
       toggleAutoTopUp,
+      setRoundUpTo,
       toggleWaitlist,
       reset,
     ]
