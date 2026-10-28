@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
-import { MyMove } from "@/components/move/MyMove";
+import { MyTenancy } from "@/components/move/MyTenancy";
 import { EcosystemGrid } from "@/components/dashboard/EcosystemGrid";
 import { renter } from "@/lib/data";
 import { useGreeting } from "@/lib/use-greeting";
@@ -16,7 +16,7 @@ import { useGreeting } from "@/lib/use-greeting";
  * are home-screen furniture — a welcome belongs where you land, and "what else
  * Litchi does" is an invitation rather than a detail of any one thing.
  */
-export default function MyMovePage() {
+export default function MyTenancyPage() {
   const greeting = useGreeting();
 
   return (
@@ -31,7 +31,7 @@ export default function MyMovePage() {
       />
 
       <div className="space-y-6">
-        <MyMove />
+        <MyTenancy />
         <EcosystemGrid />
       </div>
     </>

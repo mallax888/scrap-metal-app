@@ -23,13 +23,13 @@ export interface TourStop {
 
 export const TOUR: TourStop[] = [
   {
-    href: "/move",
+    href: "/cost-my-move",
     label: "Where it starts",
     title: "The first question is not how much you want",
     look: "It's your tenancy. Upload the sample agreement and watch the rent, bond and dates come off it — every figure after this is derived from those, and the amount is capped at what the move actually costs.",
   },
   {
-    href: "/my-move",
+    href: "/my-tenancy",
     label: "The centre",
     title: "A move, not a loan account",
     look: "The verified tenancy at the top and the costed move under it. Litchi covered 53% of this move; the rent in advance and the exit clean were paid outright. The repayment is one card down the page, which is the right size for it.",

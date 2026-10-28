@@ -20,7 +20,7 @@ import { plan } from "@/lib/data";
  * the score, the rewards balance, the Moving Fund and the product roadmap all
  * had a card here, each one a smaller copy of a page that owned the subject
  * properly. That is a reasonable home screen and a poor detail screen, and
- * once /my-move became home it was neither.
+ * once /my-tenancy became home it was neither.
  *
  * So everything that is not the repayment has gone back to the page that owns
  * it. What is left answers one question — how is the plan going — from the

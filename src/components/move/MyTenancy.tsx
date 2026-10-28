@@ -48,7 +48,7 @@ const COVERAGE_TEXT: Record<MoveCoverage, string> = {
   self: "You paid",
 };
 
-export function MyMove() {
+export function MyTenancy() {
   const { derived } = useLitchi();
 
   const total = myMove.lines.reduce((sum, line) => sum + line.amount, 0);
@@ -232,8 +232,8 @@ export function MyMove() {
               </p>
             </div>
           </div>
-          <ButtonLink href="/move" variant="secondary">
-            Cost a move
+          <ButtonLink href="/cost-my-move" variant="secondary">
+            Cost my move
             <ArrowRight className="h-4 w-4" aria-hidden />
           </ButtonLink>
         </div>

@@ -7,7 +7,7 @@ import { MoveFlow } from "@/components/move/MoveFlow";
 import { HOME_HREF } from "@/lib/nav";
 
 export const metadata: Metadata = {
-  title: "Calculate my move",
+  title: "Cost my move",
   description:
     "Upload your tenancy agreement, have your agency confirm it, and see what the move costs and what it would repay. An estimate, not an offer.",
 };

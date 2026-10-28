@@ -241,7 +241,7 @@ export function MovePlan({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <ButtonLink href="/my-move" size="lg">
+        <ButtonLink href="/my-tenancy" size="lg">
           See a funded account
           <ArrowRight className="h-4 w-4" aria-hidden />
         </ButtonLink>

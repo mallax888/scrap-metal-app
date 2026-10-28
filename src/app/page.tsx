@@ -94,8 +94,8 @@ const PRODUCTS = [
       "Capped at what your move actually costs — never more",
       "One application, one repayment, paid direct to each provider",
     ],
-    href: "/move",
-    cta: "Calculate my move",
+    href: "/cost-my-move",
+    cta: "Cost my move",
     featured: true,
   },
 ];
@@ -154,8 +154,8 @@ export default function LandingPage() {
               wins is decided by their order in the stylesheet, not by the order
               they appear in the class attribute. */}
           <span className="hidden sm:block">
-            <ButtonLink href="/move" size="sm" variant="secondary">
-              Calculate my move
+            <ButtonLink href="/cost-my-move" size="sm" variant="secondary">
+              Cost my move
             </ButtonLink>
           </span>
           <ButtonLink href="/tour" size="sm">
@@ -192,8 +192,8 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <ButtonLink href="/move" size="lg">
-                Calculate my move
+              <ButtonLink href="/cost-my-move" size="lg">
+                Cost my move
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </ButtonLink>
               <ButtonLink href={APP_HOME} size="lg" variant="secondary">
@@ -474,8 +474,8 @@ export default function LandingPage() {
               Take the tour
               <ArrowRight className="h-4 w-4" aria-hidden />
             </ButtonLink>
-            <ButtonLink href="/move" size="lg" variant="onHeroGhost">
-              Calculate my move
+            <ButtonLink href="/cost-my-move" size="lg" variant="onHeroGhost">
+              Cost my move
             </ButtonLink>
             <ButtonLink href={APP_HOME} size="lg" variant="onHeroGhost">
               See the demo account
