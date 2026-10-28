@@ -10,7 +10,7 @@ import {
   rent as sampleRent,
   type PropertySize,
 } from "@/lib/data";
-import { money, moneyExact } from "@/lib/format";
+import { money, moneyExact, percent } from "@/lib/format";
 import {
   RTA_CAPS,
   buildMoveCosts,
@@ -75,6 +75,16 @@ export function CoverCalculator() {
   const [size, setSize] = useState<PropertySize>("medium");
   /** Only the lines the visitor has changed; the rest keep their default. */
   const [ticked, setTicked] = useState<Record<string, boolean>>({});
+  /**
+   * Which of the two products the week is showing.
+   *
+   * It starts on everything, because ticking a line is someone saying they
+   * want that line dealt with — a panel that answers by quoting the bond
+   * regardless is ignoring what they just told it. The cheaper option sits
+   * beside it with its own price, so the steer is still there and is now a
+   * choice rather than a default nobody was shown.
+   */
+  const [cover, setCover] = useState<"all" | "bond">("all");
 
   const parsed = Number.parseInt(typed, 10);
   const typedIsUsable =
@@ -102,8 +112,21 @@ export function CoverCalculator() {
     };
   }, [weeklyRent, size, ticked]);
 
-  const financingBond = bondAssist.amount > 0;
-  const rentShare = weeklyRent / (weeklyRent + bondAssist.weekly);
+  const canCoverBondOnly = bondAssist.amount > 0;
+  // The bond-only option disappears when the bond is not ticked, and the
+  // selection has to fall back rather than quote a product for nothing.
+  const showing = cover === "bond" && canCoverBondOnly ? "bond" : "all";
+  const financed = showing === "bond" ? bondAssist.amount : total;
+  const weekly =
+    showing === "bond" ? bondAssist.weekly : wholeMove ? wholeMove.weekly : 0;
+  const terms =
+    showing === "bond"
+      ? `${bondAssist.termWeeks} weeks · ${money(bondAssist.fee)} flat fee, no interest`
+      : wholeMove
+        ? `${wholeMove.termWeeks} weeks · ${money(wholeMove.establishmentFee)} establishment fee, ${percent(wholeMove.annualRate, 2)} p.a.`
+        : "";
+  const financingSomething = financed > 0 && weekly > 0;
+  const rentShare = weeklyRent / (weeklyRent + weekly);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 pt-8 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-14">
@@ -303,6 +326,59 @@ export function CoverCalculator() {
 
         <div className="bg-cream p-5 sm:p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
+            What Litchi would cover
+          </p>
+
+          {/* Both products, both prices, side by side. The cheaper one is
+              labelled as cheaper rather than chosen on the visitor's behalf. */}
+          <div className="mt-3 grid gap-2" role="group" aria-label="What Litchi would cover">
+            {(
+              [
+                { key: "all" as const, label: "Everything ticked", amount: total, week: wholeMove?.weekly ?? 0 },
+                { key: "bond" as const, label: "Just the bond", amount: bondAssist.amount, week: bondAssist.weekly },
+              ]
+            ).map((option) => {
+              const available = option.amount > 0;
+              const cheaper =
+                option.key === "bond" && canCoverBondOnly && bondAssist.weekly < (wholeMove?.weekly ?? 0);
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  disabled={!available}
+                  aria-pressed={available && showing === option.key}
+                  onClick={() => setCover(option.key)}
+                  className={clsx(
+                    "tap flex items-center justify-between gap-3 rounded-tile border px-3.5 py-2.5 text-left transition-colors",
+                    !available && "cursor-not-allowed opacity-45",
+                    available && showing === option.key
+                      ? "border-bark bg-paper"
+                      : "border-transparent bg-paper/60 hover:border-sand",
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-ink">
+                      {option.label}
+                      {cheaper ? (
+                        <span className="ml-2 rounded-full bg-moss-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-moss">
+                          Cheaper
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="numeric mt-0.5 block text-[12px] text-mist">
+                      {available ? money(option.amount) : "nothing ticked"}
+                    </span>
+                  </span>
+                  <span className="numeric shrink-0 whitespace-nowrap text-[15px] font-semibold text-ink">
+                    {available ? moneyExact(option.week) : "—"}
+                    <span className="text-[12px] font-medium text-mist"> / wk</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
             Then your week looks like this
           </p>
           <div
@@ -311,9 +387,9 @@ export function CoverCalculator() {
           >
             <div
               className="h-full bg-moss"
-              style={{ width: `${(financingBond ? rentShare : 1) * 100}%` }}
+              style={{ width: `${(financingSomething ? rentShare : 1) * 100}%` }}
             />
-            {financingBond ? <div className="h-full flex-1 bg-litchi" /> : null}
+            {financingSomething ? <div className="h-full flex-1 bg-litchi" /> : null}
           </div>
 
           <dl className="numeric mt-2 divide-y divide-sand/70">
@@ -337,7 +413,7 @@ export function CoverCalculator() {
                 <span className="text-[13px] font-medium text-mist"> / wk</span>
               </dd>
             </div>
-            {financingBond ? (
+            {financingSomething ? (
               <div className="flex items-center justify-between gap-4 py-3.5">
                 <dt className="flex min-w-0 items-center gap-3">
                   <span
@@ -346,16 +422,14 @@ export function CoverCalculator() {
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-ink">
-                      Litchi, for the {money(bondAssist.amount)} bond
+                      Litchi, for the {money(financed)}{" "}
+                      {showing === "bond" ? "bond" : "you ticked"}
                     </span>
-                    <span className="block text-xs text-mist">
-                      {bondAssist.termWeeks} weeks &middot;{" "}
-                      {money(bondAssist.fee)} flat fee, no interest
-                    </span>
+                    <span className="block text-xs text-mist">{terms}</span>
                   </span>
                 </dt>
                 <dd className="shrink-0 whitespace-nowrap text-[15px] font-semibold text-ink">
-                  {moneyExact(bondAssist.weekly)}
+                  {moneyExact(weekly)}
                   <span className="text-[13px] font-medium text-mist"> / wk</span>
                 </dd>
               </div>
@@ -364,32 +438,25 @@ export function CoverCalculator() {
 
           {/* What the other way of paying for it would cost, said plainly
               rather than left for the visitor to discover after applying. */}
+          {/* Why the two prices differ, rather than leaving someone to work it
+              out from the figures. A flat fee on a refundable bond and a rate
+              on an unsecured facility are not the same product. */}
           <p className="mt-3 border-t border-sand/70 pt-4 text-[12.5px] leading-relaxed text-mist">
             {total === 0 ? (
               <>Nothing ticked yet. Choose the lines that apply and the week fills in.</>
-            ) : !financingBond && wholeMove ? (
+            ) : !canCoverBondOnly ? (
               <>
-                You have left the bond out, so there is nothing for Bond Assist to cover.
-                Litchi Move can take the {money(total)} you have ticked at{" "}
-                <span className="numeric font-semibold text-ink">
-                  {moneyExact(wholeMove.weekly)}
-                </span>{" "}
-                a week over {wholeMove.termWeeks} weeks.
-              </>
-            ) : wholeMove && total > bondAssist.amount ? (
-              <>
-                Financing the whole {money(total)} instead is{" "}
-                <span className="numeric font-semibold text-ink">
-                  {moneyExact(wholeMove.weekly)}
-                </span>{" "}
-                a week over {wholeMove.termWeeks} weeks. We show you both before you apply, and
-                the bond on its own is always the cheaper one.
+                The bond is not ticked, so there is nothing for Bond Assist to cover &mdash;
+                Litchi Move takes whatever you have ticked instead.
               </>
             ) : (
               <>
-                The bond is the only line ticked, and Bond Assist is the cheapest way to cover
-                one: a flat {money(bondAssist.fee)} fee, no interest, and you can clear it early
-                whenever you like.
+                Bond Assist only ever covers a bond, at a flat{" "}
+                {money(bondAssist.fee)} fee with no interest, because a bond comes back to you
+                at the end of the tenancy. Litchi Move covers whatever you tick, at a{" "}
+                {money(wholeMove ? wholeMove.establishmentFee : 0)} establishment fee and{" "}
+                {percent(wholeMove ? wholeMove.annualRate : 0, 2)} p.a., because a truck does
+                not. That is why the bond on its own is the cheaper one.
               </>
             )}
           </p>
