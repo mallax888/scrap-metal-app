@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Menu, X } from "lucide-react";
+import { ArrowLeft, Compass, Menu, X } from "lucide-react";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { SidebarNav } from "./SidebarNav";
 import { ThemeToggle } from "./ThemeToggle";
-import { APP_HOME } from "@/lib/nav";
+import { APP_HOME, HOME_HREF } from "@/lib/nav";
 import { DemoTag } from "@/components/marketing/DemoTag";
 import { UserChip } from "./UserChip";
 
@@ -28,6 +28,28 @@ function TourLink({ onNavigate }: { onNavigate?: () => void }) {
     >
       <Compass className="h-4 w-4 shrink-0" aria-hidden />
       Take the tour
+    </Link>
+  );
+}
+
+/**
+ * The way back out to the front page.
+ *
+ * Every standalone screen — the calculator, the eligibility check, the agent
+ * view, the tour, even the 404 — has its wordmark linked to the front page.
+ * The one place that did not was the signed-in app, where the wordmark goes to
+ * the app's own home instead. So from inside the demo account there was no
+ * route back to the page that costs a move, short of editing the URL.
+ */
+function FrontPageLink({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Link
+      href={HOME_HREF}
+      onClick={onNavigate}
+      className="tap flex items-center gap-3 rounded-full px-4 py-2.5 text-[13px] font-medium text-mist transition-colors hover:bg-cream hover:text-ink"
+    >
+      <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+      Back to the front page
     </Link>
   );
 }
@@ -83,6 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="mt-6 flex shrink-0 flex-col gap-3">
+          <FrontPageLink />
           <TourLink />
           <ThemeToggle />
           <UserChip />
@@ -138,6 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarNav onNavigate={() => setDrawerOpen(false)} />
             </div>
             <div className="mt-6 flex flex-col gap-3">
+              <FrontPageLink onNavigate={() => setDrawerOpen(false)} />
               <TourLink onNavigate={() => setDrawerOpen(false)} />
               <ThemeToggle />
               <UserChip />
