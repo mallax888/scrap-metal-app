@@ -73,7 +73,7 @@ export function RoundUps() {
             Round-ups stand down whenever a Litchi payment fails. Sort the payment and they start
             again on the next purchase &mdash; there is nothing to switch back on.
           </p>
-          <ButtonLink href="/dashboard">Sort the payment</ButtonLink>
+          <ButtonLink href="/plan">Sort the payment</ButtonLink>
         </div>
       ) : (
         <>

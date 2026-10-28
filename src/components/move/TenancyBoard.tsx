@@ -130,7 +130,7 @@ export function TenancyBoard() {
          * that repeated the first one's number.
          */}
         <TileLink
-          href="/dashboard"
+          href="/plan"
           icon={PiggyBank}
           label="Your plan"
           figure={moneyExact(plan.weeklyPayment)}

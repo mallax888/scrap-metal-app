@@ -20,6 +20,19 @@ const nextConfig: NextConfig = {
     return [
       { source: "/move", destination: "/cost-my-move", permanent: false },
       { source: "/my-move", destination: "/my-tenancy", permanent: false },
+      /*
+       * The plan moved to /plan so that /dashboard could stop being a place
+       * anyone lands.
+       *
+       * It was the most-visited URL in the demo, which meant browsers
+       * autocompleted to it and restored it on startup — so opening "the app"
+       * meant opening a repayment schedule, past the front door, with no idea
+       * what the product was. Nothing in the app ever navigated there; the
+       * address bar did. Freeing the path is the only thing that could fix
+       * that, since a redirect on a path the sidebar still uses would bounce
+       * people out of the app mid-session.
+       */
+      { source: "/dashboard", destination: "/", permanent: false },
     ];
   },
 };

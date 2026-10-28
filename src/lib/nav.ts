@@ -51,7 +51,7 @@ export const APP_HOME = "/my-tenancy";
  */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/my-tenancy", label: "My tenancy", icon: Home },
-  { href: "/dashboard", label: "My plan", icon: LayoutGrid },
+  { href: "/plan", label: "My plan", icon: LayoutGrid },
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/bond", label: "My bond", icon: ShieldCheck },
   { href: "/services", label: "Cleaners & movers", icon: Truck },
