@@ -4,18 +4,25 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Calculator,
-  CreditCard,
   Home,
   Landmark,
   PiggyBank,
   ShieldCheck,
+  Truck,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { StatGrid } from "@/components/ui/StatGrid";
 import { TileButton, TileLink } from "@/components/ui/Tile";
-import { TODAY, bond, myMove, plan, tenancy, type MoveCoverage } from "@/lib/data";
+import {
+  TODAY,
+  bond,
+  myMove,
+  plan,
+  tenancy,
+  type MoveCoverage,
+} from "@/lib/data";
 import {
   daysBetween,
   formatDate,
@@ -72,6 +79,8 @@ export function TenancyBoard() {
   const booked = myMove.lines
     .filter((line) => line.coverage === "book")
     .reduce((sum, line) => sum + line.amount, 0);
+  /** The provider the booked line was paid to, for the services block. */
+  const bookedLine = myMove.lines.find((line) => line.coverage === "book");
   const self = total - financed - booked;
 
   const next = derived.nextPayment;
@@ -97,8 +106,8 @@ export function TenancyBoard() {
           figure={myMove.property}
           state={
             <>
-              {myMove.suburb} &middot; {money(tenancy.rentWeekly)} a week &middot; moved in{" "}
-              {formatDayMonth(myMove.movedIn)}
+              {myMove.suburb} &middot; {money(tenancy.rentWeekly)}{" "}
+              a week &middot; moved in {formatDayMonth(myMove.movedIn)}
             </>
           }
           chip={
@@ -114,6 +123,12 @@ export function TenancyBoard() {
           controls="panel-tenancy"
         />
 
+        {/*
+         * The plan and the next payment are the same fact at two zoom levels,
+         * so they share a block: the weekly figure, then the date it next
+         * happens and what it comes off. Splitting them bought a second tile
+         * that repeated the first one's number.
+         */}
         <TileLink
           href="/dashboard"
           icon={PiggyBank}
@@ -122,39 +137,36 @@ export function TenancyBoard() {
           unit="a week"
           progress={derived.progress}
           state={
-            <>
-              {money(derived.totalRepaid)} of {money(plan.totalRepayable)} repaid &middot;{" "}
-              {derived.weeksRemaining} weeks left, finishing {formatDateShort(derived.payoffDate)}
-            </>
-          }
-          chip={<Badge tone="moss">On track</Badge>}
-          action="Your plan in full"
-        />
-
-        {next ? (
-          <TileLink
-            href="/payments"
-            icon={CreditCard}
-            label="Next payment"
-            figure={moneyExact(next.amount)}
-            state={
+            next ? (
               <>
-                {formatDayShort(next.date)} &middot; {method.brand} &bull;&bull;&bull;&bull;{" "}
-                {method.last4}
+                Next on{" "}
+                <span className="font-semibold text-ink">
+                  {formatDayShort(next.date)}
+                </span>{" "}
+                from {method.brand} &bull;&bull;&bull;&bull; {method.last4}{" "}
+                &middot; {derived.weeksRemaining} of {plan.termWeeks} left
               </>
-            }
-            chip={
-              daysToPayment !== null && daysToPayment <= 10 ? (
-                <Badge tone="amber">
-                  {daysToPayment === 0 ? "Today" : `In ${daysToPayment} days`}
-                </Badge>
-              ) : (
-                <Badge tone="outline">Scheduled</Badge>
-              )
-            }
-            action="Move it or pay early"
-          />
-        ) : null}
+            ) : (
+              <>
+                {money(derived.totalRepaid)} of {money(plan.totalRepayable)}{" "}
+                repaid &middot; {derived.weeksRemaining} weeks left, finishing{" "}
+                {formatDateShort(derived.payoffDate)}
+              </>
+            )
+          }
+          chip={
+            daysToPayment !== null && daysToPayment <= 10 ? (
+              <Badge tone="amber">
+                {daysToPayment === 0
+                  ? "Due today"
+                  : `Due in ${daysToPayment} days`}
+              </Badge>
+            ) : (
+              <Badge tone="moss">On track</Badge>
+            )
+          }
+          action="Payments and plan"
+        />
 
         <TileLink
           href="/bond"
@@ -167,7 +179,9 @@ export function TenancyBoard() {
               <span className="whitespace-nowrap">{bond.bondId}</span>
             </>
           }
-          chip={<Badge tone="moss">Lodged {formatDayMonth(bond.lodgedDate)}</Badge>}
+          chip={
+            <Badge tone="moss">Lodged {formatDayMonth(bond.lodgedDate)}</Badge>
+          }
           action="The bond in full"
         />
 
@@ -177,8 +191,8 @@ export function TenancyBoard() {
           figure={money(total)}
           state={
             <>
-              You paid {money(self)} &middot; booked {money(booked)} &middot; Litchi covered{" "}
-              {money(financed)}
+              You paid {money(self)} &middot; booked {money(booked)}{" "}
+              &middot; Litchi covered {money(financed)}
             </>
           }
           chip={<Badge tone="bark">{myMove.lines.length} lines</Badge>}
@@ -186,6 +200,36 @@ export function TenancyBoard() {
           onClick={() => toggle("cost")}
           expanded={open === "cost"}
           controls="panel-cost"
+        />
+
+        {/*
+         * The booked line of the move, which is the only block that is about
+         * something Litchi does rather than something it financed — and the
+         * one a tenant comes back to when the next move starts.
+         */}
+        <TileLink
+          href="/services"
+          icon={Truck}
+          label="Cleaners &amp; movers"
+          figure={money(booked)}
+          state={
+            bookedLine ? (
+              <>
+                {bookedLine.paidTo}, booked through Litchi and paid on the day
+                you moved
+              </>
+            ) : (
+              <>
+                Vetted movers and bond cleans, booked and paid through Litchi.
+              </>
+            )
+          }
+          chip={
+            <Badge tone="outline">
+              {bookedLine ? "Used once" : "Not used yet"}
+            </Badge>
+          }
+          action="Book for the next one"
         />
 
         <TileLink
@@ -211,10 +255,11 @@ export function TenancyBoard() {
           What {myMove.agencyName} confirmed, and what they were never told
         </h3>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-mist">
-          {myMove.verifiedBy} confirmed {myMove.verifiedFields.join(", ").toLowerCase()} on{" "}
+          {myMove.verifiedBy} confirmed{" "}
+          {myMove.verifiedFields.join(", ").toLowerCase()} on{" "}
           {formatDate(myMove.verifiedOn)}{" "}
-          &mdash; four facts they already held, from a link that took about ten seconds and needed
-          no account.
+          &mdash; four facts they already held, from a link that took about ten seconds and
+          needed no account.
         </p>
         <StatGrid
           className="mt-5"
@@ -243,7 +288,9 @@ export function TenancyBoard() {
         hidden={open !== "cost"}
         className="animate-pop rounded-card border border-sand/70 bg-paper p-5 sm:p-6"
       >
-        <h3 className="text-[15px] font-semibold text-ink">Every line of the move</h3>
+        <h3 className="text-[15px] font-semibold text-ink">
+          Every line of the move
+        </h3>
         <ul className="mt-4 divide-y divide-sand/70">
           {myMove.lines.map((line) => (
             <li
@@ -257,7 +304,9 @@ export function TenancyBoard() {
                     {COVERAGE_TEXT[line.coverage]}
                   </Badge>
                 </div>
-                <p className="mt-1 text-[13px] leading-relaxed text-mist">{line.note}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-mist">
+                  {line.note}
+                </p>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-clay">
                   {line.paidTo} &middot; {formatDateShort(line.date)}
                 </p>
@@ -279,8 +328,9 @@ export function TenancyBoard() {
         />
         <p className={clsx("mt-5 text-[13px] leading-relaxed text-mist")}>
           Litchi covered {percent(financed / total)}{" "}
-          of this move &mdash; the bond, which is the one line you could not put off. The rest you handled yourself, which is how it should be,
-          and why the amount was never a slider.
+          of this move &mdash; the bond, which is the one line you could not put off. The rest
+          you handled yourself, which is how it should be, and why the amount was never a
+          slider.
         </p>
         <div className="mt-5">
           <ButtonLink href="/documents" variant="secondary" size="sm">
