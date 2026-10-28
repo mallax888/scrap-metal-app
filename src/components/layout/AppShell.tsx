@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Compass, Menu, X } from "lucide-react";
+import { ArrowLeft, Compass, X } from "lucide-react";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { SidebarNav } from "./SidebarNav";
+import { BottomNav } from "./BottomNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { APP_HOME, HOME_HREF } from "@/lib/nav";
 import { DemoTag } from "@/components/marketing/DemoTag";
@@ -113,21 +114,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-sand/80 bg-canvas/90 px-4 py-3 backdrop-blur-md lg:hidden">
+      {/* Just the wordmark. The destinations are in the bar at the bottom of
+          the screen where a thumb reaches them, and the settings that used to
+          sit up here are in the More sheet with everything else. */}
+      <header className="sticky top-0 z-30 flex items-center border-b border-sand/80 bg-canvas/90 px-4 py-3 backdrop-blur-md lg:hidden">
         <Link href={APP_HOME} className="tap flex items-center gap-2.5">
           <PiggyBadge className="h-8 w-8" />
           <Wordmark className="text-[15px]" />
           <DemoTag />
         </Link>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Open navigation"
-          aria-expanded={drawerOpen}
-          className="tap flex h-10 w-10 items-center justify-center rounded-full border border-sand bg-paper text-ink transition-colors hover:bg-cream"
-        >
-          <Menu className="h-5 w-5" aria-hidden />
-        </button>
       </header>
 
       {/* Mobile drawer */}
@@ -138,7 +133,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setDrawerOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-[300px] flex-col bg-paper px-5 py-6 shadow-lift animate-pop">
+          <div
+            role="dialog"
+            aria-label="More"
+            className="absolute inset-x-0 bottom-0 flex max-h-[86%] flex-col rounded-t-card bg-paper px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5 shadow-lift animate-pop"
+          >
             <div className="flex items-center justify-between">
               <Link
                 href={APP_HOME}
@@ -157,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
-            <div className="mt-8 flex-1 overflow-y-auto">
+            <div className="mt-6 flex-1 overflow-y-auto">
               <SidebarNav onNavigate={() => setDrawerOpen(false)} />
             </div>
             <div className="mt-6 flex flex-col gap-3">
@@ -170,9 +169,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <main className="min-w-0 flex-1 px-4 pb-16 pt-6 sm:px-8 sm:pt-10 lg:px-10 xl:px-14">
+      {/* The bottom bar overlays the page, so the page has to end above it. */}
+      <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pt-10 lg:px-10 lg:pb-16 xl:px-14">
         <div className="mx-auto w-full max-w-[1180px]">{children}</div>
       </main>
+
+      <BottomNav onMore={() => setDrawerOpen(true)} />
     </div>
   );
 }

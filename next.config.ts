@@ -2,9 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: {
-    // Defaults to bottom-left, where it lands on top of the sidebar's user
-    // chip. Moved rather than disabled so the dev tools stay available.
-    position: "bottom-right",
+    /*
+     * Every other corner is taken.
+     *
+     * The default, bottom-left, lands on the sidebar's user chip. Bottom-right
+     * was fine until the phone nav moved to the bottom of the screen, where
+     * the indicator then covered the More tab and swallowed taps on it — in
+     * development only, but that is where the app gets used most. Top-right is
+     * the one corner holding nothing but a theme toggle on a phone.
+     */
+    position: "top-right",
   },
 
   /**

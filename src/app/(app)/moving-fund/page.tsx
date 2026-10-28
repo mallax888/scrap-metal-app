@@ -13,6 +13,7 @@ import { ActivityRow } from "@/components/dashboard/ActivityFeed";
 import { MovingFundModal } from "@/components/modals/MovingFundModal";
 import { RoundUps } from "@/components/fund/RoundUps";
 import { FundProjection } from "@/components/fund/FundProjection";
+import { RoundUpMoment } from "@/components/fund/RoundUpMoment";
 import { bond, movingFund, tenancy } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import { buildMoveCosts, costedTotal } from "@/lib/move";
@@ -158,6 +159,7 @@ export default function MovingFundPage() {
           </Card>
         </div>
 
+        <RoundUpMoment />
         <RoundUps />
         <FundProjection />
 
