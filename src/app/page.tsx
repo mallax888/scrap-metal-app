@@ -4,8 +4,7 @@ import { ArrowRight, Check, Minus } from "lucide-react";
 import { clsx } from "clsx";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { ButtonLink } from "@/components/ui/Button";
-import { DemoBadge } from "@/components/marketing/DemoBadge";
-import { WeekSplit } from "@/components/marketing/WeekSplit";
+import { CoverCalculator } from "@/components/marketing/CoverCalculator";
 import { bond, movingChecklist, plan, rent, tenancy } from "@/lib/data";
 import { money, moneyExact, percent } from "@/lib/format";
 import { buildMoveCosts, costedTotal, defaultPartner, quoteMove } from "@/lib/move";
@@ -166,77 +165,12 @@ export default function LandingPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-5 pb-24 sm:px-8">
-        {/* Hero */}
-        <section className="grid items-center gap-12 pt-10 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
-          <div>
-            <DemoBadge />
-            <h1 className="mt-6 max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:text-[64px]">
-              Move in.
-              <br />
-              Pay smarter.
-            </h1>
-            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
-              A bond is typically four weeks&rsquo; rent &mdash; and it&rsquo;s often the biggest
-              cost in a pile of expenses that all hit at once. You&rsquo;re paying rent in advance,
-              moving costs, professional cleaning, and getting your power and internet connected,
-              all within the same week.
-            </p>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
-              And the money that would cover it is sitting in your old bond, which you don&rsquo;t
-              get back until after you&rsquo;ve paid the new one. That gap is usually a few weeks.
-              It&rsquo;s the whole problem.
-            </p>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-mist sm:text-[19px]">
-              Litchi covers it. You repay in a simple, fixed weekly amount &mdash; making moving
-              into your next home easier and more manageable.
-            </p>
+        {/* The cover.
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <ButtonLink href="/cost-my-move" size="lg">
-                Cost my move
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </ButtonLink>
-              <ButtonLink href={APP_HOME} size="lg" variant="secondary">
-                See the demo account
-              </ButtonLink>
-            </div>
-            <p className="mt-4 text-[13px] text-clay">
-              Both open an interactive demo. Nothing to sign up for.
-            </p>
-
-            {/* The one figure that makes the case, stated plainly. */}
-            <dl className="mt-14 grid w-fit grid-cols-2 gap-x-10 gap-y-6 border-t border-sand pt-8 sm:grid-cols-[repeat(3,auto)] sm:gap-x-16">
-              <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                  Bond
-                </dt>
-                <dd className="numeric mt-1.5 whitespace-nowrap text-[26px] font-semibold tracking-[-0.02em] text-ink">
-                  {money(bond.amount)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                  Up front
-                </dt>
-                <dd className="numeric mt-1.5 whitespace-nowrap text-[26px] font-semibold tracking-[-0.02em] text-moss">
-                  {money(0)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-clay">
-                  Then
-                </dt>
-                <dd className="numeric mt-1.5 whitespace-nowrap text-[26px] font-semibold tracking-[-0.02em] text-ink">
-                  {money(plan.weeklyPayment)}
-                  <span className="text-base font-medium tracking-normal text-mist"> / week</span>
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* The claim the product rests on, drawn rather than described. */}
-          <WeekSplit />
-        </section>
+            It asks for the one number a renter already knows and answers with
+            their own move, rather than spending three paragraphs explaining
+            what a bond is to someone who has just paid one. */}
+        <CoverCalculator />
 
         {/* The problem, named. "Everything else about moving" means nothing
             until the list is actually written out. Unpriced on purpose. */}

@@ -310,6 +310,39 @@ export interface CheaperAlternative {
  * products are not comparable and offering the cheaper one would be a worse
  * answer rather than a kinder one.
  */
+export interface BondAssistQuote {
+  amount: number;
+  /** Litchi's only charge on this product, and therefore its cost of credit. */
+  fee: number;
+  weekly: number;
+  totalRepayable: number;
+  termWeeks: number;
+}
+
+/**
+ * Bond Assist priced on any bond, not just the sample one.
+ *
+ * The sample tenancy's figures live in `plan`, but the front door quotes a
+ * bond off whatever rent someone types, so the arithmetic had to come out of
+ * the one place that happened to need it first.
+ *
+ * The total is the contract, not the instalment times the term. Bond Assist is
+ * a flat fee, so the cost of credit IS the fee — and because the weekly figure
+ * is rounded up to the cent, multiplying it out overstates the total by a few
+ * cents, which the last payment absorbs. Quoting weekly x 52 anywhere would
+ * have that screen disagree with every other one about the same product.
+ */
+export function quoteBondAssist(amount: number): BondAssistQuote {
+  const fee = round2(amount * plan.feeRate);
+  return {
+    amount,
+    fee,
+    weekly: Math.ceil(((amount + fee) / plan.termWeeks) * 100) / 100,
+    totalRepayable: round2(amount + fee),
+    termWeeks: plan.termWeeks,
+  };
+}
+
 export function cheaperAlternative(
   lines: MoveCostLine[],
   coverage: Record<string, Coverage>,
@@ -322,20 +355,8 @@ export function cheaperAlternative(
 
   if (financed.length !== 1 || financed[0].id !== "bond") return null;
 
-  const amount = financed[0].amount;
-  const fee = round2(amount * plan.feeRate);
-  const weekly = Math.ceil(((amount + fee) / plan.termWeeks) * 100) / 100;
-
-  /*
-   * The total is the contract, not the instalment times the term. Bond Assist
-   * is a flat fee, so the cost of credit IS the fee — and because the weekly
-   * figure is rounded up to the cent, multiplying it out overstates the total
-   * by a few cents and the last payment is trimmed to absorb exactly that.
-   * Quoting weekly x 52 here would have this screen disagree with every other
-   * one about the same product.
-   */
-  const totalRepayable = round2(amount + fee);
-  const costOfCredit = fee;
+  const bondAssist = quoteBondAssist(financed[0].amount);
+  const costOfCredit = bondAssist.fee;
 
   // Only worth saying if it is actually cheaper. If the terms ever move so it
   // is not, this quietly stops offering it rather than misleading anyone.
@@ -343,11 +364,11 @@ export function cheaperAlternative(
 
   return {
     name: "Bond Assist",
-    amount,
+    amount: bondAssist.amount,
     costOfCredit,
-    weekly,
-    totalRepayable,
-    termWeeks: plan.termWeeks,
+    weekly: bondAssist.weekly,
+    totalRepayable: bondAssist.totalRepayable,
+    termWeeks: bondAssist.termWeeks,
     saving: round2(quote.costOfCredit - costOfCredit),
     href: "/apply",
   };

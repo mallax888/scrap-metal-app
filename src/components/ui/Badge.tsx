@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 
-type Tone = "moss" | "cream" | "bark" | "amber" | "outline";
+type Tone = "moss" | "cream" | "bark" | "amber" | "outline" | "onHero";
 
 const TONES: Record<Tone, string> = {
   moss: "bg-moss-soft text-moss",
@@ -8,6 +8,8 @@ const TONES: Record<Tone, string> = {
   bark: "bg-brand text-onbrand",
   amber: "bg-amber-soft text-amber-warm",
   outline: "border border-sand text-mist",
+  /* For the dark slab, where cream-on-brown would be invisible. */
+  onHero: "bg-onbrand/15 text-onbrand",
 };
 
 export function Badge({
