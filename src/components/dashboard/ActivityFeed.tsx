@@ -36,7 +36,13 @@ export function ActivityRow({ item }: { item: ActivityItem }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-ink">{item.title}</p>
-        {item.detail ? <p className="truncate text-xs text-mist">{item.detail}</p> : null}
+        {/* The title stays on one line so the rows keep their rhythm, but the
+            detail under it may wrap: truncating it clipped the month off
+            "On-time payments — September" by four pixels on a phone, which is
+            the one word in the line that carries any information. */}
+        {item.detail ? (
+          <p className="text-xs leading-relaxed text-mist sm:truncate">{item.detail}</p>
+        ) : null}
       </div>
       <div className="shrink-0 text-right">
         {item.amount != null ? (

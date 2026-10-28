@@ -141,9 +141,11 @@ export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-canvas">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-        <span className="flex items-center gap-3">
-          <PiggyBadge />
-          <Wordmark className="text-[17px]" />
+        {/* Bigger than the in-app lockup. This is the only screen where the
+            mark has to introduce the company rather than label a sidebar. */}
+        <span className="flex items-center gap-3.5">
+          <PiggyBadge className="h-11 w-11" />
+          <Wordmark className="text-[21px]" />
         </span>
         <span className="flex items-center gap-2">
           {/* Two buttons overflow a 390px header, so the secondary one steps

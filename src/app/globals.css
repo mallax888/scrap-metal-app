@@ -311,6 +311,22 @@ body {
   border-radius: 6px;
 }
 
+/*
+ * The opt-out, for a control that sits inside a wrapper which draws the focus
+ * state itself. Without it the input gets its own ring and you see a second
+ * box drawn inside the first.
+ *
+ * It has to live here rather than as a `focus-visible:outline-none` utility at
+ * the call site. The rule above is unlayered, and an unlayered rule beats
+ * anything in @layer utilities whatever its specificity — the same trap that
+ * once had `.numeric` silently overriding every explicit tracking-*. Both
+ * selectors resolve to the specificity of `:focus-visible` alone, so this one
+ * wins on source order.
+ */
+:where(.focus-ring-on-wrapper):focus-visible {
+  outline: none;
+}
+
 /* Recharts injects its own focus outline on the surface; suppress it. */
 .recharts-wrapper:focus,
 .recharts-surface:focus {

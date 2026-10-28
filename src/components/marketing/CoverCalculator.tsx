@@ -129,7 +129,7 @@ export function CoverCalculator() {
                 autoComplete="off"
                 placeholder="Rent per week"
                 aria-describedby={outOfRange ? `${inputId}-hint` : undefined}
-                className="numeric min-w-0 flex-1 bg-transparent outline-none focus-visible:outline-none text-[24px] font-semibold tracking-[-0.02em] text-ink placeholder:text-[17px] placeholder:font-medium placeholder:tracking-normal placeholder:text-clay"
+                className="focus-ring-on-wrapper numeric min-w-0 flex-1 bg-transparent text-[24px] font-semibold tracking-[-0.02em] text-ink placeholder:text-[17px] placeholder:font-medium placeholder:tracking-normal placeholder:text-clay"
               />
               <span className="shrink-0 text-[13px] text-mist">a week</span>
             </div>
