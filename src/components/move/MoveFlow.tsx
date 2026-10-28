@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -209,6 +209,37 @@ export function MoveFlow() {
   const [submitted, setSubmitted] = useState(false);
   const [consent, setConsent] = useState(false);
 
+  /**
+   * Every step starts at its own beginning.
+   *
+   * Without this, Continue swapped the content underneath an unchanged scroll
+   * position — and since you press Continue from the bottom of a long step,
+   * you landed 400px below the next step's heading, in the middle of a form,
+   * with no idea what was being asked. The taller the step you just finished,
+   * the further past the next one you arrive.
+   *
+   * It scrolls to the step rather than to the top of the document, because the
+   * page intro and the progress list sit above it: scrolling to the very top
+   * would make someone re-read the same 60 words on the way to every step.
+   *
+   * Skipped on first render so arriving at the page mid-scroll, from a link
+   * with a hash or a restored position, is left alone.
+   */
+  const mounted = useRef(false);
+  const stepTop = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    stepTop.current?.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [step, submitted]);
+
   const extracted = useMemo(() => (fileName ? extractTenancy(fileName) : null), [fileName]);
 
   // The confirmation step can correct anything the extraction got wrong, so
@@ -335,6 +366,7 @@ export function MoveFlow() {
   if (submitted) {
     return (
       <>
+        <div ref={stepTop} className="scroll-mt-4" />
         <Heading
           title="Your move plan"
           body={`Everything for ${request?.property ?? "your move"} in one place — what it costs, who is covering each line, and the tenancy behind it.`}
@@ -367,6 +399,9 @@ export function MoveFlow() {
         title={"You\u2019ve got the place. Let\u2019s work out the move."}
         body="We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover \u2014 up to what the move actually costs, never more."
       />
+      {/* What each step scrolls to: the progress list and the step beneath it,
+          so you land on where you are as well as on what is being asked. */}
+      <div ref={stepTop} className="scroll-mt-4" />
       <ol className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
         {STEPS.map((label, index) => (
           <li key={label} className="flex items-center gap-2">

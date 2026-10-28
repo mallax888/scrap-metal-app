@@ -33,7 +33,7 @@ export default function MovePage() {
           className="tap flex items-center gap-1.5 text-[13px] font-medium text-mist transition-colors hover:text-ink"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back
+          Front page
         </Link>
       </header>
 

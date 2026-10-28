@@ -14,15 +14,21 @@ import { NAV_ITEMS } from "@/lib/nav";
  * phone that is the wrong shape for an app you open for ten seconds to check
  * one number — which is most of what this app is for.
  *
- * Four destinations are permanent and the rest live behind More. They are the
- * first four in the sidebar's own order, which is already sorted by how often
- * someone opens each one, so the bar needs no separate opinion about priority.
+ * Four destinations are permanent and the rest live behind More. The sidebar's
+ * order mostly decides which four, since it is already sorted by how often
+ * each screen is opened — except that the bond trades places with the Moving
+ * Fund here. The bond is reference material: where it is lodged and what its
+ * number is, looked up once and then never again. The fund is a weekly habit
+ * now that round-ups feed it, and a habit two taps behind a More menu is not
+ * a habit.
  */
-const PRIMARY_COUNT = 4;
+const PRIMARY: string[] = ["/my-tenancy", "/plan", "/payments", "/moving-fund"];
 
 export function BottomNav({ onMore }: { onMore: () => void }) {
   const pathname = usePathname();
-  const primary = NAV_ITEMS.slice(0, PRIMARY_COUNT);
+  const primary = PRIMARY.map((href) =>
+    NAV_ITEMS.find((item) => item.href === href)
+  ).filter((item): item is (typeof NAV_ITEMS)[number] => item !== undefined);
   const inMore = !primary.some((item) => item.href === pathname);
 
   return (
