@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Check, Clock, Lock, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Clock, Lock } from "lucide-react";
 import { clsx } from "clsx";
-import { Card, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { formatDate, money } from "@/lib/format";
 import { verificationDisclosure, type VerificationRequest } from "@/lib/verification";
 import { respondToVerification, useVerificationStatus } from "@/lib/verification-store";
@@ -22,6 +23,12 @@ import { respondToVerification, useVerificationStatus } from "@/lib/verification
  * tenant is borrowing, how much, or whether they were approved is none of the
  * agency's business and telling them would make Litchi a party to the tenancy
  * relationship it is trying to stay out of.
+ *
+ * Two things had crept in front of the task: a card heading that repeated the
+ * page heading, and a paragraph of reassurance. Both pushed the buttons off a
+ * phone screen, which made a ten-second job start with a scroll. The facts and
+ * the buttons come first now; the reassurance is behind a heading, where
+ * someone who wants it will look for it.
  */
 export function VerifyPanel({ request }: { request: VerificationRequest }) {
   const status = useVerificationStatus(request.token);
@@ -40,20 +47,7 @@ export function VerifyPanel({ request }: { request: VerificationRequest }) {
   return (
     <div className="space-y-5">
       <Card>
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream text-bark">
-            <ShieldCheck className="h-[18px] w-[18px]" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <CardTitle>Confirm these tenancy details</CardTitle>
-            <p className="mt-2 text-sm leading-relaxed text-mist">
-              {request.tenantName} has applied to Litchi to help with the cost of moving in, and
-              gave us the details below. Please confirm they match your records.
-            </p>
-          </div>
-        </div>
-
-        <dl className="mt-6 divide-y divide-sand/70">
+        <dl className="divide-y divide-sand/70">
           {rows.map((row) => (
             <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
               <dt className="text-[13px] text-mist">{row.label}</dt>
@@ -83,7 +77,7 @@ export function VerifyPanel({ request }: { request: VerificationRequest }) {
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-bark">
                 {status === "verified"
-                  ? `Recorded against ${request.property} as confirmed by ${request.manager}. Nothing further is needed from you, and you can close this page.`
+                  ? `Recorded against ${request.property} as confirmed by ${request.manager}. Nothing further is needed from you.`
                   : "We've told the tenant the details didn't match and asked them to check their agreement. You won't be asked again unless they resubmit."}
               </p>
               {justAnswered ? (
@@ -101,7 +95,7 @@ export function VerifyPanel({ request }: { request: VerificationRequest }) {
             </div>
           </div>
         ) : (
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
               onClick={() => {
@@ -126,36 +120,58 @@ export function VerifyPanel({ request }: { request: VerificationRequest }) {
         )}
       </Card>
 
-      <Card tone="cream">
-        <div className="flex items-start gap-3">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
-          <div>
-            <h2 className="text-[15px] font-semibold text-ink">
-              What this does and does not tell you
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-bark">
-              Everything above is something your agency already holds, so confirming it tells us
-              nothing new about your tenant.
-            </p>
-            <ul className="mt-4 space-y-2">
-              {verificationDisclosure.withheld.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-2.5 text-[13px] leading-relaxed text-bark"
-                >
-                  <Lock className="mt-[3px] h-3.5 w-3.5 shrink-0 text-clay" aria-hidden />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-[13px] leading-relaxed text-bark">
-              Confirming a tenancy is not a reference and not a recommendation. It does not make
-              your agency a party to anything your tenant arranges with Litchi, and it has no
-              bearing on the tenancy itself.
-            </p>
+      {/*
+       * Somewhere to go once the job is done.
+       *
+       * The page used to end here with nothing but an undo link: an agent
+       * arrived from an email, spent ten seconds, and was left on a dead page
+       * with no route anywhere — not even back to the site they had just
+       * helped. Closing the tab is still the right answer for most of them,
+       * which is why it is said; but it should not be the only one available.
+       */}
+      {answered ? (
+        <Card tone="cream">
+          <h2 className="text-[15px] font-semibold text-ink">That&rsquo;s it — you can close this page</h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-bark">
+            Your tenant takes it from here. If you want to know what Litchi does for the agencies
+            it works with, and what it never asks of them, that is one page.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <ButtonLink href="/agents">
+              What this means for your agency
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </ButtonLink>
+            <ButtonLink href="/" variant="secondary">
+              Litchi home
+            </ButtonLink>
           </div>
-        </div>
-      </Card>
+        </Card>
+      ) : null}
+
+      <div className="rounded-card border border-sand/70 bg-paper px-5">
+        <Disclosure title="What this does and does not tell you" className="border-t-0">
+          <p className="max-w-2xl text-sm leading-relaxed text-mist">
+            Everything above is something your agency already holds, so confirming it tells us
+            nothing new about your tenant.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {verificationDisclosure.withheld.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2.5 text-[13px] leading-relaxed text-mist"
+              >
+                <Lock className="mt-[3px] h-3.5 w-3.5 shrink-0 text-clay" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-mist">
+            Confirming a tenancy is not a reference and not a recommendation. It does not make
+            your agency a party to anything your tenant arranges with Litchi, and it has no
+            bearing on the tenancy itself.
+          </p>
+        </Disclosure>
+      </div>
 
       <div className="flex items-start gap-3 text-[13px] leading-relaxed text-mist">
         <Clock className="mt-0.5 h-4 w-4 shrink-0 text-clay" aria-hidden />

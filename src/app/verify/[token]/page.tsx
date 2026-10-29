@@ -48,12 +48,15 @@ export default async function VerifyPage({ params }: { params: Promise<{ token: 
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
             Tenancy verification
           </p>
+          {/* The heading asks for the thing. It used to announce who had been
+              named, which the agency already knows, and left the actual
+              request to a card heading further down the page. */}
           <h1 className="mt-3 text-[28px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink sm:text-[36px]">
-            {request ? `A tenant has named ${request.agencyName}` : "This link has expired"}
+            {request ? "Does this look right?" : "This link has expired"}
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-mist sm:text-[17px]">
             {request
-              ? "Two buttons, no account, and you will not be asked for anything else. It takes about ten seconds."
+              ? `${request.tenantName} has applied to Litchi for help with the cost of moving in, and gave us these details. Confirm they match your records — about ten seconds, no account, and nothing else will be asked of you.`
               : "Verification links open a single tenancy and stop working after seven days."}
           </p>
         </div>
