@@ -221,11 +221,13 @@ export function CoverCalculator() {
       ) : (
         <p className="mx-auto mt-7 max-w-[46ch] text-[15px] leading-relaxed text-mist sm:text-[16px]">
           Type it and we&rsquo;ll price the whole move &mdash; bond, rent in advance, the truck,
-          the clean. A {money(sampleRent.weekly)} place comes to about{" "}
+          the clean. A place at {money(sampleRent.weekly)} a week comes to about{" "}
+          {/* The full stop has to touch the figure. On its own line it becomes
+              a text node whose leading newline collapses to a space, and the
+              sentence renders as "$5,300 ." */}
           <strong className="numeric font-semibold text-ink">
-            {money(costedTotal(buildMoveCosts(sampleRent.weekly, "medium")))}
+            {money(costedTotal(buildMoveCosts(sampleRent.weekly, "medium")))}.
           </strong>
-          .
         </p>
       )}
 
@@ -308,7 +310,7 @@ export function CoverCalculator() {
             completeness belongs, so it carries it. */}
         <div className="mt-1 flex items-baseline justify-between gap-4 border-t border-sand pt-3">
           <span className="text-[13px] font-semibold text-ink">
-            {typedIsUsable ? "Your move" : `A ${money(sampleRent.weekly)} place`}
+            {typedIsUsable ? "Your move" : `At ${money(sampleRent.weekly)} a week`}
           </span>
           <span className="numeric text-[18px] font-semibold tracking-[-0.02em] text-ink">
             {money(total)}
