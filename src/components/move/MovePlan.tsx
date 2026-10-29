@@ -248,12 +248,24 @@ export function MovePlan({
         </>
       ) : null}
 
+      {/*
+       * The journey used to stop here.
+       *
+       * This screen was the end of the road: a plan, and a door into someone
+       * else's finished account. Identity, the bank check and the agreement
+       * lived at /setup, which nothing on this path linked to — so the two
+       * steps that turn a costed move into a funded one were off to the side
+       * where nobody walking the flow would find them. The real next thing to
+       * do goes first now, and the sample account becomes what it is: a look
+       * at the far end, not the way on.
+       */}
       <div className="flex flex-wrap gap-3">
-        {/* The paragraph below already says this is another tenant's account
-            once a lender has said yes, so the gate would only repeat it. */}
-        <ButtonLink href="/my-tenancy" size="lg" onClick={openAccount}>
-          See a funded account
+        <ButtonLink href={`/setup?rent=${rent}`} size="lg">
+          Finish your application
           <ArrowRight className="h-4 w-4" aria-hidden />
+        </ButtonLink>
+        <ButtonLink href="/my-tenancy" variant="secondary" size="lg" onClick={openAccount}>
+          See a funded account
         </ButtonLink>
         <Button variant="ghost" size="lg" onClick={onStartAgain}>
           Start again
@@ -261,8 +273,10 @@ export function MovePlan({
       </div>
 
       <p className="text-[13px] leading-relaxed text-clay">
-        The funded account is a different tenant&rsquo;s, ten weeks into repaying a bond Litchi
-        covered &mdash; it is what this plan looks like once a lender has said yes.
+        Finishing takes about five minutes: who you are, the account the repayment comes from, and
+        the agreement in full before anything is owed. The funded account is a different
+        tenant&rsquo;s, ten weeks in &mdash; it is what this plan looks like once a lender has said
+        yes.
       </p>
     </div>
   );

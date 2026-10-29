@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -43,8 +44,13 @@ export default function MovePage() {
         </div>
 
         {/* The heading belongs to the flow, not the page: it has to stop
-            saying "let's work out the move" once the move is worked out. */}
-        <MoveFlow />
+            saying "let's work out the move" once the move is worked out.
+
+            The flow reads the rent off the URL, which opts it into client
+            rendering; the boundary keeps that to the flow itself. */}
+        <Suspense fallback={null}>
+          <MoveFlow />
+        </Suspense>
       </main>
     </div>
   );

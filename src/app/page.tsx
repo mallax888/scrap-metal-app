@@ -5,7 +5,7 @@ import { clsx } from "clsx";
 import { PiggyBadge, Wordmark } from "@/components/brand/PiggyMark";
 import { ButtonLink } from "@/components/ui/Button";
 import { CoverCalculator } from "@/components/marketing/CoverCalculator";
-import { bond, movingChecklist, plan, rent, tenancy } from "@/lib/data";
+import { bond, movingChecklist, plan, tenancy } from "@/lib/data";
 import { money, moneyExact, percent } from "@/lib/format";
 import { buildMoveCosts, costedTotal, defaultPartner, quoteMove } from "@/lib/move";
 import { APP_HOME } from "@/lib/nav";
@@ -67,9 +67,18 @@ const PRODUCTS = [
   {
     name: "Bond Assist",
     covers: "The bond, and nothing else",
-    amount: money(bond.amount),
-    price: `Flat ${plan.feeRate * 100}% fee — ${money(plan.fee)}`,
-    weekly: `${moneyExact(plan.weeklyPayment)} a week for ${plan.termWeeks} weeks`,
+    /*
+     * The rule, not one tenant's figure.
+     *
+     * These cards sit under a calculator the visitor has just typed their own
+     * rent into. Printing the sample tenancy's $2,800 bond and $140 fee
+     * underneath it put two different answers for the same move on one
+     * screen — so the card states what is true for everyone and leaves the
+     * arithmetic to the calculator that has the actual number.
+     */
+    amount: `${bond.weeksOfRent} weeks' rent`,
+    price: `Flat ${plan.feeRate * 100}% fee, no interest`,
+    weekly: `Repaid weekly over ${plan.termWeeks} weeks`,
     points: [
       "No interest, so the amount never grows",
       "Paid straight to your agency, lodged with Tenancy Services",
@@ -103,21 +112,15 @@ const PRODUCTS = [
 const CLARITY = [
   {
     yes: "Your rent is your rent",
-    body: `${money(rent.weekly)} a week still goes to ${
-      tenancy.landlordAgency
-    }, exactly as it did before. Litchi does not touch it, collect it, or change it.`,
+    body: `It still goes to your property manager, exactly as it did before, on the same day and for the same amount. Litchi does not touch it, collect it, or change it.`,
   },
   {
     yes: "Your repayment is separate",
-    body: `${money(
-      plan.weeklyPayment
-    )} a week comes to Litchi for the bond we financed. It is a repayment, not rent, and it is shown separately everywhere in the app.`,
+    body: `One weekly payment comes to Litchi for what we financed. It is a repayment, not rent, it is never added to your rent, and the two are shown apart everywhere in the app.`,
   },
   {
     yes: "The price is quoted before you apply",
-    body: `On Bond Assist, a flat ${money(plan.fee)} fee on a ${money(
-      plan.principal
-    )} bond — no interest, so it never grows. On Litchi Move, an establishment fee and a rate, both shown on the estimate screen before anything is submitted.`,
+    body: `On Bond Assist, a flat ${plan.feeRate * 100}% of the bond — no interest, so it never grows. On Litchi Move, an establishment fee and a rate, both shown on the estimate screen before anything is submitted.`,
   },
 ];
 

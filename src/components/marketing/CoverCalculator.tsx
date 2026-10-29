@@ -232,7 +232,13 @@ export function CoverCalculator() {
       )}
 
       <div className="mt-9 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
-        <ButtonLink href="/cost-my-move" size="lg">
+        {/* The rent goes with them. Asking one question and then opening the
+            next screen on a different number is the fastest way to teach
+            someone that the app is not listening. */}
+        <ButtonLink
+          href={typedIsUsable ? `/cost-my-move?rent=${weeklyRent}` : "/cost-my-move"}
+          size="lg"
+        >
           Cost my move
           <ArrowRight className="h-4 w-4" aria-hidden />
         </ButtonLink>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -223,6 +224,19 @@ export function MoveFlow() {
     });
   }, [step, submitted]);
 
+  /*
+   * What they typed on the front page, if they came that way.
+   *
+   * It is an estimate made against a rent they had in their head, not a fact
+   * about a tenancy — the figures in this flow come off the agreement. But
+   * dropping it silently is what made the first two screens disagree, so it
+   * is carried, said out loud on the way in, and reconciled against the
+   * document on the step that can correct it.
+   */
+  const params = useSearchParams();
+  const askedRent = Number(params.get("rent"));
+  const estimatedOn = Number.isFinite(askedRent) && askedRent > 0 ? askedRent : null;
+
   const extracted = useMemo(() => (fileName ? extractTenancy(fileName) : null), [fileName]);
 
   // The confirmation step can correct anything the extraction got wrong, so
@@ -380,7 +394,7 @@ export function MoveFlow() {
     <div>
       <Heading
         title={"You\u2019ve got the place. Let\u2019s work out the move."}
-        body="We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover \u2014 up to what the move actually costs, never more."
+        body="We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover — up to what the move actually costs, never more."
       />
       {/* What each step scrolls to: the progress list and the step beneath it,
           so you land on where you are as well as on what is being asked. */}
@@ -409,6 +423,17 @@ export function MoveFlow() {
             title="Start with the place you've just got"
             body="Upload your tenancy agreement and we'll read the rent, the bond and the dates off it. It saves you typing them, and it means the figures behind your application came from the document rather than from memory."
           >
+            {estimatedOn ? (
+              <p className="mt-5 rounded-tile bg-cream px-4 py-3.5 text-[13px] leading-relaxed text-bark">
+                You costed a move on{" "}
+                <strong className="numeric font-semibold text-ink">
+                  {money(estimatedOn)} a week
+                </strong>
+                . We&rsquo;ll use whatever your agreement actually says, and you can correct it on
+                the next screen.
+              </p>
+            ) : null}
+
             <div className="mt-7">
               {reading ? (
                 <div className="flex items-center gap-3 rounded-tile border border-sand bg-cream px-5 py-6">
@@ -532,6 +557,18 @@ export function MoveFlow() {
                 />
               </Field>
             </div>
+
+            {/* The one place the two numbers can be put side by side and
+                settled, because this is the step where rent is editable. */}
+            {estimatedOn && rent > 0 && estimatedOn !== rent ? (
+              <p className="mt-5 text-[13px] leading-relaxed text-mist">
+                You estimated on{" "}
+                <strong className="numeric font-semibold text-ink">{money(estimatedOn)}</strong>;
+                this agreement says{" "}
+                <strong className="numeric font-semibold text-ink">{money(rent)}</strong>. The
+                agreement wins unless you change it here.
+              </p>
+            ) : null}
 
             <label className="mt-7 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
               <input
