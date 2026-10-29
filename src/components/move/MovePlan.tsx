@@ -95,24 +95,30 @@ export function MovePlan({
           {lines.map((line) => {
             const how = coverage[line.id] ?? defaultCoverage(line);
             return (
-              <li
-                key={line.id}
-                className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3.5"
-              >
-                <div className="min-w-0">
+              /*
+               * Two columns that cannot swap places.
+               *
+               * This row used to wrap: the badge and the amount sat in a
+               * shrink-0 group, and on a phone a long label pushed that group
+               * onto its own line, where justify-between parked it hard left.
+               * So "Movers" kept its amount on the right and "Rent in advance"
+               * did not, and the column stopped being a column. The badge
+               * belongs with the label it describes; the amount is the only
+               * thing in the right-hand column, and it never moves.
+               */
+              <li key={line.id} className="flex items-start justify-between gap-4 py-3.5">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-ink">{line.label}</p>
-                  <p className="mt-0.5 text-[12px] text-mist">
-                    {how === "self" ? "You" : line.payeeName}
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-mist">
+                    <span>{how === "self" ? "You" : line.payeeName}</span>
+                    <Badge tone={how === "litchi" ? "bark" : how === "book" ? "cream" : "outline"}>
+                      {COVERAGE_SHORT[how]}
+                    </Badge>
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <Badge tone={how === "litchi" ? "bark" : how === "book" ? "cream" : "outline"}>
-                    {COVERAGE_SHORT[how]}
-                  </Badge>
-                  <span className="numeric w-20 text-right text-sm font-semibold text-ink">
-                    {money(line.amount)}
-                  </span>
-                </div>
+                <span className="numeric w-20 shrink-0 text-right text-sm font-semibold text-ink">
+                  {money(line.amount)}
+                </span>
               </li>
             );
           })}

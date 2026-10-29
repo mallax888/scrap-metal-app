@@ -281,7 +281,9 @@ export default function LandingPage() {
                 </div>
 
                 <dl className="mt-6 space-y-2 text-[13px]">
-                  <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                  {/* No wrap: the value is a column, and a wrapped one lands
+                      under its own label at the left margin. */}
+                  <div className="flex justify-between gap-4">
                     <dt className={product.featured ? "text-onbrand/70" : "text-mist"}>
                       What it costs
                     </dt>
@@ -294,7 +296,9 @@ export default function LandingPage() {
                       {product.price}
                     </dd>
                   </div>
-                  <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                  {/* No wrap: the value is a column, and a wrapped one lands
+                      under its own label at the left margin. */}
+                  <div className="flex justify-between gap-4">
                     <dt className={product.featured ? "text-onbrand/70" : "text-mist"}>
                       Repayment
                     </dt>

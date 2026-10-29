@@ -44,18 +44,22 @@ function QueueRow({ token }: { token: string }) {
   if (!request) return null;
 
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 py-4">
-      <div className="min-w-0">
+    /* The status belongs with the tenancy it describes, so the action stays
+       alone in the right-hand column and cannot be wrapped under the row. */
+    <li className="flex items-start justify-between gap-4 py-4">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-ink">{request.property}</p>
         <p className="mt-0.5 text-[13px] text-mist">
           {request.tenantName} &middot; {money(request.weeklyRent)} a week &middot; bond{" "}
           {money(request.bond)}
         </p>
-        <p className="mt-1.5 text-[11px] uppercase tracking-[0.1em] text-clay">
-          Requested {formatDateShort(request.requestedAt)} &middot; {request.source}
+        <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-clay">
+          <span>
+            Requested {formatDateShort(request.requestedAt)} &middot; {request.source}
+          </span>
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 flex-col items-end gap-2">
         <Badge tone={STATUS_TONE[status]}>
           {status === "verified" ? (
             <Check className="h-3 w-3" aria-hidden />
