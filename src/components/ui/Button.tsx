@@ -57,6 +57,7 @@ export function ButtonLink({
   size = "md",
   className,
   target,
+  onClick,
   children,
 }: {
   href: string;
@@ -65,12 +66,15 @@ export function ButtonLink({
   className?: string;
   /** For the few links that genuinely belong in a second tab. */
   target?: "_blank";
+  /** For links that also have to record something on the way out. */
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
       target={target}
+      onClick={onClick}
       // Opener access is never wanted here, and older browsers do not imply it.
       rel={target === "_blank" ? "noopener noreferrer" : undefined}
       className={clsx(BASE, "tap", VARIANTS[variant], SIZES[size], className)}

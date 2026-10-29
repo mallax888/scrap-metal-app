@@ -22,6 +22,7 @@ import { Field, inputClass } from "@/components/ui/Field";
 import { bond as bondRules, plan, tenancy, TODAY } from "@/lib/data";
 import { formatDate, money, moneyExact } from "@/lib/format";
 import { APP_HOME } from "@/lib/nav";
+import { useLitchi } from "@/lib/store";
 import {
   buildTimeline,
   parseAccountNumber,
@@ -94,6 +95,7 @@ function StepPanel({
 
 export function SetupFlow() {
   const params = useSearchParams();
+  const { openAccount } = useLitchi();
 
   // Carried from the application, so the figures on this screen are the ones
   // the applicant was just quoted rather than a fresh set.
@@ -523,7 +525,16 @@ export function SetupFlow() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           ) : (
-            <Button onClick={() => setDone(true)} disabled={blocked}>
+            <Button
+              onClick={() => {
+                // Signing is the moment the account exists. Opening it here
+                // rather than on the link out means the screen behind it is
+                // already theirs by the time they press "Open your Litchi".
+                openAccount();
+                setDone(true);
+              }}
+              disabled={blocked}
+            >
               Sign and finish
               <Check className="h-4 w-4" aria-hidden />
             </Button>

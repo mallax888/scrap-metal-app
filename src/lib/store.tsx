@@ -115,6 +115,16 @@ export interface LitchiState {
   movedPayment: { from: string; to: string } | null;
   /** A payment that failed. The demo can trigger this to show what happens. */
   missedPayment: string | null;
+  /**
+   * Whether this visitor has reached the funded account the way a client
+   * would: applied, been approved, and signed. Nobody is a client on arrival,
+   * so it starts false and the signed-in screens stay behind it.
+   *
+   * Older saved state predates this field and reads as undefined, which is
+   * falsy — so anyone coming back is asked to come through the front door
+   * once, which is the right answer anyway.
+   */
+  accountOpened: boolean;
 }
 
 const INITIAL_STATE: LitchiState = {
@@ -127,6 +137,7 @@ const INITIAL_STATE: LitchiState = {
   waitlist: [],
   movedPayment: null,
   missedPayment: null,
+  accountOpened: false,
 };
 
 const store = createLocalStore<LitchiState>("litchi.state.v1", INITIAL_STATE);
@@ -546,6 +557,12 @@ export interface LitchiActions {
   catchUpPayment: () => void;
   /** Demo only: show what a failed payment looks like, or put it back. */
   setMissedPayment: (date: string | null) => void;
+  /**
+   * Open the signed-in account. Called where a client would really arrive —
+   * signing the agreement at the end of set-up — and by the two informed
+   * routes in that say what they are showing before they show it.
+   */
+  openAccount: () => void;
   reset: () => void;
 }
 
@@ -671,6 +688,10 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const openAccount = useCallback(() => {
+    store.setState((prev) => (prev.accountOpened ? prev : { ...prev, accountOpened: true }));
+  }, []);
+
   const reset = useCallback(() => store.setState(INITIAL_STATE), []);
 
   const value = useMemo<LitchiContextValue>(
@@ -688,6 +709,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       movePayment,
       catchUpPayment,
       setMissedPayment,
+      openAccount,
       reset,
     }),
     [
@@ -703,6 +725,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       toggleAutoTopUp,
       setRoundUpTo,
       toggleWaitlist,
+      openAccount,
       reset,
     ]
   );

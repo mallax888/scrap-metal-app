@@ -16,6 +16,7 @@ import {
   type MoveQuote,
 } from "@/lib/move";
 import { APPLICATION_STAGES, type VerificationRequest } from "@/lib/verification";
+import { useLitchi } from "@/lib/store";
 
 /**
  * The saved move plan.
@@ -56,6 +57,7 @@ export function MovePlan({
 }) {
   const { lines, coverage, split, total, rent, requested, financing, quote, partner, tenancy } =
     plan;
+  const { openAccount } = useLitchi();
 
   // The partner is assessing. Everything before that is done; the decision and
   // the drawdown are not ours to claim.
@@ -247,7 +249,9 @@ export function MovePlan({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <ButtonLink href="/my-tenancy" size="lg">
+        {/* The paragraph below already says this is another tenant's account
+            once a lender has said yes, so the gate would only repeat it. */}
+        <ButtonLink href="/my-tenancy" size="lg" onClick={openAccount}>
           See a funded account
           <ArrowRight className="h-4 w-4" aria-hidden />
         </ButtonLink>
