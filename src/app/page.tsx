@@ -179,7 +179,13 @@ export default function LandingPage() {
             one off the list.
           </p>
 
-          <ul className="mt-8 grid max-w-4xl gap-3 sm:grid-cols-2">
+          {/* Three across on a wide screen, not two inside a narrower cap.
+              This was the one grid on the page with a max-width of its own,
+              so it stopped short of the column every other section fills and
+              read as misaligned rather than as a deliberate measure. Six
+              items divide evenly three ways, which fills the column without
+              stretching each tile across half of it. */}
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {movingChecklist.map((item) => (
               <li
                 key={item.label}
