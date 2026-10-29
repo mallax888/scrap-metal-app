@@ -78,13 +78,35 @@ import { Field } from "@/components/ui/Field";
  *
  * Nothing here is submitted anywhere. The whole journey runs in the browser.
  */
-const STEPS = [
-  "Your tenancy",
-  "Check the details",
-  "Agency confirms",
-  "What it costs",
-  "How you'll cover it",
-] as const;
+/*
+ * Four steps, one rail.
+ *
+ * This was five, beside a three-step eligibility check and a four-step set-up
+ * at two other URLs — twelve steps over three rails, two of which were both
+ * called "Your tenancy". Reading the agreement and checking what we read were
+ * never two questions; they were one question and its answer, so they are one
+ * step.
+ */
+const STEPS = ["Your move", "Agency confirms", "What it costs", "How you'll cover it"] as const;
+
+/** The step that belongs to the property manager, and to nobody still looking. */
+const AGENCY_STEP = 1;
+
+/** The first question, and the only one whose answer changes the rest. */
+const FORK_CHOICES = [
+  {
+    key: "signed" as const,
+    title: "I\u2019ve signed",
+    body: "Upload the agreement. We read the rent, the bond and the dates off it, your agency confirms them, and the figures are exact.",
+    tag: "Exact \u00b7 can be funded",
+  },
+  {
+    key: "looking" as const,
+    title: "Still looking",
+    body: "Tell us the rent you\u2019re seeing. You get the number now and we keep the plan \u2014 finish it when you\u2019ve signed.",
+    tag: "Estimate \u00b7 no credit check",
+  },
+];
 
 const CONFIDENCE_TONE: Record<Confidence, string> = {
   high: "text-moss",
@@ -187,6 +209,17 @@ export function MoveFlow() {
   const verification = useVerificationStatus(token);
 
   const [step, setStep] = useState(0);
+
+  /*
+   * Where they are up to, which decides what we can honestly tell them.
+   *
+   * The front page asks a question anyone house-hunting has, and this flow
+   * used to open by demanding a signed tenancy agreement — so the page that
+   * won someone's attention and the first gate of the funnel were aimed at
+   * two different people, and the larger group hit a wall on arrival. Asking
+   * outright costs one tap and makes both answers legitimate.
+   */
+  const [mode, setMode] = useState<"signed" | "looking" | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -259,6 +292,7 @@ export function MoveFlow() {
   function reset() {
     setSubmitted(false);
     setStep(0);
+    setMode(null);
     setFileName(null);
     setConfirmed(false);
     setConsent(false);
@@ -338,11 +372,28 @@ export function MoveFlow() {
    * the answer turned out to be one nobody needs to borrow for.
    */
   const blocked =
-    (step === 0 && !extracted) ||
-    (step === 1 && (!confirmed || rent < 100)) ||
-    (step === 2 && verification !== "verified") ||
-    (step === 3 && total <= 0) ||
-    (step === 4 && financing && (!consent || belowMinimum));
+    // Step one asks a different thing of each answer: a document and a tick
+    // from someone who has signed, a rent from someone who has not.
+    (step === 0 && mode === null) ||
+    (step === 0 && mode === "signed" && (!extracted || !confirmed || rent < 100)) ||
+    (step === 0 && mode === "looking" && rent < 100) ||
+    (step === AGENCY_STEP && verification !== "verified") ||
+    (step === 2 && total <= 0) ||
+    (step === 3 && financing && (!consent || belowMinimum));
+
+  /*
+   * Someone still looking has no agency to ask and no tenancy to confirm, so
+   * that step is not theirs — it is stepped over rather than shown as
+   * something they have failed to do. The panel indices stay fixed either
+   * way; renumbering them by mode is how a flow ends up rendering the wrong
+   * screen for a state nobody tested.
+   */
+  const skipsAgency = mode === "looking";
+  const visibleSteps = skipsAgency ? STEPS.filter((_, i) => i !== AGENCY_STEP) : [...STEPS];
+  const positionOf = (index: number) => (skipsAgency && index > AGENCY_STEP ? index - 1 : index);
+  const goNext = () => setStep((s) => (skipsAgency && s === AGENCY_STEP - 1 ? s + 2 : s + 1));
+  const goBack = () =>
+    setStep((s) => Math.max(0, skipsAgency && s === AGENCY_STEP + 1 ? s - 2 : s - 1));
 
   function readDocument(name: string) {
     setFileName(null);
@@ -366,7 +417,7 @@ export function MoveFlow() {
         <div ref={stepTop} className="scroll-mt-4" />
         <Heading
           title="Your move plan"
-          body={`Everything for ${request?.property ?? "your move"} in one place — what it costs, who is covering each line, and the tenancy behind it.`}
+          body={`Everything for ${request?.property ?? "your move"} in one place \u2014 what it costs, who is covering each line, and the tenancy behind it.`}
         />
         <MovePlan
           plan={{
@@ -393,22 +444,35 @@ export function MoveFlow() {
   return (
     <div>
       <Heading
-        title={"You\u2019ve got the place. Let\u2019s work out the move."}
-        body="We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover — up to what the move actually costs, never more."
+        /* The heading has to survive the answer to the fork. "You've got the
+           place" and "your agency confirms it" are both false for someone
+           still looking, and telling them about a tenancy they do not have is
+           how the front page and the first step came to disagree in the first
+           place. */
+        title={
+          mode === "looking"
+            ? "What will your move cost?"
+            : "You\u2019ve got the place. Let\u2019s work out the move."
+        }
+        body={
+          mode === "looking"
+            ? "A rent is enough to price the whole thing \u2014 bond, rent in advance, the truck, the clean. Nothing is checked and nothing is applied for until you have signed somewhere."
+            : "We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover \u2014 up to what the move actually costs, never more."
+        }
       />
       {/* What each step scrolls to: the progress list and the step beneath it,
           so you land on where you are as well as on what is being asked. */}
       <div ref={stepTop} className="scroll-mt-4" />
       <ol className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
-        {STEPS.map((label, index) => (
+        {visibleSteps.map((label, index) => (
           <li key={label} className="flex items-center gap-2">
             {index > 0 ? <span className="text-sand">/</span> : null}
             <span
               className={clsx(
-                index === step ? "font-semibold text-ink" : "text-mist",
-                index < step && "text-moss"
+                index === positionOf(step) ? "font-semibold text-ink" : "text-mist",
+                index < positionOf(step) && "text-moss"
               )}
-              aria-current={index === step ? "step" : undefined}
+              aria-current={index === positionOf(step) ? "step" : undefined}
             >
               {label}
             </span>
@@ -416,8 +480,118 @@ export function MoveFlow() {
         ))}
       </ol>
 
+      {/*
+       * The fork, above the card, because it decides what the card holds.
+       *
+       * Both answers are real. Someone who has signed gets exact figures off
+       * their agreement and can be funded; someone still looking gets a
+       * costing and nothing is checked. What used to happen to the second
+       * group was a wall on the first screen.
+       */}
+      {step === 0 ? (
+        <Card className="mt-5">
+          <h2 className="text-[19px] font-semibold tracking-[-0.015em] text-ink">
+            Where are you up to?
+          </h2>
+          <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-mist">
+            It changes what we can tell you. Both answers are fine, and you can start on one and
+            finish on the other.
+          </p>
+          {/* Said here rather than inside a branch: someone who answered the
+              front page should see their number acknowledged on arrival, not
+              after they have made another choice. */}
+          {estimatedOn ? (
+            <p className="numeric mt-3 max-w-[52ch] text-sm leading-relaxed text-bark">
+              You costed a move on{" "}
+              <strong className="font-semibold text-ink">{money(estimatedOn)} a week</strong>
+              . We&rsquo;ll carry that through whichever you pick.
+            </p>
+          ) : null}
+          <div className="mt-6 grid gap-3.5 sm:grid-cols-2">
+            {FORK_CHOICES.map((choice) => (
+              <button
+                key={choice.key}
+                type="button"
+                aria-pressed={mode === choice.key}
+                onClick={() => {
+                  setMode(choice.key);
+                  // Carrying it through means putting it in the field, not
+                  // just mentioning it. The signed branch gets its rent off
+                  // the agreement instead, so it is left alone.
+                  if (choice.key === "looking" && estimatedOn && rent === 0) setRent(estimatedOn);
+                }}
+                className={clsx(
+                  "tap flex h-full flex-col items-start gap-2 rounded-card border-[1.5px] p-5 text-left transition-colors",
+                  mode === choice.key
+                    ? "border-bark bg-cream/60"
+                    : "border-sand bg-paper hover:border-clay"
+                )}
+              >
+                <span className="text-[16px] font-semibold text-ink">{choice.title}</span>
+                <span className="text-[13px] leading-relaxed text-mist">{choice.body}</span>
+                <Badge tone="cream">{choice.tag}</Badge>
+              </button>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {/*
+       * Still looking: a costing, and an honest account of what it is not.
+       *
+       * No document, no agency and no credit check, so no application either.
+       * The figures come off the same Residential Tenancies Act caps the rest
+       * of the flow uses, which is why they still agree with it later.
+       */}
+      {step === 0 && mode === "looking" ? (
+        <Card className="mt-5">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="Rent per week" hint="Of the place you&rsquo;re looking at.">
+              <MoneyInput value={rent} onChange={setRent} label="Rent per week" />
+            </Field>
+            <Field label="Size" hint="Sets the movers and the clean.">
+              <div className="flex flex-wrap gap-2">
+                {PROPERTY_SIZES.map((option) => (
+                  <ChoiceChip
+                    key={option.value}
+                    pressed={size === option.value}
+                    onClick={() => setSize(option.value)}
+                  >
+                    {option.label}
+                  </ChoiceChip>
+                ))}
+              </div>
+            </Field>
+          </div>
+
+          {rent >= 100 ? (
+            <div className="mt-7 rounded-card bg-hero px-6 py-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-onbrand/70">
+                Your move, roughly
+              </p>
+              <p className="numeric mt-2 text-[32px] font-semibold leading-none tracking-[-0.025em] text-onbrand">
+                {money(total)}
+              </p>
+              <p className="numeric mt-3 max-w-[48ch] text-[13.5px] leading-relaxed text-onbrand/80">
+                {covered
+                  .map((line) => `${line.label.toLowerCase()} ${money(line.amount)}`)
+                  .join(" \u00b7 ")}
+                . An estimate from the rent you typed, using the Residential Tenancies Act caps.
+                Not a credit offer.
+              </p>
+            </div>
+          ) : null}
+
+          <p className="mt-5 text-[13px] leading-relaxed text-clay">
+            Nothing is checked and no credit file is touched until you have a signed tenancy.
+            We&rsquo;ll keep this costing so you don&rsquo;t type it twice.
+          </p>
+        </Card>
+      ) : null}
+
+      {step > 0 || mode === "signed" ? (
       <Card className="mt-5">
-        {step === 0 ? (
+        {step === 0 && mode === "signed" ? (
           <StepPanel
             icon={FileText}
             title="Start with the place you've just got"
@@ -492,7 +666,7 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        {step === 1 && extracted ? (
+        {step === 0 && mode === "signed" && extracted ? (
           <StepPanel
             icon={ClipboardList}
             title="Check what we read"
@@ -585,7 +759,7 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        {step === 2 ? (
+        {step === AGENCY_STEP ? (
           <StepPanel
             icon={ShieldCheck}
             title="Your agency confirms the tenancy"
@@ -686,7 +860,7 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        {step === 3 ? (
+        {step === 2 ? (
           <StepPanel
             icon={Building2}
             title="What this move actually costs"
@@ -773,7 +947,7 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        {step === 4 ? (
+        {step === 3 ? (
           <StepPanel
             icon={Wallet}
             title="How you'll cover it"
@@ -1042,28 +1216,32 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-sand/70 pt-6">
-          <Button
-            variant="ghost"
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Back
-          </Button>
-          {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} disabled={blocked}>
-              Continue
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
-          ) : (
-            <Button onClick={() => setSubmitted(true)} disabled={blocked}>
-              {financing ? "Save plan and apply" : "Save my move plan"}
-              <Send className="h-4 w-4" aria-hidden />
-            </Button>
-          )}
-        </div>
       </Card>
+      ) : null}
+
+      {/* The footer belongs to the flow, not to the card: on the first step
+          it is the fork and its branch that carry the content, and a card
+          holding nothing but two buttons is an empty box. */}
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-sand/70 pt-6">
+        <Button variant="ghost" onClick={goBack} disabled={step === 0}>
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back
+        </Button>
+        {step < STEPS.length - 1 ? (
+          <Button onClick={goNext} disabled={blocked}>
+            Continue
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Button>
+        ) : (
+          <Button onClick={() => setSubmitted(true)} disabled={blocked}>
+            {/* Someone still looking is not applying for anything — there is
+                no tenancy to lend against yet — so the button saves the
+                costing and says so. */}
+            {skipsAgency ? "Save this costing" : financing ? "Save plan and apply" : "Save my move plan"}
+            <Send className="h-4 w-4" aria-hidden />
+          </Button>
+        )}
+      </div>
 
       <p className="mt-5 text-[13px] leading-relaxed text-clay">
         Sample tenancy, sample figures, today&rsquo;s date fixed at {formatDate(TODAY)}. Nothing
