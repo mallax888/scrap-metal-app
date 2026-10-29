@@ -148,17 +148,8 @@ export default function LandingPage() {
           <Wordmark className="text-[21px]" />
         </span>
         <span className="flex items-center gap-2">
-          {/* Two buttons overflow a 390px header, so the secondary one steps
-              aside on a phone — the eligibility check is still in the body of
-              the page. Wrapped rather than given a "hidden" class: the button's
-              own inline-flex is also a display utility, and which of the two
-              wins is decided by their order in the stylesheet, not by the order
-              they appear in the class attribute. */}
-          <span className="hidden sm:block">
-            <ButtonLink href="/cost-my-move" size="sm" variant="secondary">
-              Cost my move
-            </ButtonLink>
-          </span>
+          {/* One button. "Cost my move" sat here as well as on the cover
+              itself, two inches below — the same door twice. */}
           <ButtonLink href="/tour" size="sm">
             Take the tour
             <ArrowRight className="h-4 w-4" aria-hidden />
