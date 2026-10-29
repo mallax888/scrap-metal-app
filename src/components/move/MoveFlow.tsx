@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   Check,
   ClipboardList,
   Clock,
@@ -54,6 +53,7 @@ import {
 } from "@/lib/verification";
 import { useVerificationStatus } from "@/lib/verification-store";
 import { Field } from "@/components/ui/Field";
+import { Disclosure } from "@/components/ui/Disclosure";
 
 /**
  * Litchi Move: from "I got the place" to a costed, verified move plan.
@@ -87,7 +87,7 @@ import { Field } from "@/components/ui/Field";
  * never two questions; they were one question and its answer, so they are one
  * step.
  */
-const STEPS = ["Your move", "Agency confirms", "What it costs", "How you'll cover it"] as const;
+const STEPS = ["Your move", "Agency confirms", "What we cover"] as const;
 
 /** The step that belongs to the property manager, and to nobody still looking. */
 const AGENCY_STEP = 1;
@@ -363,6 +363,75 @@ export function MoveFlow() {
      bond is the only thing being financed. */
   const alternative = cheaperAlternative(lines, coverage, quote);
 
+  /*
+   * The question, reduced to its three real answers.
+   *
+   * This step used to be two: nine line items with nine amount fields, and
+   * then up to three coverage buttons on each of them. Everything in it was
+   * true and almost none of it was the decision — which is "how much of this
+   * should Litchi carry", and that has three answers. The nine lines are
+   * still here, behind a heading, for the minority who want to argue with
+   * them; what they are not is the first thing asked.
+   *
+   * Each option is priced by running the real split and the real quote over
+   * a hypothetical coverage map, so the figure on the button is the figure
+   * you get by pressing it — including the cheaper product when the bond is
+   * the only thing financed.
+   */
+  const priceOf = (pick: (line: MoveCostLine) => Coverage) => {
+    const map: Record<string, Coverage> = {};
+    covered.forEach((line) => {
+      map[line.id] = pick(line);
+    });
+    const hypothetical = coverageSplit(lines, map);
+    const amount = Math.min(hypothetical.financed, partner.maxAdvance);
+    const q = quoteMove(amount, termWeeks, partner);
+    const alt = cheaperAlternative(lines, map, q);
+    return {
+      map,
+      amount,
+      weekly: amount > 0 ? (alt ? alt.weekly : q.weekly) : 0,
+      product: alt ? alt.name : partner.name,
+    };
+  };
+
+  const COVER_ALL = "all";
+  const COVER_BOND = "bond";
+  const COVER_NONE = "none";
+
+  const options = useMemo(
+    () => [
+      {
+        key: COVER_ALL,
+        title: "All of it",
+        body: covered.map((line) => line.label.toLowerCase()).join(", "),
+        ...priceOf(() => "litchi"),
+      },
+      {
+        key: COVER_BOND,
+        title: "Just the bond",
+        body: "The cheaper product: a flat fee and no interest, because a bond comes back to you at the end of the tenancy.",
+        ...priceOf((line) => (line.id === "bond" ? "litchi" : "self")),
+      },
+      {
+        key: COVER_NONE,
+        title: "Nothing yet",
+        body: "Keep the costing and decide later. Your plan is saved either way.",
+        ...priceOf(() => "self"),
+      },
+    ],
+    // priceOf closes over everything that moves the figures.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lines, covered, coverage, termWeeks, partner]
+  );
+
+  /** Which of the three the current per-line choices actually amount to. */
+  const chosen = options.find((option) =>
+    covered.every(
+      (line) => (coverage[line.id] ?? defaultCoverage(line)) === option.map[line.id]
+    )
+  );
+
   const uncertain = extracted ? lowConfidenceFields(extracted) : [];
 
   /*
@@ -378,8 +447,9 @@ export function MoveFlow() {
     (step === 0 && mode === "signed" && (!extracted || !confirmed || rent < 100)) ||
     (step === 0 && mode === "looking" && rent < 100) ||
     (step === AGENCY_STEP && verification !== "verified") ||
-    (step === 2 && total <= 0) ||
-    (step === 3 && financing && (!consent || belowMinimum));
+    // One step now, so it carries both of what used to gate two: a move
+    // worth costing, and consent to the quote if any of it is being financed.
+    (step === 2 && (total <= 0 || (financing && (!consent || belowMinimum))));
 
   /*
    * Someone still looking has no agency to ask and no tenancy to confirm, so
@@ -862,137 +932,177 @@ export function MoveFlow() {
 
         {step === 2 ? (
           <StepPanel
-            icon={Building2}
-            title="What this move actually costs"
-            body="Bond and rent in advance come off your verified rent, so those two are facts. The rest are the jobs nobody covers — switch off anything you've already sorted."
-          >
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[13px] font-semibold text-ink">How big is the place?</p>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Property size">
-                {PROPERTY_SIZES.map((option) => (
-                  <ChoiceChip
-                    key={option.value}
-                    pressed={size === option.value}
-                    onClick={() => setSize(option.value)}
-                  >
-                    {option.label}
-                  </ChoiceChip>
-                ))}
-              </div>
-            </div>
-
-            <ul className="mt-6 divide-y divide-sand/70">
-              {lines.map((line) => (
-                <li key={line.id} className="flex flex-wrap items-start gap-x-4 gap-y-3 py-4">
-                  <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={line.selected}
-                      onChange={(e) =>
-                        setToggles((prev) => ({ ...prev, [line.id]: e.target.checked }))
-                      }
-                      className="mt-1 h-4 w-4 shrink-0 accent-[var(--bark)]"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-ink">{line.label}</span>
-                      <span className="mt-0.5 block text-[13px] leading-relaxed text-mist">
-                        {line.detail}
-                      </span>
-                      <span className="mt-1.5 flex flex-wrap items-center gap-2">
-                        <Badge tone={line.payee === "tenant" ? "amber" : "cream"}>
-                          {line.payee === "tenant"
-                            ? "Paid to you"
-                            : `Direct to ${line.payeeName}`}
-                        </Badge>
-                        {line.capNote ? (
-                          <span className="text-[11px] leading-relaxed text-clay">
-                            {line.capNote}
-                          </span>
-                        ) : null}
-                      </span>
-                    </span>
-                  </label>
-                  <MoneyInput
-                    value={line.amount}
-                    max={line.max}
-                    disabled={!line.selected}
-                    label={`${line.label} amount`}
-                    onChange={(next) => setAmounts((prev) => ({ ...prev, [line.id]: next }))}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-6 flex flex-wrap items-baseline justify-between gap-4 rounded-tile bg-cream px-5 py-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
-                  Estimated move cost
-                </p>
-                <p className="mt-1 text-[13px] text-bark">
-                  {percent(direct)} of it never touches your account.
-                </p>
-              </div>
-              <p className="numeric text-[30px] font-semibold leading-none tracking-[-0.02em] text-ink">
-                {money(total)}
-              </p>
-            </div>
-
-            {total > 0 && total < partner.minAdvance ? (
-              <p className="mt-4 text-[13px] leading-relaxed text-litchi">
-                The smallest facility {partner.name} writes is {money(partner.minAdvance)}. Add
-                the lines you still need covered, or pay this one outright &mdash; for an amount
-                this size that is almost always the better answer.
-              </p>
-            ) : null}
-          </StepPanel>
-        ) : null}
-
-        {step === 3 ? (
-          <StepPanel
             icon={Wallet}
-            title="How you'll cover it"
-            body="Line by line. Most people pay for most of it themselves — the question is which parts you can't, and those are the only ones Litchi needs to be involved in."
+            title="How much of it should Litchi cover?"
+            body="Capped at what the move actually costs — we can never advance you more than that, whichever you pick."
           >
-            <ul className="mt-7 divide-y divide-sand/70">
-              {covered.map((line) => {
-                const how = coverage[line.id] ?? defaultCoverage(line);
-                const options: Coverage[] = canBook(line)
-                  ? ["self", "book", "litchi"]
-                  : ["self", "litchi"];
-                return (
-                  <li key={line.id} className="py-4">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <p className="text-sm font-semibold text-ink">{line.label}</p>
-                      <p className="numeric text-sm font-semibold text-ink">
-                        {money(line.amount)}
-                      </p>
-                    </div>
-                    <div
-                      className="mt-3 flex flex-wrap gap-2"
-                      role="group"
-                      aria-label={`How to cover ${line.label}`}
+            <div className="mt-7 grid gap-3">
+              {options.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  aria-pressed={chosen?.key === option.key}
+                  onClick={() => setCoverage(option.map)}
+                  className={clsx(
+                    "tap flex flex-col items-start justify-between gap-4 rounded-card border-[1.5px] p-5 text-left transition-colors sm:flex-row sm:items-start",
+                    chosen?.key === option.key
+                      ? "border-bark bg-cream/60"
+                      : "border-sand bg-paper hover:border-clay"
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-[15.5px] font-semibold text-ink">
+                      {option.title}
+                    </span>
+                    <span className="mt-1.5 block max-w-[44ch] text-[13px] leading-relaxed text-mist first-letter:uppercase">
+                      {option.body}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-left sm:text-right">
+                    <span className="numeric block text-[19px] font-semibold text-ink">
+                      {money(option.amount)}
+                    </span>
+                    <span className="numeric mt-0.5 block text-[12px] text-mist">
+                      {option.amount > 0 ? `${moneyExact(option.weekly)} / wk` : "\u00a0"}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/*
+             * The nine lines, behind a heading.
+             *
+             * They are the whole of what used to be a step of its own, and
+             * they still matter — someone who has already booked a truck
+             * needs to take it off. But reading nine rows is not how most
+             * people answer "how much should you cover", so it is not what
+             * they are shown first.
+             */}
+            <Disclosure
+              className="mt-7"
+              title={`Change what\u2019s included \u2014 ${covered.length} lines, ${money(total)}`}
+            >
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[13px] font-semibold text-ink">How big is the place?</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Property size">
+                  {PROPERTY_SIZES.map((option) => (
+                    <ChoiceChip
+                      key={option.value}
+                      pressed={size === option.value}
+                      onClick={() => setSize(option.value)}
                     >
-                      {options.map((option) => (
-                        <ChoiceChip
-                          key={option}
-                          pressed={how === option}
-                          onClick={() => setCoverage((prev) => ({ ...prev, [line.id]: option }))}
-                        >
-                          {COVERAGE_LABELS[option]}
-                        </ChoiceChip>
-                      ))}
-                    </div>
-                    {how !== "self" ? (
-                      <p className="mt-2 text-[12px] leading-relaxed text-clay">
-                        {how === "book"
-                          ? `Litchi books ${line.payeeName} and you pay them on the day. Nothing is added to their price.`
-                          : `Paid direct to ${line.payeeName} on your move date, out of the facility.`}
-                      </p>
-                    ) : null}
+                      {option.label}
+                    </ChoiceChip>
+                  ))}
+                </div>
+              </div>
+
+              <ul className="mt-6 divide-y divide-sand/70">
+                {lines.map((line) => (
+                  <li key={line.id} className="flex flex-wrap items-start gap-x-4 gap-y-3 py-4">
+                    <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={line.selected}
+                        onChange={(e) =>
+                          setToggles((prev) => ({ ...prev, [line.id]: e.target.checked }))
+                        }
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--bark)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-ink">{line.label}</span>
+                        <span className="mt-0.5 block text-[13px] leading-relaxed text-mist">
+                          {line.detail}
+                        </span>
+                        <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <Badge tone={line.payee === "tenant" ? "amber" : "cream"}>
+                            {line.payee === "tenant"
+                              ? "Paid to you"
+                              : `Direct to ${line.payeeName}`}
+                          </Badge>
+                          {line.capNote ? (
+                            <span className="text-[11px] leading-relaxed text-clay">
+                              {line.capNote}
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                    </label>
+                    <MoneyInput
+                      value={line.amount}
+                      max={line.max}
+                      disabled={!line.selected}
+                      label={`${line.label} amount`}
+                      onChange={(next) => setAmounts((prev) => ({ ...prev, [line.id]: next }))}
+                    />
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex flex-wrap items-baseline justify-between gap-4 rounded-tile bg-cream px-5 py-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
+                    Estimated move cost
+                  </p>
+                  <p className="mt-1 text-[13px] text-bark">
+                    {percent(direct)} of it never touches your account.
+                  </p>
+                </div>
+                <p className="numeric text-[30px] font-semibold leading-none tracking-[-0.02em] text-ink">
+                  {money(total)}
+                </p>
+              </div>
+
+              {total > 0 && total < partner.minAdvance ? (
+                <p className="mt-4 text-[13px] leading-relaxed text-litchi">
+                  The smallest facility {partner.name} writes is {money(partner.minAdvance)}. Add
+                  the lines you still need covered, or pay this one outright &mdash; for an amount
+                  this size that is almost always the better answer.
+                </p>
+              ) : null}
+
+              <ul className="mt-7 divide-y divide-sand/70">
+                {covered.map((line) => {
+                  const how = coverage[line.id] ?? defaultCoverage(line);
+                  const options: Coverage[] = canBook(line)
+                    ? ["self", "book", "litchi"]
+                    : ["self", "litchi"];
+                  return (
+                    <li key={line.id} className="py-4">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <p className="text-sm font-semibold text-ink">{line.label}</p>
+                        <p className="numeric text-sm font-semibold text-ink">
+                          {money(line.amount)}
+                        </p>
+                      </div>
+                      <div
+                        className="mt-3 flex flex-wrap gap-2"
+                        role="group"
+                        aria-label={`How to cover ${line.label}`}
+                      >
+                        {options.map((option) => (
+                          <ChoiceChip
+                            key={option}
+                            pressed={how === option}
+                            onClick={() => setCoverage((prev) => ({ ...prev, [line.id]: option }))}
+                          >
+                            {COVERAGE_LABELS[option]}
+                          </ChoiceChip>
+                        ))}
+                      </div>
+                      {how !== "self" ? (
+                        <p className="mt-2 text-[12px] leading-relaxed text-clay">
+                          {how === "book"
+                            ? `Litchi books ${line.payeeName} and you pay them on the day. Nothing is added to their price.`
+                            : `Paid direct to ${line.payeeName} on your move date, out of the facility.`}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </Disclosure>
 
             {/* The three totals, always visible, so the trade is on screen
                 rather than one step away. */}
