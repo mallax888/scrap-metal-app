@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CreditCard, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
-import { Card, CardLabel, CardTitle } from "@/components/ui/Card";
+import { Card, CardLabel } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PiggyBadge } from "@/components/brand/PiggyMark";
 import { movingFund, roundUps, weeklyPurchases } from "@/lib/data";
@@ -33,7 +33,7 @@ import { useLitchi } from "@/lib/store";
 const DISMISS_AFTER_MS = 6000;
 
 export function RoundUpMoment() {
-  const { state, derived } = useLitchi();
+  const { state, derived, setRoundUpTo } = useLitchi();
   const [index, setIndex] = useState(0);
   /** The purchase the visible notification is about, captured when it fired. */
   const [shown, setShown] = useState<{ merchant: string; amount: number; up: number } | null>(
@@ -52,6 +52,8 @@ export function RoundUpMoment() {
   const up = purchase ? roundUpFor(purchase.amount, rounding) : 0;
 
   const remaining = Math.max(0, derived.fundRemaining - collected);
+  /** What the notification shows: the last one that fired, or the next one up. */
+  const display = shown ?? { merchant: purchase?.merchant ?? "", amount: purchase?.amount ?? 0, up };
 
   useEffect(() => {
     return () => {
@@ -74,32 +76,38 @@ export function RoundUpMoment() {
     setIndex(0);
   }, []);
 
-  if (!state.roundUpTo || !purchase) return null;
+  /*
+   * The card stays when round-ups are off.
+   *
+   * Hiding it took the rounding chips with it — and they were the only way
+   * back on, which left "off" as a one-way door. It also loses the better
+   * argument: someone who has not switched this on is exactly who should see
+   * what arrives when they do.
+   */
+  const off = !state.roundUpTo;
+  if (!purchase) return null;
 
   return (
     <Card tone="ink" className="overflow-hidden">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <CardLabel className="text-onbrand/60">The moment it happens</CardLabel>
-          <CardTitle className="mt-2.5 text-onbrand">
-            You get told, a second after you tap.
-          </CardTitle>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-onbrand/70">
-            Nobody opens an app to watch a fund grow. {money(rounding)} rounding, your real
-            spending, and the distance to the goal closing in front of you.
-          </p>
-        </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-onbrand/15 text-onbrand">
-          <Bell className="h-[18px] w-[18px]" aria-hidden />
-        </span>
+      <div className="flex items-center justify-between gap-4">
+        <CardLabel className="text-onbrand/60">The moment it happens</CardLabel>
+        <Bell className="h-[18px] w-[18px] shrink-0 text-onbrand/60" aria-hidden />
       </div>
 
       {/* The notification, drawn as it would arrive rather than as a card. */}
-      <div className="mt-7 flex justify-center">
+      <div className="mt-5 flex justify-center">
         <div
           className={clsx(
             "w-full max-w-sm rounded-[22px] border border-onbrand/10 bg-onbrand/[0.07] p-3.5 backdrop-blur-sm transition-all duration-500",
-            shown ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
+            // At rest it shows the next purchase as an example rather than an
+            // empty hole: a card whose whole argument is "look what arrives"
+            // should not open with nothing to look at.
+            //
+            // Marked by the word "example" rather than by dimming it. Fading
+            // the container multiplied down the label and the timestamp with
+            // it and put both under 4.5:1 — the same way the cover's dimmed
+            // sample panel failed.
+            shown && "translate-y-0"
           )}
           // The live region announces each arrival, which is the whole point of
           // a notification and the one thing a purely visual mock would lose.
@@ -113,19 +121,15 @@ export function RoundUpMoment() {
                 <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-onbrand/60">
                   Litchi
                 </span>
-                <span className="text-[11px] text-onbrand/50">now</span>
+                <span className="text-[11px] text-onbrand/50">{shown ? "now" : "example"}</span>
               </div>
-              {shown ? (
-                <>
-                  <p className="numeric mt-1 text-[15px] font-semibold leading-snug text-onbrand">
-                    +{moneyExact(shown.up)} to your move
-                  </p>
-                  <p className="numeric mt-1 text-[13px] leading-relaxed text-onbrand/70">
-                    {shown.merchant} {moneyExact(shown.amount)} &rarr;{" "}
-                    {moneyExact(shown.amount + shown.up)}. {money(remaining)} to go.
-                  </p>
-                </>
-              ) : null}
+              <p className="numeric mt-1 text-[15px] font-semibold leading-snug text-onbrand">
+                +{moneyExact(display.up)} to your move
+              </p>
+              <p className="numeric mt-1 text-[13px] leading-relaxed text-onbrand/70">
+                {display.merchant} {moneyExact(display.amount)} &rarr;{" "}
+                {moneyExact(display.amount + display.up)}. {money(remaining)} to go.
+              </p>
             </div>
           </div>
         </div>
@@ -134,7 +138,9 @@ export function RoundUpMoment() {
       <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-onbrand/15 pt-5">
         <div className="min-w-0">
           <p className="numeric text-[13px] text-onbrand/70">
-            {collected > 0 ? (
+            {off ? (
+              <>Round-ups are off. Pick a rounding to see what arrives.</>
+            ) : collected > 0 ? (
               <>
                 <span className="font-semibold text-onbrand">{moneyExact(collected)}</span>{" "}
                 added in this run &middot; {money(remaining)} to go of {money(movingFund.goal)}
@@ -148,10 +154,30 @@ export function RoundUpMoment() {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2.5">
-          <Button variant="onHero" onClick={tap}>
+          <Button variant="onHero" onClick={tap} disabled={off}>
             <CreditCard className="h-4 w-4" aria-hidden />
             Tap your card
           </Button>
+          {/* The setting sits with the thing it changes rather than in a card
+              below it: the amounts in the notification are what it controls. */}
+          <span className="flex gap-1.5" role="group" aria-label="Round up to the nearest">
+            {roundUps.options.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={state.roundUpTo === option}
+                onClick={() => setRoundUpTo(option)}
+                className={clsx(
+                  "tap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                  state.roundUpTo === option
+                    ? "bg-onbrand text-hero"
+                    : "border border-onbrand/25 text-onbrand/70 hover:text-onbrand"
+                )}
+              >
+                {money(option)}
+              </button>
+            ))}
+          </span>
           {collected > 0 ? (
             <Button variant="onHeroGhost" onClick={reset}>
               <RotateCcw className="h-4 w-4" aria-hidden />

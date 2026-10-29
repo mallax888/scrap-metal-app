@@ -35,7 +35,10 @@ export function BottomNav({ onMore }: { onMore: () => void }) {
     <nav
       aria-label="Main"
       className={clsx(
-        "fixed inset-x-0 bottom-0 z-30 border-t border-sand/80 bg-canvas/95 backdrop-blur-md lg:hidden",
+        // Opaque, not frosted. A translucent bar takes its effective contrast
+        // from whatever scrolls under it, and the dark notification card on the
+        // Moving Fund dragged the active tab's coral below 4.5:1.
+        "fixed inset-x-0 bottom-0 z-30 border-t border-sand/80 bg-canvas lg:hidden",
         // Clears the home indicator on a phone that has one.
         "pb-[env(safe-area-inset-bottom)]"
       )}
