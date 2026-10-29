@@ -52,6 +52,7 @@ import {
   type Confidence,
 } from "@/lib/verification";
 import { useVerificationStatus } from "@/lib/verification-store";
+import { Field } from "@/components/ui/Field";
 
 /**
  * Litchi Move: from "I got the place" to a costed, verified move plan.
@@ -135,24 +136,6 @@ function StepPanel({
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-mist">{body}</p>
       {children}
     </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="text-[13px] font-semibold text-ink">{label}</span>
-      {hint ? <span className="mt-0.5 block text-xs leading-relaxed text-mist">{hint}</span> : null}
-      <span className="mt-2 block">{children}</span>
-    </label>
   );
 }
 

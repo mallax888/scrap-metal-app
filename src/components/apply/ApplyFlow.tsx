@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Info, Minus, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Card } from "@/components/ui/Card";
+import { Field, inputClass } from "@/components/ui/Field";
 import { StatGrid } from "@/components/ui/StatGrid";
 import { ButtonLink } from "@/components/ui/Button";
 import { Button } from "@/components/ui/Button";
@@ -42,27 +43,6 @@ const DEFAULTS: Application = {
   employment: "permanent",
   monthsInRole: 18,
 };
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="text-[13px] font-semibold text-ink">{label}</span>
-      {hint ? <span className="mt-0.5 block text-xs text-mist">{hint}</span> : null}
-      <span className="mt-2 block">{children}</span>
-    </label>
-  );
-}
-
-const inputClass =
-  "tap w-full rounded-tile border border-sand bg-paper px-4 text-[15px] text-ink outline-none transition-colors focus:border-clay";
 
 export function ApplyFlow() {
   const [step, setStep] = useState(0);

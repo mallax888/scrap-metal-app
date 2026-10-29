@@ -18,6 +18,7 @@ import { clsx } from "clsx";
 import { Card } from "@/components/ui/Card";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Field, inputClass } from "@/components/ui/Field";
 import { bond as bondRules, plan, tenancy, TODAY } from "@/lib/data";
 import { formatDate, money, moneyExact } from "@/lib/format";
 import { APP_HOME } from "@/lib/nav";
@@ -67,30 +68,6 @@ const ID_TYPES = [
   { value: "passport", label: "Passport" },
   { value: "kiwiaccess", label: "Kiwi Access card" },
 ] as const;
-
-function Field({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="text-[13px] font-semibold text-ink">{label}</span>
-      {hint ? <span className="mt-0.5 block text-xs leading-relaxed text-mist">{hint}</span> : null}
-      <span className="mt-2 block">{children}</span>
-      {error ? <span className="mt-1.5 block text-xs font-medium text-litchi">{error}</span> : null}
-    </label>
-  );
-}
-
-const inputClass =
-  "tap w-full rounded-tile border border-sand bg-paper px-4 text-[15px] text-ink outline-none transition-colors focus:border-clay";
 
 function StepPanel({
   icon: Icon,
