@@ -31,6 +31,13 @@ export function nextBusinessDay(iso: string): string {
   return date;
 }
 
+/** The documents an applicant can verify with, under standard CDD. */
+export const ID_TYPES = [
+  { value: "licence", label: "NZ driver licence" },
+  { value: "passport", label: "Passport" },
+  { value: "kiwiaccess", label: "Kiwi Access card" },
+] as const;
+
 export const WEEKDAYS = [
   { value: 1, label: "Monday" },
   { value: 2, label: "Tuesday" },

@@ -259,13 +259,15 @@ export function MovePlan({
        * do goes first now, and the sample account becomes what it is: a look
        * at the far end, not the way on.
        */}
+      {/* Signing happens inside the flow now, so by the time this screen is
+          reached there is nothing left to finish elsewhere. It used to send
+          people to /setup, which was the only route into the two steps the
+          path through here never reached — those are steps three and four of
+          this flow now, and this is what comes after them. */}
       <div className="flex flex-wrap gap-3">
-        <ButtonLink href={`/setup?rent=${rent}`} size="lg">
-          Finish your application
+        <ButtonLink href="/my-tenancy" size="lg" onClick={openAccount}>
+          Open your Litchi
           <ArrowRight className="h-4 w-4" aria-hidden />
-        </ButtonLink>
-        <ButtonLink href="/my-tenancy" variant="secondary" size="lg" onClick={openAccount}>
-          See a funded account
         </ButtonLink>
         <Button variant="ghost" size="lg" onClick={onStartAgain}>
           Start again
@@ -273,10 +275,8 @@ export function MovePlan({
       </div>
 
       <p className="text-[13px] leading-relaxed text-clay">
-        Finishing takes about five minutes: who you are, the account the repayment comes from, and
-        the agreement in full before anything is owed. The funded account is a different
-        tenant&rsquo;s, ten weeks in &mdash; it is what this plan looks like once a lender has said
-        yes.
+        The account is a different tenant&rsquo;s, ten weeks into repaying a bond Litchi covered
+        &mdash; it is what this plan looks like once the money has moved.
       </p>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   Check,
   ClipboardList,
   Clock,
-  ExternalLink,
   FileText,
   Info,
   Loader2,
@@ -48,12 +47,18 @@ import {
   extractTenancy,
   findVerification,
   lowConfidenceFields,
-  verificationDisclosure,
   type Confidence,
 } from "@/lib/verification";
 import { useVerificationStatus } from "@/lib/verification-store";
-import { Field } from "@/components/ui/Field";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { Field, inputClass } from "@/components/ui/Field";
+import {
+  buildTimeline,
+  ID_TYPES,
+  parseAccountNumber,
+  WEEKDAYS,
+  type PaymentDay,
+} from "@/lib/setup";
 
 /**
  * Litchi Move: from "I got the place" to a costed, verified move plan.
@@ -87,10 +92,16 @@ import { Disclosure } from "@/components/ui/Disclosure";
  * never two questions; they were one question and its answer, so they are one
  * step.
  */
-const STEPS = ["Your move", "Agency confirms", "What we cover"] as const;
+const STEPS = ["Your move", "What we cover", "Can we", "Sign"] as const;
 
-/** The step that belongs to the property manager, and to nobody still looking. */
-const AGENCY_STEP = 1;
+/**
+ * The last step anyone still looking can reach.
+ *
+ * They have no tenancy, so there is nothing to check and nothing to sign.
+ * The flow ends for them where the costing ends, and says so, rather than
+ * walking them into two steps built around a document they do not have.
+ */
+const LAST_WITHOUT_TENANCY = 1;
 
 /** The first question, and the only one whose answer changes the rest. */
 const FORK_CHOICES = [
@@ -220,6 +231,24 @@ export function MoveFlow() {
    * outright costs one tap and makes both answers legitimate.
    */
   const [mode, setMode] = useState<"signed" | "looking" | null>(null);
+
+  /*
+   * Everything the application itself needs, which used to live at /setup —
+   * a separate four-step flow at a separate URL that the path through this
+   * one never linked to. Identity and the bank are not paperwork at the end;
+   * they are two of the three things that answer "can we", so they are asked
+   * where that question is asked.
+   */
+  const [idType, setIdType] = useState(ID_TYPES[0].value);
+  const [idNumber, setIdNumber] = useState("");
+  const [bankLinked, setBankLinked] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [readDisclosure, setReadDisclosure] = useState(false);
+  const [account, setAccount] = useState("");
+  const [touchedAccount, setTouchedAccount] = useState(false);
+  const [payDay, setPayDay] = useState<PaymentDay>(5);
+  const [authorised, setAuthorised] = useState(false);
+  const parsedAccount = parseAccountNumber(account);
   const [fileName, setFileName] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -293,6 +322,12 @@ export function MoveFlow() {
     setSubmitted(false);
     setStep(0);
     setMode(null);
+    setIdNumber("");
+    setBankLinked(false);
+    setReadDisclosure(false);
+    setAccount("");
+    setTouchedAccount(false);
+    setAuthorised(false);
     setFileName(null);
     setConfirmed(false);
     setConsent(false);
@@ -425,6 +460,81 @@ export function MoveFlow() {
     [lines, covered, coverage, termWeeks, partner]
   );
 
+  const timeline = useMemo(
+    () => buildTimeline(TODAY, payDay, quote.termWeeks),
+    [payDay, quote.termWeeks]
+  );
+
+  /*
+   * Every term that binds you, on one screen, before you sign — which is what
+   * the law asks for and roughly the opposite of how most credit is sold.
+   * These came off a separate flow at /setup quoting its own figures; here
+   * they are derived from the quote this flow has just shown you, so the
+   * agreement and the offer cannot drift apart.
+   */
+  const terms = [
+    {
+      label: "Creditor",
+      value: partner.name,
+      note: "Litchi arranges and services the loan. Litchi is not the lender and never holds your money.",
+    },
+    {
+      label: "Total advanced",
+      value: money(requested),
+      note: "Paid direct to the people owed, on your move dates.",
+    },
+    {
+      label: "Establishment fee",
+      value: money(partner.establishmentFee),
+      note: "Charged once, at the start, and included in the figures above.",
+    },
+    {
+      label: "Interest rate",
+      value: `${percent(partner.annualRate, 2)} p.a.`,
+      note: "On the reducing balance, so it falls as you repay.",
+    },
+    {
+      label: "Total repayable",
+      value: money(quote.totalRepayable),
+      note: "Every dollar you will pay, stated before you sign.",
+    },
+    {
+      label: "Payments",
+      value: `${quote.termWeeks} weekly`,
+      note: `${moneyExact(quote.weekly)} a week, starting ${formatDate(timeline.firstPayment)}.`,
+    },
+    {
+      label: "Default fees",
+      value: "None",
+      note: "No late fee, no dishonour fee, no collection fee. A missed payment costs you nothing.",
+    },
+    {
+      label: "Security taken",
+      value: "None",
+      note: "No claim over your bond refund, your possessions, or anything else. The refund is yours.",
+    },
+    {
+      label: "Right to cancel",
+      value: "5 working days",
+      note: `Until ${formatDate(timeline.cancelUntil)}. Cancel and you repay what was advanced, nothing more.`,
+    },
+    {
+      label: "Paying it off early",
+      value: "Any time, no fee",
+      note: "Interest stops with the balance, and nothing is added for settling sooner.",
+    },
+    {
+      label: "If things get hard",
+      value: "Hardship applies",
+      note: "You can apply to vary the payments and we have to properly consider it.",
+    },
+    {
+      label: "Complaints",
+      value: `Free, via ${partner.disputesScheme}`,
+      note: "An approved dispute resolution scheme, at no cost to you.",
+    },
+  ];
+
   /** Which of the three the current per-line choices actually amount to. */
   const chosen = options.find((option) =>
     covered.every(
@@ -446,24 +556,27 @@ export function MoveFlow() {
     (step === 0 && mode === null) ||
     (step === 0 && mode === "signed" && (!extracted || !confirmed || rent < 100)) ||
     (step === 0 && mode === "looking" && rent < 100) ||
-    (step === AGENCY_STEP && verification !== "verified") ||
+
     // One step now, so it carries both of what used to gate two: a move
     // worth costing, and consent to the quote if any of it is being financed.
-    (step === 2 && (total <= 0 || (financing && (!consent || belowMinimum))));
+    (step === 1 && (total <= 0 || (financing && (!consent || belowMinimum)))) ||
+    // All three checks, not just the agency's: the two that are ours are the
+    // ones that make the answer an answer rather than a maybe.
+    (step === 2 && (idNumber.trim().length < 5 || !bankLinked || verification !== "verified")) ||
+    (step === 3 && (!readDisclosure || !parsedAccount.ok || !authorised));
 
   /*
-   * Someone still looking has no agency to ask and no tenancy to confirm, so
-   * that step is not theirs — it is stepped over rather than shown as
-   * something they have failed to do. The panel indices stay fixed either
-   * way; renumbering them by mode is how a flow ends up rendering the wrong
-   * screen for a state nobody tested.
+   * Someone still looking has no agency to ask, no identity to verify against
+   * an application nobody is making, and nothing to sign. The flow ends for
+   * them at the costing rather than walking them through two steps built
+   * around a document they have not got — so the rail is shorter and the last
+   * button saves a costing instead of claiming an application.
    */
-  const skipsAgency = mode === "looking";
-  const visibleSteps = skipsAgency ? STEPS.filter((_, i) => i !== AGENCY_STEP) : [...STEPS];
-  const positionOf = (index: number) => (skipsAgency && index > AGENCY_STEP ? index - 1 : index);
-  const goNext = () => setStep((s) => (skipsAgency && s === AGENCY_STEP - 1 ? s + 2 : s + 1));
-  const goBack = () =>
-    setStep((s) => Math.max(0, skipsAgency && s === AGENCY_STEP + 1 ? s - 2 : s - 1));
+  const withoutTenancy = mode === "looking";
+  const lastStep = withoutTenancy ? LAST_WITHOUT_TENANCY : STEPS.length - 1;
+  const visibleSteps = withoutTenancy ? STEPS.slice(0, lastStep + 1) : [...STEPS];
+  const goNext = () => setStep((s) => Math.min(lastStep, s + 1));
+  const goBack = () => setStep((s) => Math.max(0, s - 1));
 
   function readDocument(name: string) {
     setFileName(null);
@@ -539,10 +652,10 @@ export function MoveFlow() {
             {index > 0 ? <span className="text-sand">/</span> : null}
             <span
               className={clsx(
-                index === positionOf(step) ? "font-semibold text-ink" : "text-mist",
-                index < positionOf(step) && "text-moss"
+                index === step ? "font-semibold text-ink" : "text-mist",
+                index < step && "text-moss"
               )}
-              aria-current={index === positionOf(step) ? "step" : undefined}
+              aria-current={index === step ? "step" : undefined}
             >
               {label}
             </span>
@@ -829,13 +942,122 @@ export function MoveFlow() {
           </StepPanel>
         ) : null}
 
-        {step === AGENCY_STEP ? (
+        {step === 2 ? (
           <StepPanel
             icon={ShieldCheck}
-            title="Your agency confirms the tenancy"
-            body="We've sent your property manager a link asking them to confirm the rent, the bond and the start date. It takes them about ten seconds and they don't need an account."
+            title="Three checks, run together"
+            body="Two of them are ours and take a moment. The third is your property manager's, and you do not have to sit here for it."
           >
-            <div className="mt-7">
+            {/*
+             * The agency used to be a step you sat in, and it was the second
+             * thing that happened: you could not price the move until someone
+             * else had answered their email. Identity and the bank lived at a
+             * different URL entirely, after the decision they are supposed to
+             * inform. All three belong here, at the one point where the answer
+             * is "can we" — and only one of them waits on another human.
+             */}
+            <div className="mt-7 space-y-5">
+              <div className="rounded-tile border border-sand bg-paper px-5 py-5">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={clsx(
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                      idNumber.trim().length >= 5 ? "bg-moss text-onbrand" : "bg-cream text-clay"
+                    )}
+                    aria-hidden
+                  >
+                    {idNumber.trim().length >= 5 ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <span className="text-[12px] font-bold">1</span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink">You are who you say you are</p>
+                    <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-mist">
+                      A lender in New Zealand is a reporting entity under the AML/CFT Act and has
+                      to verify identity before advancing anything. The same check a bank runs
+                      when you open an account.
+                    </p>
+                    <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                      <Field label="Document type">
+                        <select
+                          value={idType}
+                          onChange={(e) => setIdType(e.target.value as typeof idType)}
+                          className={`h-12 ${inputClass}`}
+                        >
+                          {ID_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field
+                        label="Document number"
+                        hint="Type anything — this demo checks nothing and stores nothing."
+                      >
+                        <input
+                          value={idNumber}
+                          onChange={(e) => setIdNumber(e.target.value)}
+                          placeholder="AB123456"
+                          className={`numeric h-12 ${inputClass}`}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-tile border border-sand bg-paper px-5 py-5">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={clsx(
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                      bankLinked ? "bg-moss text-onbrand" : "bg-cream text-clay"
+                    )}
+                    aria-hidden
+                  >
+                    {bankLinked ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <span className="text-[12px] font-bold">2</span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink">
+                      The repayment fits alongside your rent
+                    </p>
+                    <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-mist">
+                      Ninety days of transactions, read with your permission through Akahu, to see
+                      that {moneyExact(quote.weekly)} a week sits alongside {money(rent)} of rent
+                      rather than on top of it. Your login goes to your bank, never to us, and
+                      nothing can be moved out of the account.
+                    </p>
+                    <div className="mt-4">
+                      {bankLinked ? (
+                        <Badge tone="moss">
+                          <Check className="h-3.5 w-3.5" aria-hidden />
+                          Connected &middot; income and outgoings check out
+                        </Badge>
+                      ) : (
+                        <Button
+                          loading={linking}
+                          onClick={async () => {
+                            setLinking(true);
+                            await new Promise((r) => setTimeout(r, 900));
+                            setLinking(false);
+                            setBankLinked(true);
+                          }}
+                        >
+                          Connect my bank
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div
                 className={clsx(
                   "rounded-tile px-5 py-5",
@@ -847,90 +1069,193 @@ export function MoveFlow() {
                 )}
               >
                 <div className="flex items-start gap-3">
-                  {verification === "verified" ? (
-                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-moss" aria-hidden />
-                  ) : (
-                    <Clock className="mt-0.5 h-5 w-5 shrink-0 text-bark" aria-hidden />
-                  )}
-                  <div className="min-w-0">
+                  <span
+                    className={clsx(
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                      verification === "verified" ? "bg-moss text-onbrand" : "bg-paper text-clay"
+                    )}
+                    aria-hidden
+                  >
+                    {verification === "verified" ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Clock className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ink">
                       {verification === "verified"
-                        ? "Tenancy verified"
+                        ? "Your agency confirmed the tenancy"
                         : verification === "disputed"
                           ? "Your agency has queried the details"
-                          : "Waiting on your property manager"}
+                          : "Your agency is confirming the tenancy"}
                     </p>
-                    <p className="mt-1 text-[13px] leading-relaxed text-bark">
+                    <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-bark">
                       {verification === "verified"
-                        ? `${request?.manager ?? "Your property manager"} confirmed the rent, bond and start date. That goes to the lender with your application.`
+                        ? `${request?.manager ?? "Your property manager"} confirmed the rent, bond and start date. That is the part that makes the rest of this quick.`
                         : verification === "disputed"
-                          ? "They've flagged something that doesn't match their records. Go back a step and check the figures against your agreement."
-                          : `Sent to ${request?.manager ?? "your property manager"} at ${request?.agencyName ?? "your agency"}. You'll get a text the moment they respond.`}
+                          ? "They've flagged something that doesn't match their records. Go back and check the figures against your agreement."
+                          : // The agency's own name often ends in "Co." or "Ltd.", so a
+                            // sentence that ends right after it gets two full stops.
+                            `Sent to ${request?.manager ?? "your property manager"} at ${(request?.agencyName ?? "your agency").replace(/\.$/, "")}. About ten seconds, no account needed — and you don't have to wait here, we'll text you.`}
                     </p>
+                    {verification === "awaiting" && request ? (
+                      <a
+                        href={`/verify/${request.token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="tap mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-bark underline underline-offset-4"
+                      >
+                        Open the agency&rsquo;s link
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                      </a>
+                    ) : null}
                   </div>
                 </div>
               </div>
-
-              {/* The demo has to be able to stand on both sides of this. */}
-              <div className="mt-5 rounded-tile border border-dashed border-sand px-5 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
-                  Demo
-                </p>
-                <p className="mt-2 text-[13px] leading-relaxed text-mist">
-                  This is the one step that needs somebody else. Open the link your property
-                  manager was sent, answer it as them, and come back &mdash; the application picks
-                  up where their answer left it.
-                </p>
-                <div className="mt-4">
-                  {/* A second tab, so this application keeps its place — and
-                      because it really is a different screen for a different
-                      person. Answering there updates this one live. */}
-                  <ButtonLink
-                    href={`/verify/${token}`}
-                    variant="secondary"
-                    size="sm"
-                    target="_blank"
-                  >
-                    Open the agency&rsquo;s link
-                    <ExternalLink className="h-4 w-4" aria-hidden />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </ButtonLink>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h3 className="text-[13px] font-semibold text-ink">
-                  What your property manager is shown
-                </h3>
-                <ul className="mt-3 space-y-2">
-                  {verificationDisclosure.shown.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-start gap-2.5 text-[13px] leading-relaxed text-mist"
-                    >
-                      <Check className="mt-[3px] h-3.5 w-3.5 shrink-0 text-moss" aria-hidden />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <h3 className="mt-5 text-[13px] font-semibold text-ink">And what they are not</h3>
-                <ul className="mt-3 space-y-2">
-                  {verificationDisclosure.withheld.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-start gap-2.5 text-[13px] leading-relaxed text-mist"
-                    >
-                      <Lock className="mt-[3px] h-3.5 w-3.5 shrink-0 text-clay" aria-hidden />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
+
+            {/* The offer, live underneath, marked for whatever is outstanding
+                — so a wait on someone else never blocks reading the terms. */}
+            {financing ? (
+              <div className="mt-7 rounded-card bg-hero px-6 py-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-onbrand/70">
+                  {verification === "verified" ? "Your offer" : "Your offer, subject to that tick"}
+                </p>
+                <p className="numeric mt-2 text-[30px] font-semibold leading-none tracking-[-0.025em] text-onbrand">
+                  {money(requested)}{" "}
+                  <span className="text-[16px] font-medium text-onbrand/75">
+                    at {moneyExact(quote.weekly)} a week for {quote.termWeeks} weeks
+                  </span>
+                </p>
+                <p className="numeric mt-3 max-w-[50ch] text-[13.5px] leading-relaxed text-onbrand/80">
+                  {money(partner.establishmentFee)} establishment fee, {percent(partner.annualRate, 2)}{" "}
+                  p.a., {money(quote.totalRepayable)} repaid in all &mdash; {money(quote.costOfCredit)}{" "}
+                  of that is the cost of credit. {partner.name} is the lender; Litchi is paid by
+                  them, not by you.
+                </p>
+              </div>
+            ) : null}
+
+            <p className="mt-5 text-[13px] leading-relaxed text-clay">
+              Declining costs you nothing and leaves no mark. Nothing is reported to a credit
+              bureau unless you sign.
+            </p>
           </StepPanel>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
+          <StepPanel
+            icon={FileText}
+            title="Sign, and the money moves"
+            body="Two things left — the other two were how we answered the last question. Every term is here in full, before anything is owed."
+          >
+            <Disclosure
+              className="mt-7"
+              title={`The whole agreement \u2014 ${terms.length} terms, nothing in fine print`}
+            >
+              <dl className="overflow-hidden rounded-tile border border-sand">
+                {terms.map((row, index) => (
+                  <div
+                    key={row.label}
+                    className={clsx(
+                      "grid gap-1 px-4 py-3.5 sm:grid-cols-[190px_minmax(0,1fr)] sm:gap-4 sm:px-5",
+                      index % 2 === 1 && "bg-cream/50"
+                    )}
+                  >
+                    <dt className="text-[13px] font-semibold text-ink">{row.label}</dt>
+                    <dd>
+                      <p className="numeric text-[15px] font-semibold text-ink">{row.value}</p>
+                      <p className="mt-0.5 text-[12.5px] leading-relaxed text-mist">{row.note}</p>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Disclosure>
+
+            <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
+              <input
+                type="checkbox"
+                checked={readDisclosure}
+                onChange={(e) => setReadDisclosure(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--bark)]"
+              />
+              <span className="text-[13px] leading-relaxed text-bark">
+                I&rsquo;ve read the agreement in full. I understand what I repay, when it starts,
+                and that I can cancel within five working days.
+              </span>
+            </label>
+
+            <div className="mt-7 grid gap-6 sm:grid-cols-2">
+              <Field
+                label="Account to debit"
+                hint="Bank, branch, account, suffix."
+                error={touchedAccount && !parsedAccount.ok ? parsedAccount.reason : undefined}
+              >
+                <input
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  onBlur={() => setTouchedAccount(true)}
+                  placeholder="12-3456-0123456-00"
+                  inputMode="numeric"
+                  aria-invalid={touchedAccount && !parsedAccount.ok}
+                  className={`numeric h-12 ${inputClass}`}
+                />
+              </Field>
+              <Field label="Day of the week" hint="Pick the day after your pay lands.">
+                <select
+                  value={payDay}
+                  onChange={(e) => setPayDay(Number(e.target.value) as PaymentDay)}
+                  className={`h-12 ${inputClass}`}
+                >
+                  {WEEKDAYS.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="mt-6 rounded-tile bg-cream px-5 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-clay">
+                Your first payment
+              </p>
+              <p className="numeric mt-1.5 text-[20px] font-semibold text-ink">
+                {moneyExact(quote.weekly)} on {formatDate(timeline.firstPayment)}
+              </p>
+              <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-bark">
+                A week after the money moves, so nothing comes out before you have moved in. Then
+                the same amount every{" "}
+                {WEEKDAYS.find((d) => d.value === payDay)?.label ?? "week"} until{" "}
+                {formatDate(timeline.lastPayment)}.
+              </p>
+            </div>
+
+            <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
+              <input
+                type="checkbox"
+                checked={authorised}
+                onChange={(e) => setAuthorised(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--bark)]"
+              />
+              <span className="text-[13px] leading-relaxed text-bark">
+                I authorise {partner.name} to debit this account {moneyExact(quote.weekly)} weekly
+                under the agreement above. I can cancel this authority with my bank at any time,
+                and I know that doing so does not cancel what I owe.
+              </span>
+            </label>
+
+            <p className="mt-5 text-[13px] leading-relaxed text-clay">
+              Your rent is not part of this. {money(rent)} a week keeps going to{" "}
+              {request?.agencyName ?? "your agency"}{" "}
+              exactly as it does now, and the bond is lodged with Tenancy Services in your
+              landlord&rsquo;s name &mdash; Litchi never holds it.
+            </p>
+          </StepPanel>
+        ) : null}
+
+        {step === 1 ? (
           <StepPanel
             icon={Wallet}
             title="How much of it should Litchi cover?"
@@ -1337,7 +1662,7 @@ export function MoveFlow() {
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
         </Button>
-        {step < STEPS.length - 1 ? (
+        {step < lastStep ? (
           <Button onClick={goNext} disabled={blocked}>
             Continue
             <ArrowRight className="h-4 w-4" aria-hidden />
@@ -1347,7 +1672,7 @@ export function MoveFlow() {
             {/* Someone still looking is not applying for anything — there is
                 no tenancy to lend against yet — so the button saves the
                 costing and says so. */}
-            {skipsAgency ? "Save this costing" : financing ? "Save plan and apply" : "Save my move plan"}
+            {withoutTenancy ? "Save this costing" : "Sign and finish"}
             <Send className="h-4 w-4" aria-hidden />
           </Button>
         )}

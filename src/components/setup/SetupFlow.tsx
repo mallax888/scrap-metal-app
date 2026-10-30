@@ -25,6 +25,7 @@ import { APP_HOME } from "@/lib/nav";
 import { useLitchi } from "@/lib/store";
 import {
   buildTimeline,
+  ID_TYPES,
   parseAccountNumber,
   quoteFor,
   WEEKDAYS,
@@ -62,13 +63,6 @@ const BANK_NEVER = [
   "The ability to move money out of your account",
   "Anything after the check — the connection ends when it is done",
 ];
-
-/** The documents an applicant can verify with, under standard CDD. */
-const ID_TYPES = [
-  { value: "licence", label: "NZ driver licence" },
-  { value: "passport", label: "Passport" },
-  { value: "kiwiaccess", label: "Kiwi Access card" },
-] as const;
 
 function StepPanel({
   icon: Icon,
