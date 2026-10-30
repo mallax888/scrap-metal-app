@@ -224,7 +224,7 @@ export default function AgentsPage() {
             or harder.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/apply" size="lg" variant="onHero">
+            <ButtonLink href="/cost-my-move" size="lg" variant="onHero">
               See the tenant&rsquo;s side
               <ArrowRight className="h-4 w-4" aria-hidden />
             </ButtonLink>

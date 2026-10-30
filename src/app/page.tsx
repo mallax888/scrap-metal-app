@@ -84,8 +84,8 @@ const PRODUCTS = [
       "Paid straight to your agency, lodged with Tenancy Services",
       "Pay it off early whenever you like",
     ],
-    href: "/apply",
-    cta: "Check eligibility",
+    href: "/cost-my-move",
+    cta: "Cost my move",
     featured: false,
   },
   {

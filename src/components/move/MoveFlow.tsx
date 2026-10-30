@@ -11,6 +11,7 @@ import {
   FileText,
   Info,
   Loader2,
+  Minus,
   Lock,
   PiggyBank,
   Send,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { Card } from "@/components/ui/Card";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { StatGrid } from "@/components/ui/StatGrid";
 import { ChoiceChip } from "@/components/ui/ChoiceChip";
@@ -51,6 +52,12 @@ import {
 } from "@/lib/verification";
 import { useVerificationStatus } from "@/lib/verification-store";
 import { Disclosure } from "@/components/ui/Disclosure";
+import {
+  assess,
+  EMPLOYMENT_LABELS,
+  RULES,
+  type Employment,
+} from "@/lib/underwriting";
 import { Field, inputClass } from "@/components/ui/Field";
 import {
   buildTimeline,
@@ -249,6 +256,7 @@ export function MoveFlow() {
   const [payDay, setPayDay] = useState<PaymentDay>(5);
   const [authorised, setAuthorised] = useState(false);
   const parsedAccount = parseAccountNumber(account);
+
   const [fileName, setFileName] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -304,8 +312,41 @@ export function MoveFlow() {
   // The confirmation step can correct anything the extraction got wrong, so
   // these are seeded from the document and owned by the tenant thereafter.
   const [rent, setRent] = useState(0);
-  const [bondAmount, setBondAmount] = useState(0);
+  /*
+   * The bond follows the rent, unless someone says otherwise.
+   *
+   * It used to be independent state seeded once off the document, while the
+   * field's own cap was rent x 4. So lowering the rent clamped the bond,
+   * clearing the rent pinned it to zero, and raising the rent again never
+   * brought it back — all while the label above promised "everything else is
+   * worked out from this". An override that is null means "worked out",
+   * which is also how the line amounts on the next step already behave.
+   */
+  const [bondOverride, setBondOverride] = useState<number | null>(null);
   const [size, setSize] = useState<PropertySize>("medium");
+
+  /** Four weeks' rent — the most a landlord can take, and the default. */
+  const bondCap = Math.round(rent * RTA_CAPS.bondWeeks * 100) / 100;
+  const bondAmount = bondOverride === null ? bondCap : Math.min(bondOverride, bondCap);
+
+  /*
+   * "Would you say yes to me?", for someone who has not signed anything.
+   *
+   * This was a three-step flow of its own at /apply. For somebody who has a
+   * tenancy it is redundant — the bank connection on step three tests the
+   * same thing against their actual account rather than against a number they
+   * typed. But for someone still looking it is the one question they cannot
+   * otherwise answer, and knowing it before they commit to a place is the
+   * point. So it lives in the branch that needs it, behind a heading, and
+   * nowhere else.
+   */
+  const [weeklyIncome, setWeeklyIncome] = useState(1600);
+  const [employment, setEmployment] = useState<Employment>("permanent");
+  const [monthsInRole, setMonthsInRole] = useState(18);
+  const eligibility = useMemo(
+    () => assess({ weeklyRent: rent || 0, weeklyIncome, employment, monthsInRole }),
+    [rent, weeklyIncome, employment, monthsInRole]
+  );
 
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
@@ -332,7 +373,7 @@ export function MoveFlow() {
     setConfirmed(false);
     setConsent(false);
     setRent(0);
-    setBondAmount(0);
+    setBondOverride(null);
     setAmounts({});
     setToggles({});
     setCoverage({});
@@ -587,7 +628,10 @@ export function MoveFlow() {
       const parsed = extractTenancy(name);
       setFileName(name);
       setRent(parsed.weeklyRent.value);
-      setBondAmount(parsed.bond.value);
+      // Only hold the document's figure when it differs from the cap; a bond
+      // that is simply four weeks' rent should keep tracking the rent.
+      const cap = Math.round(parsed.weeklyRent.value * RTA_CAPS.bondWeeks * 100) / 100;
+      setBondOverride(parsed.bond.value === cap ? null : parsed.bond.value);
       setReading(false);
     }, 900);
   }
@@ -765,6 +809,136 @@ export function MoveFlow() {
             </div>
           ) : null}
 
+          {/*
+           * The question nobody still looking can otherwise answer.
+           *
+           * Behind a heading because most people want the number first, and
+           * because answering it means handing over income — which should be
+           * a choice, not a toll on the way to a costing.
+           */}
+          {rent >= 100 ? (
+            <Disclosure className="mt-7" title="Would we say yes? Check before you commit">
+              <p className="max-w-[54ch] text-[13px] leading-relaxed text-mist">
+                An affordability test, not a credit check. Nothing is sent anywhere, nothing
+                touches your credit file, and the workings are all shown.
+              </p>
+
+              <div className="mt-5 grid gap-6 sm:grid-cols-2">
+                {/* A plain field rather than MoneyInput: that control is 44px
+                    tall and the select beside it is 48px, so the pair sat 4px
+                    out of line with each other. */}
+                <Field label="Weekly take-home pay" hint="After tax, for everyone on the plan.">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-[15px] font-medium text-mist" aria-hidden>
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={weeklyIncome === 0 ? "" : weeklyIncome}
+                      aria-label="Weekly take-home pay"
+                      onChange={(e) => setWeeklyIncome(Math.max(0, Number(e.target.value)))}
+                      className={`numeric h-12 ${inputClass}`}
+                    />
+                  </span>
+                </Field>
+                <Field label="How you&rsquo;re paid">
+                  <select
+                    value={employment}
+                    onChange={(e) => setEmployment(e.target.value as Employment)}
+                    className={`h-12 ${inputClass}`}
+                  >
+                    {Object.entries(EMPLOYMENT_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+
+              <div className="mt-6">
+                <Field label="Months in that role">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={monthsInRole}
+                    onChange={(e) => setMonthsInRole(Number(e.target.value))}
+                    className={`numeric h-12 max-w-[200px] ${inputClass}`}
+                  />
+                </Field>
+              </div>
+
+              <div
+                className={clsx(
+                  "mt-7 rounded-tile px-5 py-4",
+                  eligibility.outcome === "approved"
+                    ? "border border-moss/30 bg-moss-soft/40"
+                    : eligibility.outcome === "refer"
+                      ? "border border-sand bg-amber-soft"
+                      : "border border-sand bg-paper"
+                )}
+                role="status"
+              >
+                <p className="text-sm font-semibold text-ink">
+                  {eligibility.outcome === "approved"
+                    ? `On these numbers, yes — ${moneyExact(eligibility.weeklyPayment)} a week for the bond`
+                    : eligibility.outcome === "refer"
+                      ? "On these numbers, a person would look at it"
+                      : "On these numbers, no"}
+                </p>
+                <p className="numeric mt-1.5 max-w-[54ch] text-[13px] leading-relaxed text-bark">
+                  Rent and repayment come to {percent(eligibility.housingShare)} of take-home pay.
+                  We refer above {percent(RULES.housingShareRefer)} and decline above{" "}
+                  {percent(RULES.housingShareMax)}, which would leave you{" "}
+                  {moneyExact(Math.max(0, eligibility.weeklyLeftOver))} a week once both are paid.
+                </p>
+              </div>
+
+              <ul className="mt-5 space-y-2.5">
+                {eligibility.checks.map((check) => (
+                  <li key={check.key} className="flex items-start gap-3">
+                    <span
+                      className={clsx(
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                        check.result === "pass"
+                          ? "bg-moss text-onbrand"
+                          : check.result === "refer"
+                            ? "bg-amber-soft text-amber-warm"
+                            : "bg-cream text-clay"
+                      )}
+                      aria-hidden
+                    >
+                      {check.result === "pass" ? (
+                        <Check className="h-3 w-3" />
+                      ) : check.result === "refer" ? (
+                        <Info className="h-3 w-3" />
+                      ) : (
+                        <Minus className="h-3 w-3" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13.5px] font-medium text-ink">
+                        {check.label}
+                      </span>
+                      <span className="mt-0.5 block text-[12.5px] leading-relaxed text-mist">
+                        {check.detail}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="mt-5 text-[12.5px] leading-relaxed text-clay">
+                A guide, not a decision. Once you have signed somewhere we check the repayment
+                against your actual bank account rather than against a number you typed, and the
+                lender makes the call.
+              </p>
+            </Disclosure>
+          ) : null}
+
           <p className="mt-5 text-[13px] leading-relaxed text-clay">
             Nothing is checked and no credit file is touched until you have a signed tenancy.
             We&rsquo;ll keep this costing so you don&rsquo;t type it twice.
@@ -908,7 +1082,10 @@ export function MoveFlow() {
               >
                 <MoneyInput
                   value={bondAmount}
-                  onChange={setBondAmount}
+                  // An override only means anything below the cap; at or above
+                  // it, it is indistinguishable from four weeks' rent, so it
+                  // is dropped and the field goes back to following the rent.
+                  onChange={(next) => setBondOverride(next >= bondCap ? null : next)}
                   max={rent * RTA_CAPS.bondWeeks}
                   label="Bond"
                 />
@@ -1513,11 +1690,22 @@ export function MoveFlow() {
                           over the {alternative.termWeeks} weeks.
                         </p>
 
+                        {/* This used to leave the flow for /apply, which was
+                            a strange thing to do to someone mid-decision —
+                            and that page is gone. The cheaper product is one
+                            of the three options above, so taking it is a
+                            choice made here. */}
                         <div className="mt-5 flex flex-wrap gap-3">
-                          <ButtonLink href={alternative.href} size="sm">
-                            Check {alternative.name} instead
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const bondOnly = options.find((o) => o.key === COVER_BOND);
+                              if (bondOnly) setCoverage(bondOnly.map);
+                            }}
+                          >
+                            Switch to {alternative.name}
                             <ArrowRight className="h-4 w-4" aria-hidden />
-                          </ButtonLink>
+                          </Button>
                         </div>
                         <p className="mt-4 text-[13px] leading-relaxed text-bark">
                           Add another line to the facility and this stops applying &mdash;{" "}

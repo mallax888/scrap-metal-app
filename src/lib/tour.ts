@@ -53,10 +53,14 @@ export const TOUR: TourStop[] = [
     look: "After that missed payment the score has actually dropped and the reason says why. Catch it up and it returns — but never higher than if you had not missed.",
   },
   {
-    href: "/apply",
+    // Two stops share this screen, which is fine — the rail is ordered by
+    // position, not by URL. The eligibility check used to be a page of its
+    // own; it is now the question the costing answers for someone who has
+    // not signed, so the stop points at where that question lives.
+    href: "/cost-my-move",
     label: "Who we say yes to",
     title: "An affordability test, shown in full",
-    look: "Change the rent or the income and the decision changes with it. Every check that produced the answer is listed, including the ones that failed.",
+    look: "Choose \u201cStill looking\u201d, type a rent, then open \u201cWould we say yes?\u201d. Change the rent or the income and the decision changes with it — every check that produced the answer is listed, including the ones that failed.",
   },
   {
     href: "/agents",

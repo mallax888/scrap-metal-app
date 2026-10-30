@@ -123,8 +123,8 @@ function Gate({ children }: { children: React.ReactNode }) {
               Start at the beginning
               <ArrowRight className="h-4 w-4" aria-hidden />
             </ButtonLink>
-            <ButtonLink href="/apply" size="lg" variant="secondary">
-              Just check if I&rsquo;d be approved
+            <ButtonLink href="/cost-my-move" size="lg" variant="secondary">
+              Just see what it would cost
             </ButtonLink>
           </div>
         </Card>

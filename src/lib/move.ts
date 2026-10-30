@@ -300,7 +300,6 @@ export interface CheaperAlternative {
   termWeeks: number;
   /** What switching saves, over the life of it. */
   saving: number;
-  href: string;
 }
 
 /**
@@ -370,7 +369,6 @@ export function cheaperAlternative(
     totalRepayable: bondAssist.totalRepayable,
     termWeeks: bondAssist.termWeeks,
     saving: round2(quote.costOfCredit - costOfCredit),
-    href: "/apply",
   };
 }
 
