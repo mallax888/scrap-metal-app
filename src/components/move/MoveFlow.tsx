@@ -146,7 +146,21 @@ const fieldBase =
   "tap rounded-tile border border-sand bg-paper text-[15px] text-ink outline-none transition-colors focus:border-clay disabled:opacity-45";
 
 /** The page's one h1, which has to change when the task is finished. */
-function Heading({ title, body }: { title: string; body: string }) {
+/*
+ * Big on arrival, small thereafter.
+ *
+ * The same forty-word heading sat on all four steps — two hundred pixels of
+ * identical text re-read on every Continue, above a rail that already says
+ * where you are. It introduces the flow once; after that it is a label.
+ */
+function Heading({ title, body, compact }: { title: string; body: string; compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="mb-6">
+        <h1 className="mt-6 text-[20px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
+      </div>
+    );
+  }
   return (
     <div className="mb-10">
       <h1 className="mt-6 text-[34px] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px]">
@@ -686,6 +700,7 @@ export function MoveFlow() {
             ? "A rent is enough to price the whole thing \u2014 bond, rent in advance, the truck, the clean. Nothing is checked and nothing is applied for until you have signed somewhere."
             : "We start with your tenancy, not with a number. Your agency confirms it, the costs come off it, and you decide how much of them to cover \u2014 up to what the move actually costs, never more."
         }
+        compact={step > 0}
       />
       {/* What each step scrolls to: the progress list and the step beneath it,
           so you land on where you are as well as on what is being asked. */}
@@ -715,7 +730,33 @@ export function MoveFlow() {
        * costing and nothing is checked. What used to happen to the second
        * group was a wall on the first screen.
        */}
-      {step === 0 ? (
+      {/* Answered, it is a line rather than a card: two option boxes worth
+          170px explaining a choice already made, on a screen that has moved
+          on to the next thing. */}
+      {step === 0 && mode !== null && (mode === "looking" || extracted) ? (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-card border border-sand/70 bg-paper px-5 py-3.5">
+          <p className="text-[13.5px] text-bark">
+            <span className="font-semibold text-ink">
+              {mode === "signed" ? "You\u2019ve signed" : "Still looking"}
+            </span>{" "}
+            &mdash;{" "}
+            {mode === "signed"
+              ? "exact figures off your agreement"
+              : "an estimate, with nothing checked"}
+          </p>
+          {/* Named for where it goes. "Change" on a two-way switch makes
+              someone press it to find out what the other side is. */}
+          <button
+            type="button"
+            onClick={() => setMode(mode === "signed" ? "looking" : "signed")}
+            className="tap text-[13px] font-semibold text-bark underline underline-offset-4 transition-colors hover:text-ink"
+          >
+            {mode === "signed" ? "I haven\u2019t signed yet" : "I\u2019ve signed"}
+          </button>
+        </div>
+      ) : null}
+
+      {step === 0 && !(mode === "looking" || extracted) ? (
         <Card className="mt-5">
           <h2 className="text-[19px] font-semibold tracking-[-0.015em] text-ink">
             Where are you up to?
@@ -951,8 +992,12 @@ export function MoveFlow() {
         {step === 0 && mode === "signed" ? (
           <StepPanel
             icon={FileText}
-            title="Start with the place you've just got"
-            body="Upload your tenancy agreement and we'll read the rent, the bond and the dates off it. It saves you typing them, and it means the figures behind your application came from the document rather than from memory."
+            title={extracted ? "Your agreement" : "Start with the place you\u2019ve just got"}
+            body={
+              extracted
+                ? "Read, and nothing else taken from it."
+                : "Upload your tenancy agreement and we\u2019ll read the rent, the bond and the dates off it \u2014 so the figures behind your application came from the document rather than from memory."
+            }
           >
             {estimatedOn ? (
               <p className="mt-5 rounded-tile bg-cream px-4 py-3.5 text-[13px] leading-relaxed text-bark">
@@ -1011,14 +1056,10 @@ export function MoveFlow() {
                 </div>
               )}
 
-              <div className="mt-5 flex items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
-                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-bark" aria-hidden />
-                <p className="text-[13px] leading-relaxed text-bark">
-                  Your agreement is used to read those few fields and nothing else. It is never
-                  sent to your property manager, and it is not shared with the lender &mdash; they
-                  receive the confirmed figures, not the document.
-                </p>
-              </div>
+              <p className="mt-4 flex items-start gap-2 text-[12.5px] leading-relaxed text-clay">
+                <Lock className="mt-[2px] h-3.5 w-3.5 shrink-0" aria-hidden />
+                Read for those fields and nothing else. Never sent to your agency or the lender.
+              </p>
             </div>
           </StepPanel>
         ) : null}
@@ -1151,10 +1192,8 @@ export function MoveFlow() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ink">You are who you say you are</p>
-                    <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-mist">
-                      A lender in New Zealand is a reporting entity under the AML/CFT Act and has
-                      to verify identity before advancing anything. The same check a bank runs
-                      when you open an account.
+                    <p className="mt-1 text-[13px] leading-relaxed text-mist">
+                      Required of any lender here. Takes a moment.
                     </p>
                     <div className="mt-4 grid gap-5 sm:grid-cols-2">
                       <Field label="Document type">
@@ -1205,11 +1244,9 @@ export function MoveFlow() {
                     <p className="text-sm font-semibold text-ink">
                       The repayment fits alongside your rent
                     </p>
-                    <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed text-mist">
-                      Ninety days of transactions, read with your permission through Akahu, to see
-                      that {moneyExact(quote.weekly)} a week sits alongside {money(rent)} of rent
-                      rather than on top of it. Your login goes to your bank, never to us, and
-                      nothing can be moved out of the account.
+                    <p className="numeric mt-1 text-[13px] leading-relaxed text-mist">
+                      That {moneyExact(quote.weekly)} a week sits alongside {money(rent)} of rent,
+                      not on top of it.
                     </p>
                     <div className="mt-4">
                       {bankLinked ? (
@@ -1274,7 +1311,7 @@ export function MoveFlow() {
                           ? "They've flagged something that doesn't match their records. Go back and check the figures against your agreement."
                           : // The agency's own name often ends in "Co." or "Ltd.", so a
                             // sentence that ends right after it gets two full stops.
-                            `Sent to ${request?.manager ?? "your property manager"} at ${(request?.agencyName ?? "your agency").replace(/\.$/, "")}. About ten seconds, no account needed — and you don't have to wait here, we'll text you.`}
+                            `Sent to ${(request?.agencyName ?? "your agency").replace(/\.$/, "")}. You don't have to wait here — we'll text you.`}
                     </p>
                     {verification === "awaiting" && request ? (
                       <a
@@ -1291,6 +1328,46 @@ export function MoveFlow() {
                 </div>
               </div>
             </div>
+
+            {/*
+             * Why each check exists, in one place.
+             *
+             * It used to sit inline, three paragraphs of it, which made a
+             * screen of three yes/no rows read like a policy document. The
+             * rows say what is happening; this says why, for whoever wants
+             * to know before handing over a document or a bank connection.
+             */}
+            <Disclosure className="mt-7" title="Why we ask for each of these">
+              <dl className="space-y-4">
+                <div>
+                  <dt className="text-[13.5px] font-semibold text-ink">Your identity</dt>
+                  <dd className="mt-1 max-w-[56ch] text-[13px] leading-relaxed text-mist">
+                    A lender in New Zealand is a reporting entity under the AML/CFT Act and has to
+                    verify identity before advancing anything. It is the same check a bank runs
+                    when you open an account. In the real thing the document goes to the issuing
+                    authority through a verification provider and is not kept; your agency never
+                    sees it.
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[13.5px] font-semibold text-ink">Your bank</dt>
+                  <dd className="mt-1 max-w-[56ch] text-[13px] leading-relaxed text-mist">
+                    Ninety days of transactions, read with your permission through Akahu, so the
+                    repayment is tested against what actually goes in and out rather than against
+                    a number you typed. Your login goes to your bank, never to us. Nothing can be
+                    moved out of the account, and the connection ends when the check is done.
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[13.5px] font-semibold text-ink">Your agency</dt>
+                  <dd className="mt-1 max-w-[56ch] text-[13px] leading-relaxed text-mist">
+                    They confirm the rent, the bond and the start date — four facts they already
+                    hold. It takes about ten seconds and needs no account. They are never sent
+                    your agreement, your income, or whether you were approved.
+                  </dd>
+                </div>
+              </dl>
+            </Disclosure>
 
             {/* The offer, live underneath, marked for whatever is outstanding
                 — so a wait on someone else never blocks reading the terms. */}
@@ -1327,9 +1404,36 @@ export function MoveFlow() {
             title="Sign, and the money moves"
             body="Two things left — the other two were how we answered the last question. Every term is here in full, before anything is owed."
           >
+            {/*
+             * The five the law wants in front of you.
+             *
+             * Everything was behind the heading, which is the wrong way round
+             * for key disclosure under the CCCFA: the amount, the rate, what
+             * it all comes to, how long for and the cooling-off period have
+             * to be seen, not findable. The other seven terms are still one
+             * press away, in full.
+             */}
+            <dl className="mt-7 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-3">
+              {[
+                { k: "You receive", v: money(requested) },
+                { k: "Interest rate", v: `${percent(partner.annualRate, 2)} p.a.` },
+                { k: "You repay in all", v: money(quote.totalRepayable) },
+                { k: "Over", v: `${quote.termWeeks} weeks` },
+                { k: "Weekly", v: moneyExact(quote.weekly) },
+                { k: "Cancel within", v: "5 working days" },
+              ].map((row) => (
+                <div key={row.k} className="bg-paper px-4 py-3">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-clay">
+                    {row.k}
+                  </dt>
+                  <dd className="numeric mt-1 text-[16px] font-semibold text-ink">{row.v}</dd>
+                </div>
+              ))}
+            </dl>
+
             <Disclosure
-              className="mt-7"
-              title={`The whole agreement \u2014 ${terms.length} terms, nothing in fine print`}
+              className="mt-5"
+              title={`Every other term \u2014 ${terms.length} in all, nothing in fine print`}
             >
               <dl className="overflow-hidden rounded-tile border border-sand">
                 {terms.map((row, index) => (
@@ -1423,11 +1527,10 @@ export function MoveFlow() {
               </span>
             </label>
 
-            <p className="mt-5 text-[13px] leading-relaxed text-clay">
-              Your rent is not part of this. {money(rent)} a week keeps going to{" "}
-              {request?.agencyName ?? "your agency"}{" "}
-              exactly as it does now, and the bond is lodged with Tenancy Services in your
-              landlord&rsquo;s name &mdash; Litchi never holds it.
+            <p className="numeric mt-5 text-[13px] leading-relaxed text-clay">
+              Your rent is not part of this: {money(rent)} a week keeps going to your agency
+              exactly as it does now. The bond is lodged with Tenancy Services, never held by
+              Litchi.
             </p>
           </StepPanel>
         ) : null}
@@ -1623,10 +1726,8 @@ export function MoveFlow() {
                 <h3 className="text-[17px] font-semibold tracking-tight text-ink">
                   What the financed part costs
                 </h3>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-mist">
-                  An indicative quote on the {money(requested)}{" "}
-                  above, not an offer. {partner.name} decides the final terms after its own credit
-                  and affordability checks.
+                <p className="numeric mt-1.5 text-[13px] leading-relaxed text-mist">
+                  Indicative on {money(requested)}, not an offer.
                 </p>
 
                 {/* The screen's most important job when it applies at all. The
@@ -1643,13 +1744,9 @@ export function MoveFlow() {
                         <h4 className="text-[15px] font-semibold text-ink">
                           {alternative.name} would cover this for less
                         </h4>
-                        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-bark">
-                          You&rsquo;re only financing the bond, and that is exactly what{" "}
-                          {alternative.name} is for. Same {money(alternative.amount)}, same{" "}
-                          {alternative.termWeeks}{" "}
-                          weeks &mdash; one flat fee instead of an establishment fee and a rate,
-                          because a bond comes back to you at the end of the tenancy and a truck
-                          does not.
+                        <p className="numeric mt-1.5 text-[13px] leading-relaxed text-bark">
+                          Same {money(alternative.amount)}, same {alternative.termWeeks} weeks, a
+                          flat fee instead of a rate.
                         </p>
 
                         <dl className="mt-5 grid gap-px overflow-hidden rounded-tile border border-sand bg-sand sm:grid-cols-2">
@@ -1685,9 +1782,8 @@ export function MoveFlow() {
                           ))}
                         </dl>
 
-                        <p className="mt-4 text-sm font-medium text-ink">
-                          Switching saves you {money(alternative.saving)}{" "}
-                          over the {alternative.termWeeks} weeks.
+                        <p className="numeric mt-3 text-sm font-semibold text-ink">
+                          Saves {money(alternative.saving)}.
                         </p>
 
                         {/* This used to leave the flow for /apply, which was
@@ -1707,9 +1803,8 @@ export function MoveFlow() {
                             <ArrowRight className="h-4 w-4" aria-hidden />
                           </Button>
                         </div>
-                        <p className="mt-4 text-[13px] leading-relaxed text-bark">
-                          Add another line to the facility and this stops applying &mdash;{" "}
-                          {alternative.name} only ever covers a bond.
+                        <p className="mt-3 text-[12.5px] leading-relaxed text-clay">
+                          Only ever covers a bond, so adding a line stops this applying.
                         </p>
                       </div>
                     </div>
@@ -1750,56 +1845,72 @@ export function MoveFlow() {
                       ]}
                     />
 
-                    <dl className="mt-5 divide-y divide-sand/70 text-sm">
-                      {[
-                        { label: "Amount advanced", value: money(quote.amount) },
-                        { label: "Establishment fee", value: money(quote.establishmentFee) },
-                        {
-                          label: "Interest rate",
-                          value: `${percent(quote.annualRate, 2)} p.a. on the reducing balance`,
-                        },
-                        { label: "Total cost of credit", value: money(quote.costOfCredit) },
-                      ].map((row) => (
-                        <div
-                          key={row.label}
-                          className="flex items-baseline justify-between gap-4 py-2.5"
-                        >
-                          <dt className="text-mist">{row.label}</dt>
-                          <dd className="text-right font-medium text-ink">{row.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
+                    {/*
+                     * The breakdown, behind a heading.
+                     *
+                     * Three figures answer "what does this cost me"; the
+                     * other seven answer "show your working". Both belong on
+                     * the page, but only the first three belong in front of
+                     * someone deciding — the rest made this step twice as
+                     * long as the decision in it.
+                     */}
+                    <Disclosure className="mt-5" title="Show the working">
+                      <dl className="mt-5 divide-y divide-sand/70 text-sm">
+                        {[
+                          { label: "Amount advanced", value: money(quote.amount) },
+                          { label: "Establishment fee", value: money(quote.establishmentFee) },
+                          {
+                            label: "Interest rate",
+                            value: `${percent(quote.annualRate, 2)} p.a. on the reducing balance`,
+                          },
+                          { label: "Total cost of credit", value: money(quote.costOfCredit) },
+                        ].map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-4 py-2.5"
+                          >
+                            <dt className="text-mist">{row.label}</dt>
+                            <dd className="text-right font-medium text-ink">{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
 
-                    <div className="mt-7">
-                      <h4 className="text-[13px] font-semibold text-ink">Where the money goes</h4>
-                      <ul className="mt-3 space-y-2.5">
-                        {covered
-                          .filter((line) => (coverage[line.id] ?? defaultCoverage(line)) === "litchi")
-                          .map((line) => (
-                            <li
-                              key={line.id}
-                              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px]"
-                            >
-                              <span className="text-mist">
-                                {line.label}
-                                <span className="text-clay">
-                                  {" "}
-                                  &mdash; {PAYEE_LABELS[line.payee]}
+                      <div className="mt-7">
+                        <h4 className="text-[13px] font-semibold text-ink">Where the money goes</h4>
+                        <ul className="mt-3 space-y-2.5">
+                          {covered
+                            .filter((line) => (coverage[line.id] ?? defaultCoverage(line)) === "litchi")
+                            .map((line) => (
+                              <li
+                                key={line.id}
+                                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px]"
+                              >
+                                <span className="text-mist">
+                                  {line.label}
+                                  <span className="text-clay">
+                                    {" "}
+                                    &mdash; {PAYEE_LABELS[line.payee]}
+                                  </span>
                                 </span>
-                              </span>
-                              <span className="numeric font-medium text-ink">
-                                {money(line.amount)}
-                              </span>
-                            </li>
-                          ))}
-                      </ul>
-                      <p className="mt-4 text-[13px] leading-relaxed text-mist">
-                        Paid on your move dates, straight to the people owed. {percent(direct)}{" "}
-                        of this facility never lands in your account, so there is nothing for you
-                        to hold, forward or accidentally spend.
-                      </p>
-                    </div>
+                                <span className="numeric font-medium text-ink">
+                                  {money(line.amount)}
+                                </span>
+                              </li>
+                            ))}
+                        </ul>
+                        <p className="mt-4 text-[13px] leading-relaxed text-mist">
+                          Paid on your move dates, straight to the people owed. {percent(direct)}{" "}
+                          of this facility never lands in your account, so there is nothing for you
+                          to hold, forward or accidentally spend.
+                        </p>
+                      </div>
 
+                    </Disclosure>
+
+                    {/* Consent gates Continue, so it cannot sit behind a
+                        heading — someone would be blocked with no visible
+                        reason. The licence details follow it, where they are
+                        read rather than stepped over. */}
                     <label className="mt-7 flex cursor-pointer items-start gap-3 rounded-tile bg-cream px-4 py-3.5">
                       <input
                         type="checkbox"
@@ -1815,11 +1926,11 @@ export function MoveFlow() {
                     </label>
 
                     <p className="mt-4 text-[13px] leading-relaxed text-clay">
-                      {partner.name}{" "}
-                      is a licensed consumer lender, FSPR {partner.fspr}, and a member of{" "}
-                      {partner.disputesScheme}. Litchi arranges and services the facility. Litchi
-                      is not the lender and does not decide the outcome.
+                      {partner.name} is a licensed consumer lender, FSPR {partner.fspr}, and a
+                      member of {partner.disputesScheme}. Litchi arranges and services the
+                      facility; Litchi is not the lender and does not decide the outcome.
                     </p>
+
                   </>
                 )}
               </div>
