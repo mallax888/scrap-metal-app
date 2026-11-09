@@ -14,7 +14,7 @@ import { IfThingsGetTight } from "@/components/dashboard/IfThingsGetTight";
 import { DemoScenario } from "@/components/marketing/DemoScenario";
 import { ActivityRow } from "@/components/dashboard/ActivityFeed";
 import { ExtraPaymentModal } from "@/components/modals/ExtraPaymentModal";
-import { plan, type ActivityKind } from "@/lib/data";
+import { type ActivityKind } from "@/lib/data";
 import { formatDayShort, money, moneyExact } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
@@ -72,7 +72,7 @@ export default function PaymentsPage() {
                   </p>
                 </div>
                 <span className="numeric rounded-full bg-cream px-3 py-1.5 text-[13px] font-medium text-bark">
-                  {money(plan.weeklyPayment)} every Friday
+                  {money(derived.account.weekly)} every Friday
                 </span>
               </div>
 

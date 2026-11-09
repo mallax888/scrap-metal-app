@@ -3,17 +3,20 @@
 import { CheckCircle2, Landmark } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { bond, plan, tenancy } from "@/lib/data";
+import { bond, plan } from "@/lib/data";
 import { formatDate, money } from "@/lib/format";
+import { useLitchi } from "@/lib/store";
 
 export function BondDetailsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { derived } = useLitchi();
+  const account = derived.account;
   const rows: { label: string; value: string }[] = [
-    { label: "Bond ID", value: bond.bondId },
-    { label: "Bond amount", value: money(bond.amount) },
+    { label: "Bond ID", value: account.bondId },
+    { label: "Bond amount", value: money(account.bond) },
     { label: "Equivalent to", value: `${bond.weeksOfRent} weeks' rent` },
-    { label: "Property", value: tenancy.property },
-    { label: "Suburb", value: tenancy.suburb },
-    { label: "Tenancy start", value: formatDate(tenancy.startDate) },
+    { label: "Property", value: account.property },
+    { label: "Suburb", value: account.suburb },
+    { label: "Tenancy start", value: formatDate(account.tenancyStart) },
     { label: "Lodged", value: formatDate(bond.lodgedDate) },
     { label: "Held by", value: bond.lodgedWith },
     { label: "Financed by", value: plan.partner },

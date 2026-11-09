@@ -4,7 +4,7 @@ import Link from "next/link";
 import { TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { plan } from "@/lib/data";
+
 import { formatDateShort, money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
@@ -96,6 +96,7 @@ function Chip({
 
 export function SummaryCards() {
   const { derived, ready } = useLitchi();
+  const account = derived.account;
 
   if (!ready) {
     return (
@@ -117,7 +118,7 @@ export function SummaryCards() {
         first
         label="Weekly payment"
         href="/payments"
-        value={money(plan.weeklyPayment)}
+        value={money(account.weekly)}
         unit=" / wk"
         caption="Every Friday, by direct debit"
         chip={<Chip tone="cream">{derived.weeksRemaining} weeks left</Chip>}
@@ -128,12 +129,12 @@ export function SummaryCards() {
       <Stat
         label="Paid off"
         value={percent(derived.progress)}
-        caption={`${moneyExact(derived.totalRepaid)} of ${money(plan.totalRepayable)}`}
+        caption={`${moneyExact(derived.totalRepaid)} of ${money(account.totalRepayable)}`}
       />
       <Stat
         label="Still to repay"
         value={moneyExact(derived.balance)}
-        caption={`${money(plan.principal)} bond plus the ${money(plan.fee)} fee`}
+        caption={`${money(account.advance)} advanced, repaid over ${account.termWeeks} weeks`}
       />
       <Stat
         label="Finishes"

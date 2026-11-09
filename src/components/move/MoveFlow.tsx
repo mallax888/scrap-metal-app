@@ -26,7 +26,7 @@ import { StatGrid } from "@/components/ui/StatGrid";
 import { ChoiceChip } from "@/components/ui/ChoiceChip";
 import { MovePlan } from "@/components/move/MovePlan";
 import { PROPERTY_SIZES, TODAY, type PropertySize } from "@/lib/data";
-import { formatDate, money, moneyExact, percent } from "@/lib/format";
+import { addMonths, formatDate, money, moneyExact, percent } from "@/lib/format";
 import {
   buildMoveCosts,
   canBook,
@@ -51,6 +51,7 @@ import {
   type Confidence,
 } from "@/lib/verification";
 import { useVerificationStatus } from "@/lib/verification-store";
+import { useLitchi } from "@/lib/store";
 import { Disclosure } from "@/components/ui/Disclosure";
 import {
   assess,
@@ -235,6 +236,7 @@ function MoneyInput({
 }
 
 export function MoveFlow() {
+  const { recordFunding } = useLitchi();
   const partner = defaultPartner;
   const token = DEMO_VERIFICATION_TOKEN;
   const request = findVerification(token);
@@ -1967,7 +1969,43 @@ export function MoveFlow() {
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Button>
         ) : (
-          <Button onClick={() => setSubmitted(true)} disabled={blocked}>
+          <Button
+            onClick={() => {
+              /*
+               * Hand the signed plan to the account.
+               *
+               * Without this the app answered "whose tenancy is this?" twice
+               * and differently: you could sign on a $1,000 rent and open an
+               * account showing a $700 one. Someone still looking has signed
+               * nothing, so they record nothing and the account stays the
+               * sample it has always been.
+               */
+              if (!withoutTenancy && request) {
+                recordFunding({
+                  property: request.property,
+                  suburb: request.suburb,
+                  agencyName: request.agencyName,
+                  rentWeekly: rent,
+                  tenancyStart: request.startDate,
+                  // A twelve-month fixed term, which is the usual first one.
+                  tenancyEnd: addMonths(request.startDate, 12),
+                  bond: bondAmount,
+                  advance: requested,
+                  weekly: alternative ? alternative.weekly : quote.weekly,
+                  termWeeks: quote.termWeeks,
+                  totalRepayable: alternative ? alternative.totalRepayable : quote.totalRepayable,
+                  nextPaymentDate: timeline.firstPayment,
+                  product: alternative ? alternative.name : "Litchi Move",
+                  moveTotal: total,
+                  paidSelf: split.self,
+                  booked: split.booked,
+                  signedDate: TODAY,
+                });
+              }
+              setSubmitted(true);
+            }}
+            disabled={blocked}
+          >
             {/* Someone still looking is not applying for anything — there is
                 no tenancy to lend against yet — so the button saves the
                 costing and says so. */}

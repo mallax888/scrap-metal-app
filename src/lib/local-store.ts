@@ -10,7 +10,25 @@ export function createLocalStore<T>(key: string, fallback: T) {
     if (initialized || typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(key);
-      if (raw) state = JSON.parse(raw) as T;
+      if (raw) {
+        const saved = JSON.parse(raw) as Partial<T>;
+        /*
+         * Merged over the defaults, not swapped for them.
+         *
+         * Saved state is written by whatever version of the app the browser
+         * last ran. Replacing the whole object means every field added since
+         * reads as undefined — and for the arrays that is not a quiet default
+         * but a crash on the first .reduce(), which is a white screen on every
+         * signed-in page for anyone with older state. The merge is shallow,
+         * which is all this needs: the stores built on it hold flat objects,
+         * and a Record-shaped one has {} for its fallback, so merging changes
+         * nothing there.
+         */
+        state =
+          saved && typeof saved === "object" && !Array.isArray(saved)
+            ? { ...fallback, ...saved }
+            : (saved as T);
+      }
     } catch {
       // ignore malformed/blocked storage
     }

@@ -12,7 +12,7 @@ import { MovingFundModal } from "@/components/modals/MovingFundModal";
 import { FundVerdict } from "@/components/fund/FundVerdict";
 import { RoundUpDetail } from "@/components/fund/RoundUpDetail";
 import { RoundUpMoment } from "@/components/fund/RoundUpMoment";
-import { bond, movingFund, tenancy } from "@/lib/data";
+import { movingFund } from "@/lib/data";
 import { formatDate, money } from "@/lib/format";
 import { buildMoveCosts, costedTotal } from "@/lib/move";
 import { useLitchi } from "@/lib/store";
@@ -34,10 +34,12 @@ import { useLitchi } from "@/lib/store";
 
 /* What the goal is derived from rather than a number someone chose: a move on
    this tenancy, less the bond Litchi finances. */
-const nextMoveCost = costedTotal(buildMoveCosts(tenancy.rentWeekly, "medium"));
 
 export default function MovingFundPage() {
   const { derived } = useLitchi();
+  const account = derived.account;
+  /* The next move is priced off this tenancy's rent, not the sample's. */
+  const nextMoveCost = costedTotal(buildMoveCosts(account.rentWeekly, "medium"));
   const toast = useToast();
   const [open, setOpen] = useState(false);
 
@@ -61,7 +63,7 @@ export default function MovingFundPage() {
         <p className="mt-2.5 max-w-[42ch] text-sm leading-relaxed text-mist">
           of <strong className="numeric font-semibold text-ink">{money(movingFund.goal)}</strong>{" "}
           &mdash; the part of your next move Litchi doesn&rsquo;t finance. It costs about{" "}
-          {money(nextMoveCost)}, and the {money(bond.amount)} bond is the bit we cover.
+          {money(nextMoveCost)}, and the {money(account.bond)} bond is the bit we cover.
         </p>
 
         <Progress

@@ -11,7 +11,6 @@ import {
 } from "recharts";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { plan } from "@/lib/data";
 import { formatDate, formatDateShort, formatMonthAxis, money, moneyExact } from "@/lib/format";
 import { useLitchi, type ChartPoint } from "@/lib/store";
 
@@ -49,10 +48,11 @@ function ChartTooltip({
 
 export function RepaymentChart() {
   const { derived, ready } = useLitchi();
+  const account = derived.account;
   const data: ChartPoint[] = derived.chart;
 
   const stats = [
-    { label: "Starting balance", value: money(plan.totalRepayable), tone: "text-mist" },
+    { label: "Starting balance", value: money(account.totalRepayable), tone: "text-mist" },
     { label: "Current balance", value: moneyExact(derived.balance), tone: "text-ink" },
     {
       label: "Projected completion",
@@ -128,7 +128,7 @@ export function RepaymentChart() {
                 tick={{ fill: "var(--color-mist)", fontSize: 11 }}
               />
               <YAxis
-                domain={[0, plan.totalRepayable]}
+                domain={[0, account.totalRepayable]}
                 tickFormatter={(value: number) => money(value)}
                 tickLine={false}
                 axisLine={false}

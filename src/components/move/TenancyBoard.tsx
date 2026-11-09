@@ -17,10 +17,7 @@ import { StatGrid } from "@/components/ui/StatGrid";
 import { TileButton, TileLink } from "@/components/ui/Tile";
 import {
   TODAY,
-  bond,
   myMove,
-  plan,
-  tenancy,
   type MoveCoverage,
 } from "@/lib/data";
 import {
@@ -72,20 +69,26 @@ export function TenancyBoard() {
   const method = useActivePaymentMethod();
   const [open, setOpen] = useState<Panel>(null);
 
-  const total = myMove.lines.reduce((sum, line) => sum + line.amount, 0);
-  const financed = myMove.lines
-    .filter((line) => line.coverage === "litchi")
-    .reduce((sum, line) => sum + line.amount, 0);
-  const booked = myMove.lines
-    .filter((line) => line.coverage === "book")
-    .reduce((sum, line) => sum + line.amount, 0);
-  /** The provider the booked line was paid to, for the services block. */
-  const bookedLine = myMove.lines.find((line) => line.coverage === "book");
-  const self = total - financed - booked;
+  const account = derived.account;
 
+  /*
+   * The move's totals come from the account, so the headline on this screen
+   * is the move that was actually costed rather than the sample's. The line
+   * items behind "Every line" are still the sample's — a signed plan records
+   * what each part came to, not the nine rows it was chosen from — so the
+   * breakdown is shown only for the account it belongs to.
+   */
+  const total = account.moveTotal;
+  const financed = account.advance;
+  const booked = account.booked;
+  const self = account.paidSelf;
+  /** The provider the booked line was paid to, for the services block. */
+  const bookedLine = account.funded
+    ? null
+    : myMove.lines.find((line) => line.coverage === "book");
   const next = derived.nextPayment;
   const daysToPayment = next ? daysBetween(TODAY, next.date) : null;
-  const weeksToTermEnd = Math.round(daysBetween(TODAY, tenancy.endDate) / 7);
+  const weeksToTermEnd = Math.round(daysBetween(TODAY, account.tenancyEnd) / 7);
 
   const toggle = (panel: Exclude<Panel, null>) =>
     setOpen((current) => (current === panel ? null : panel));
@@ -103,10 +106,10 @@ export function TenancyBoard() {
           tone="ink"
           icon={Home}
           label="Your tenancy"
-          figure={myMove.property}
+          figure={account.property}
           state={
             <>
-              {myMove.suburb} &middot; {money(tenancy.rentWeekly)}{" "}
+              {account.suburb} &middot; {money(account.rentWeekly)}{" "}
               a week &middot; moved in {formatDayMonth(myMove.movedIn)}
             </>
           }
@@ -133,7 +136,7 @@ export function TenancyBoard() {
           href="/plan"
           icon={PiggyBank}
           label="Your plan"
-          figure={moneyExact(plan.weeklyPayment)}
+          figure={moneyExact(account.weekly)}
           unit="a week"
           progress={derived.progress}
           state={
@@ -144,11 +147,11 @@ export function TenancyBoard() {
                   {formatDayShort(next.date)}
                 </span>{" "}
                 from {method.brand} &bull;&bull;&bull;&bull; {method.last4}{" "}
-                &middot; {derived.weeksRemaining} of {plan.termWeeks} left
+                &middot; {derived.weeksRemaining} of {account.termWeeks} left
               </>
             ) : (
               <>
-                {money(derived.totalRepaid)} of {money(plan.totalRepayable)}{" "}
+                {money(derived.totalRepaid)} of {money(account.totalRepayable)}{" "}
                 repaid &middot; {derived.weeksRemaining} weeks left, finishing{" "}
                 {formatDateShort(derived.payoffDate)}
               </>
@@ -172,15 +175,15 @@ export function TenancyBoard() {
           href="/bond"
           icon={Landmark}
           label="Your bond"
-          figure={money(bond.amount)}
+          figure={money(account.bond)}
           state={
             <>
-              Held by {bond.lodgedWith}, not by Litchi &middot; ref{" "}
-              <span className="whitespace-nowrap">{bond.bondId}</span>
+              Held by {account.lodgedWith}, not by Litchi &middot; ref{" "}
+              <span className="whitespace-nowrap">{account.bondId}</span>
             </>
           }
           chip={
-            <Badge tone="moss">Lodged {formatDayMonth(bond.lodgedDate)}</Badge>
+            <Badge tone="moss">Lodged {formatDayMonth(account.lodgedDate)}</Badge>
           }
           action="The bond in full"
         />
@@ -195,7 +198,7 @@ export function TenancyBoard() {
               &middot; Litchi covered {money(financed)}
             </>
           }
-          chip={<Badge tone="bark">{myMove.lines.length} lines</Badge>}
+          chip={account.funded ? null : <Badge tone="bark">{myMove.lines.length} lines</Badge>}
           action="Every line"
           onClick={() => toggle("cost")}
           expanded={open === "cost"}
@@ -236,7 +239,7 @@ export function TenancyBoard() {
           href="/cost-my-move"
           icon={Calculator}
           label="Your next move"
-          figure={formatDateShort(tenancy.endDate)}
+          figure={formatDateShort(account.tenancyEnd)}
           state="Your fixed term ends then. Cost the next move whenever you start looking."
           chip={<Badge tone="outline">{weeksToTermEnd} weeks away</Badge>}
           action="Cost my move"
@@ -252,7 +255,7 @@ export function TenancyBoard() {
         className="animate-pop rounded-card border border-sand/70 bg-paper p-5 sm:p-6"
       >
         <h3 className="text-[15px] font-semibold text-ink">
-          What {myMove.agencyName} confirmed, and what they were never told
+          What {account.agencyName} confirmed, and what they were never told
         </h3>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-mist">
           {myMove.verifiedBy} confirmed{" "}
@@ -265,8 +268,8 @@ export function TenancyBoard() {
           className="mt-5"
           columns={4}
           items={[
-            { label: "Weekly rent", value: money(tenancy.rentWeekly) },
-            { label: "Bond", value: money(bond.amount) },
+            { label: "Weekly rent", value: money(account.rentWeekly) },
+            { label: "Bond", value: money(account.bond) },
             { label: "Start date", value: formatDateShort(myMove.movedIn) },
             { label: "Property", value: "Confirmed" },
           ]}

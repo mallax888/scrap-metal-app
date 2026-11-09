@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { plan, tenancy } from "@/lib/data";
 import { money } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
@@ -13,23 +12,24 @@ import { useLitchi } from "@/lib/store";
  */
 export function WeeklyBreakdown({ showRentLink = true }: { showRentLink?: boolean } = {}) {
   const { derived } = useLitchi();
+  const account = derived.account;
 
   const lines = [
     {
       label: "Rent",
-      to: tenancy.landlordAgency,
-      amount: tenancy.rentWeekly,
+      to: account.agencyName,
+      amount: account.rentWeekly,
       dot: "bg-moss",
     },
     {
       label: "Litchi bond repayment",
       to: "Litchi Bond Assist",
-      amount: plan.weeklyPayment,
+      amount: account.weekly,
       dot: "bg-litchi",
     },
   ];
 
-  const rentShare = tenancy.rentWeekly / derived.totalWeeklyHousing;
+  const rentShare = account.rentWeekly / derived.totalWeeklyHousing;
 
   return (
     <Card className="flex h-full flex-col">

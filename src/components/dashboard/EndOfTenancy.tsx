@@ -3,7 +3,7 @@
 import { ArrowRight, Check, Info } from "lucide-react";
 import { clsx } from "clsx";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { bond, plan, tenancy } from "@/lib/data";
+import { tenancy } from "@/lib/data";
 import { daysBetween, formatDate, money, moneyExact } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
@@ -32,7 +32,7 @@ const REFUND_STEPS = [
   },
   {
     label: "You both request the refund",
-    detail: `${bond.lodgedWith} needs the request from both sides. Disagree, and the Tenancy Tribunal decides.`,
+    detail: `Tenancy Services needs the request from both sides. Disagree, and the Tenancy Tribunal decides.`,
   },
   {
     label: "It lands in your account",
@@ -50,18 +50,19 @@ const DEDUCTIONS = [
 
 export function EndOfTenancy() {
   const { derived } = useLitchi();
+  const account = derived.account;
 
   // Whether the plan finishes before the tenancy does decides which story this
   // card tells, so it is worked out rather than assumed.
-  const daysOfSlack = daysBetween(derived.payoffDate, tenancy.endDate);
+  const daysOfSlack = daysBetween(derived.payoffDate, account.tenancyEnd);
   const clearsFirst = daysOfSlack >= 0;
 
   return (
     <Card>
       <CardTitle>When your tenancy ends</CardTitle>
       <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-mist">
-        Your fixed term runs to {formatDate(tenancy.endDate)}. Here&rsquo;s what happens to the{" "}
-        {money(bond.amount)} then.
+        Your fixed term runs to {formatDate(account.tenancyEnd)}. Here&rsquo;s what happens to the{" "}
+        {money(account.bond)} then.
       </p>
 
       <div className="mt-7 grid gap-8 lg:grid-cols-2">
@@ -135,7 +136,7 @@ export function EndOfTenancy() {
                 <>
                   Your last payment is {formatDate(derived.payoffDate)} &mdash;{" "}
                   {Math.round(daysOfSlack)} days before your tenancy ends. Nothing is outstanding,
-                  so the whole {money(bond.amount)} comes back to you.
+                  so the whole {money(account.bond)} comes back to you.
                 </>
               ) : (
                 <>
@@ -156,7 +157,7 @@ export function EndOfTenancy() {
         <h3 className="text-[15px] font-semibold text-ink">If you move out early and still owe</h3>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-mist">
           The plan carries on exactly as it is &mdash; same{" "}
-          {moneyExact(plan.weeklyPayment)}{" "}
+          {moneyExact(account.weekly)}{" "}
           a week, same payoff date, no change and no fee for leaving. Or, once your bond is
           refunded to you, you can use it to clear the balance in one go and be done. Either way
           it&rsquo;s your call, and telling us you&rsquo;re moving costs you nothing.

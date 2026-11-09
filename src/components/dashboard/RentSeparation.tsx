@@ -2,7 +2,8 @@
 
 import { Building2, Info, PiggyBank } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { plan, rent, tenancy } from "@/lib/data";
+import { plan, rent } from "@/lib/data";
+import { useLitchi } from "@/lib/store";
 import { formatDayDate, money } from "@/lib/format";
 
 /**
@@ -19,16 +20,18 @@ import { formatDayDate, money } from "@/lib/format";
  * labelled as a total.
  */
 export function RentSeparation() {
-  const annualRent = tenancy.rentWeekly * 52;
+  const { derived } = useLitchi();
+  const account = derived.account;
+  const annualRent = account.rentWeekly * 52;
 
   const sides = [
     {
       icon: Building2,
       label: "Your rent",
-      amount: rent.weekly,
-      to: rent.paidTo,
+      amount: account.rentWeekly,
+      to: account.agencyName,
       rows: [
-        { label: "Paid to", value: rent.paidTo },
+        { label: "Paid to", value: account.agencyName },
         { label: "Method", value: rent.method },
         { label: "Next due", value: formatDayDate(rent.nextDue) },
         { label: "Over a year", value: money(annualRent) },
@@ -37,13 +40,13 @@ export function RentSeparation() {
     {
       icon: PiggyBank,
       label: "Your Litchi payment",
-      amount: plan.weeklyPayment,
+      amount: account.weekly,
       to: "Litchi Bond Assist",
       rows: [
         { label: "Paid to", value: plan.partner },
-        { label: "What it repays", value: `The ${money(plan.principal)} bond` },
-        { label: "Ends", value: `After ${plan.termWeeks} weeks` },
-        { label: "Over a year", value: money(plan.totalRepayable) },
+        { label: "What it repays", value: `The ${money(account.advance)} advanced` },
+        { label: "Ends", value: `After ${account.termWeeks} weeks` },
+        { label: "Over a year", value: money(account.totalRepayable) },
       ],
     },
   ];
@@ -94,7 +97,7 @@ export function RentSeparation() {
         <p className="text-[13px] leading-relaxed text-bark">
           Rent is never collected by Litchi and never forms part of your bond repayment. When the
           bond is repaid, the Litchi payment stops and your housing goes back to a flat{" "}
-          {money(rent.weekly)} a week. The two were only ever side by side, never joined.
+          {money(account.rentWeekly)} a week. The two were only ever side by side, never joined.
         </p>
       </div>
     </Card>

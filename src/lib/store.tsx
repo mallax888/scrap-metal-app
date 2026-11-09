@@ -10,11 +10,11 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createLocalStore } from "./local-store";
+import { accountFrom, sampleAccount, type Account, type FundedPlan } from "./account";
 import {
   POINTS,
   TODAY,
   baseActivity,
-  baseRepaid,
   movingFund,
   originalEndDate,
   paymentMethods,
@@ -28,7 +28,6 @@ import {
   scoreBand,
   scoreFactors,
   weeklyPaymentsMade,
-  tenancy,
   weeklyPurchases,
   type ActivityItem,
   type RewardTier,
@@ -125,6 +124,14 @@ export interface LitchiState {
    * once, which is the right answer anyway.
    */
   accountOpened: boolean;
+  /**
+   * The plan this browser signed, if it signed one.
+   *
+   * Null means the account shows the sample tenant, which is what a visitor
+   * who skipped the flow should see. Older saved state predates this field
+   * and reads as undefined, which is the same thing.
+   */
+  funded: FundedPlan | null;
 }
 
 const INITIAL_STATE: LitchiState = {
@@ -138,6 +145,7 @@ const INITIAL_STATE: LitchiState = {
   movedPayment: null,
   missedPayment: null,
   accountOpened: false,
+  funded: null,
 };
 
 const store = createLocalStore<LitchiState>("litchi.state.v1", INITIAL_STATE);
@@ -179,17 +187,19 @@ export interface PlanProjection {
  * in weeks from the next one — not a date written down anywhere. Paying extra
  * removes payments off the end, which pulls the date back on its own.
  */
-export function projectPlan(totalRepaidInput: number): PlanProjection {
-  const totalRepaid = Math.min(plan.totalRepayable, Math.max(0, round2(totalRepaidInput)));
-  const balance = round2(plan.totalRepayable - totalRepaid);
-  const weeksRemaining =
-    balance <= 0 ? 0 : Math.max(1, Math.round(balance / plan.weeklyPayment));
+export function projectPlan(
+  totalRepaidInput: number,
+  account: Account = sampleAccount
+): PlanProjection {
+  const totalRepaid = Math.min(account.totalRepayable, Math.max(0, round2(totalRepaidInput)));
+  const balance = round2(account.totalRepayable - totalRepaid);
+  const weeksRemaining = balance <= 0 ? 0 : Math.max(1, Math.round(balance / account.weekly));
   const payoffDate =
-    weeksRemaining === 0 ? TODAY : addWeeks(plan.nextPaymentDate, weeksRemaining - 1);
+    weeksRemaining === 0 ? TODAY : addWeeks(account.nextPaymentDate, weeksRemaining - 1);
   return {
     totalRepaid,
     balance,
-    progress: totalRepaid / plan.totalRepayable,
+    progress: totalRepaid / account.totalRepayable,
     weeksRemaining,
     payoffDate,
     weeksSaved: Math.max(0, Math.round(daysBetween(payoffDate, originalEndDate) / 7)),
@@ -197,6 +207,7 @@ export function projectPlan(totalRepaidInput: number): PlanProjection {
 }
 
 function buildSchedule(
+  weekly: number,
   balance: number,
   weeks: number,
   firstDate: string,
@@ -210,7 +221,7 @@ function buildSchedule(
       // The final row is dated by the projected payoff so the plan and the
       // headline projection can never disagree.
       date: isFinal ? payoffDate : addWeeks(firstDate, i),
-      amount: isFinal ? round2(balance - plan.weeklyPayment * (weeks - 1)) : plan.weeklyPayment,
+      amount: isFinal ? round2(balance - weekly * (weeks - 1)) : weekly,
       isFinal,
     });
   }
@@ -220,18 +231,20 @@ function buildSchedule(
 function buildChartSeries(
   extraPayments: LedgerEntry[],
   balanceNow: number,
-  schedule: ScheduledPayment[]
+  schedule: ScheduledPayment[],
+  account: Account,
+  history: { date: string; amount: number }[]
 ): ChartPoint[] {
   const paid = [
-    ...repaymentHistory.map((entry) => ({ date: entry.date, amount: entry.amount })),
+    ...history.map((entry) => ({ date: entry.date, amount: entry.amount })),
     ...extraPayments.map((entry) => ({ date: entry.date, amount: entry.amount })),
   ].sort((a, b) => (a.date < b.date ? -1 : 1));
 
   const points: ChartPoint[] = [
-    { date: tenancy.startDate, actual: plan.totalRepayable, projected: null },
+    { date: account.tenancyStart, actual: account.totalRepayable, projected: null },
   ];
 
-  let running: number = plan.totalRepayable;
+  let running: number = account.totalRepayable;
   for (const entry of paid) {
     running = round2(running - entry.amount);
     const last = points[points.length - 1];
@@ -257,6 +270,8 @@ function buildChartSeries(
 }
 
 export interface LitchiDerived {
+  /** Whose tenancy and facility every figure below is about. */
+  account: Account;
   /** Bond finance */
   totalRepaid: number;
   balance: number;
@@ -312,10 +327,42 @@ export interface LitchiDerived {
 }
 
 function derive(state: LitchiState): LitchiDerived {
+  /*
+   * Whose tenancy this is, resolved once and threaded through everything
+   * below. Every figure on the signed-in screens hangs off this: the balance,
+   * the schedule, the chart, the weekly housing total. Resolving it here
+   * rather than in each component is what stops one screen showing the signed
+   * plan while the next shows the sample.
+   */
+  const account = accountFrom(state.funded);
+
+  /*
+   * The history, re-priced to this account's weekly payment.
+   *
+   * The sample timeline is the demo's whole value — ten weeks of on-time
+   * payments, the score built on them, the rewards earned. A freshly signed
+   * plan has none of that, and inventing it would be worse than borrowing
+   * it. So the dates stay and the amounts follow the plan actually signed:
+   * ten payments of what this tenant pays, not ten of what the sample one
+   * did. Internally consistent, and never pretending the past is theirs.
+   */
+  const paidSoFar = round2(weeklyPaymentsMade * account.weekly);
+  const history = repaymentHistory.map((entry) =>
+    entry.kind === "repayment" ? { ...entry, amount: account.weekly } : entry
+  );
+
   const extraPaid = round2(state.extraPayments.reduce((sum, e) => sum + e.amount, 0));
-  const { totalRepaid, balance, progress, weeksRemaining, payoffDate, weeksSaved } =
-    projectPlan(baseRepaid + extraPaid);
-  const schedule = buildSchedule(balance, weeksRemaining, plan.nextPaymentDate, payoffDate);
+  const { totalRepaid, balance, progress, weeksRemaining, payoffDate, weeksSaved } = projectPlan(
+    paidSoFar + extraPaid,
+    account
+  );
+  const schedule = buildSchedule(
+    account.weekly,
+    balance,
+    weeksRemaining,
+    account.nextPaymentDate,
+    payoffDate
+  );
 
   const fundAdded = round2(state.fundContributions.reduce((sum, e) => sum + e.amount, 0));
   const fundSaved = round2(movingFund.baseSaved + fundAdded);
@@ -376,7 +423,7 @@ function derive(state: LitchiState): LitchiDerived {
    */
   const nextTierDate = nextTier
     ? addWeeks(
-        plan.nextPaymentDate,
+        account.nextPaymentDate,
         Math.max(0, Math.ceil(pointsToNextTier / POINTS.perOnTimePayment) - 1)
       )
     : null;
@@ -390,7 +437,7 @@ function derive(state: LitchiState): LitchiDerived {
   const missedPayment: MissedPayment | null = missedDate
     ? {
         date: missedDate,
-        amount: plan.weeklyPayment,
+        amount: account.weekly,
         daysAgo: Math.max(0, daysBetween(missedDate, TODAY)),
         stages: (
           [
@@ -511,7 +558,8 @@ function derive(state: LitchiState): LitchiDerived {
     payoffDate,
     weeksSaved,
     schedule,
-    chart: buildChartSeries(state.extraPayments, balance, schedule),
+    account,
+    chart: buildChartSeries(state.extraPayments, balance, schedule, account, history),
     nextPayment: schedule[0] ?? null,
     movedPayment: state.movedPayment,
     missedPayment,
@@ -531,8 +579,18 @@ function derive(state: LitchiState): LitchiDerived {
     pointsToNextTier,
     nextTierDate,
     redemptions: [...state.redemptions].sort((a, b) => (a.date < b.date ? 1 : -1)),
-    totalWeeklyHousing: round2(tenancy.rentWeekly + plan.weeklyPayment),
-    activity: [...userActivity, ...baseActivity].sort((a, b) =>
+    totalWeeklyHousing: round2(account.rentWeekly + account.weekly),
+    activity: [
+      ...userActivity,
+      ...baseActivity.map((item) => {
+        if (item.kind === "repayment") return { ...item, amount: account.weekly };
+        // The lodgement row states the bond, which is this account's, not the
+        // sample's, and names the reference the account carries.
+        if (item.kind === "bond")
+          return { ...item, amount: account.bond, detail: `Bond ID ${account.bondId}` };
+        return item;
+      }),
+    ].sort((a, b) =>
       a.date < b.date ? 1 : a.date > b.date ? -1 : 0
     ),
   };
@@ -559,10 +617,12 @@ export interface LitchiActions {
   setMissedPayment: (date: string | null) => void;
   /**
    * Open the signed-in account. Called where a client would really arrive —
-   * signing the agreement at the end of set-up — and by the two informed
-   * routes in that say what they are showing before they show it.
+   * signing the agreement at the end of the flow — and by the informed route
+   * in that says what it is showing before it shows it.
    */
   openAccount: () => void;
+  /** Record a signed plan, so the account is about that tenancy and not the sample. */
+  recordFunding: (funded: FundedPlan) => void;
   reset: () => void;
 }
 
@@ -692,6 +752,10 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
     store.setState((prev) => (prev.accountOpened ? prev : { ...prev, accountOpened: true }));
   }, []);
 
+  const recordFunding = useCallback((funded: FundedPlan) => {
+    store.setState((prev) => ({ ...prev, funded, accountOpened: true }));
+  }, []);
+
   const reset = useCallback(() => store.setState(INITIAL_STATE), []);
 
   const value = useMemo<LitchiContextValue>(
@@ -710,6 +774,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       catchUpPayment,
       setMissedPayment,
       openAccount,
+      recordFunding,
       reset,
     }),
     [
@@ -726,6 +791,7 @@ export function LitchiProvider({ children }: { children: React.ReactNode }) {
       setRoundUpTo,
       toggleWaitlist,
       openAccount,
+      recordFunding,
       reset,
     ]
   );

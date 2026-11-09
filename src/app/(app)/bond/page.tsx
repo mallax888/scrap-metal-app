@@ -17,28 +17,33 @@ import { bond, plan } from "@/lib/data";
 import { formatDate, money, moneyExact, percent } from "@/lib/format";
 import { useLitchi } from "@/lib/store";
 
-const STEPS = [
-  {
-    icon: Banknote,
-    title: "Litchi's partner paid your bond",
-    body: `${plan.partner} paid ${money(bond.amount)} to your agent on ${formatDate(
-      bond.paidDate
-    )}, before you picked up the keys — which is the moment the place was actually yours.`,
-  },
-  {
-    icon: Landmark,
-    title: "Your landlord lodged it",
-    body: `The bond was lodged with ${bond.lodgedWith} in the normal way, under bond ID ${bond.bondId}. It stays there for the whole tenancy.`,
-  },
-  {
-    icon: ShieldCheck,
-    title: "You repay Litchi weekly",
-    body: `${money(plan.weeklyPayment)} every Friday until the ${money(plan.totalRepayable)} is repaid. No interest and no penalty for paying it off early.`,
-  },
-];
 
 export default function BondPage() {
   const { derived } = useLitchi();
+  const account = derived.account;
+
+  // Built here, not at module scope: the three steps describe whichever
+  // tenancy this account is about.
+    const STEPS = [
+    {
+      icon: Banknote,
+      title: "Litchi's partner paid your bond",
+      body: `${plan.partner} paid ${money(account.bond)} to your agent on ${formatDate(
+        bond.paidDate
+      )}, before you picked up the keys — which is the moment the place was actually yours.`,
+    },
+    {
+      icon: Landmark,
+      title: "Your landlord lodged it",
+      body: `The bond was lodged with ${bond.lodgedWith} in the normal way, under bond ID ${account.bondId}. It stays there for the whole tenancy.`,
+    },
+    {
+      icon: ShieldCheck,
+      title: "You repay Litchi weekly",
+      body: `${money(account.weekly)} every Friday until the ${money(account.totalRepayable)} is repaid. No interest and no penalty for paying it off early.`,
+    },
+  ];
+
   const [planOpen, setPlanOpen] = useState(false);
   const [extraOpen, setExtraOpen] = useState(false);
 
@@ -63,7 +68,7 @@ export default function BondPage() {
           <div>
             <CardLabel>Bond financed</CardLabel>
             <p className="numeric mt-2.5 text-[28px] font-semibold tracking-[-0.02em] leading-none text-ink">
-              {money(plan.principal)}
+              {money(account.advance)}
             </p>
             <p className="mt-2 text-sm text-mist">{bond.weeksOfRent} weeks&rsquo; rent</p>
           </div>
@@ -95,7 +100,7 @@ export default function BondPage() {
                 ? `${derived.weeksSaved} ${
                     derived.weeksSaved === 1 ? "week" : "weeks"
                   } ahead of your original term`
-                : `${plan.termWeeks} weekly payments from ${formatDate(plan.startDate)}`}
+                : `${account.termWeeks} weekly payments from ${formatDate(account.tenancyStart)}`}
             </p>
           </div>
 

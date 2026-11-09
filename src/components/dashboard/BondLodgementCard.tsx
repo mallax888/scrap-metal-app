@@ -5,16 +5,19 @@ import { Check, Landmark } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BondDetailsModal } from "@/components/modals/BondDetailsModal";
-import { bond, tenancy } from "@/lib/data";
 import { formatDate, money } from "@/lib/format";
+import { useLitchi } from "@/lib/store";
 
 export function BondLodgementCard() {
+  const { derived } = useLitchi();
+  const account = derived.account;
+
   const [open, setOpen] = useState(false);
 
   const rows = [
-    { label: "Bond amount", value: money(bond.amount) },
-    { label: "Property", value: tenancy.property },
-    { label: "Tenancy start", value: formatDate(tenancy.startDate) },
+    { label: "Bond amount", value: money(account.bond) },
+    { label: "Property", value: account.property },
+    { label: "Tenancy start", value: formatDate(account.tenancyStart) },
   ];
 
   return (
@@ -23,7 +26,7 @@ export function BondLodgementCard() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle>Your bond</CardTitle>
-            <p className="numeric mt-1 text-sm text-mist">Bond ID: {bond.bondId}</p>
+            <p className="numeric mt-1 text-sm text-mist">Bond ID: {account.bondId}</p>
           </div>
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream text-bark">
             <Landmark className="h-[18px] w-[18px]" aria-hidden />
@@ -34,7 +37,7 @@ export function BondLodgementCard() {
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-moss text-moss-soft">
             <Check className="h-3 w-3" aria-hidden />
           </span>
-          Lodged with {bond.lodgedWith}
+          Lodged with {account.lodgedWith}
         </div>
 
         <dl className="mt-5 divide-y divide-sand/70 text-sm">
